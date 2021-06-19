@@ -4,7 +4,9 @@
 import pandas as pd
 from datetime import datetime
 
-SOURCE_FILE_DIRECTORY = r"D:\Dudu\Finanças\Investimentos\Mercado Financeiro\Investment_Portfolio_Analysis"
+import matplotlib.pyplot as plt     #Importação da biblioteca Matplotlib
+
+SOURCE_FILE_DIRECTORY = r"C:\Users\Fred\Documents\GitHub\Investment_Portfolio_Analysis"
 
 SOURCE_FILE_INITIAL_DATE = "2000-01-01"
 
@@ -17,18 +19,23 @@ indexer_dict = {
     "Poupanca regra nova": SOURCE_FILE_DIRECTORY + "\Poupança nova mensal.xlsx"
 }
 
+
+
+#Calcula o retorno total de uma lista de taxas mensais
 def __calcTotalProfitValueFromMonthlyInterestRateList(initial_value, monthly_interest_rate_list):
     total_profit_value = initial_value
     for monthly_interest_rate in monthly_interest_rate_list:
         adjusted_monthly_interest_rate = (1 + monthly_interest_rate/100)
         total_profit_value = adjusted_monthly_interest_rate * total_profit_value
     return total_profit_value
-       
+
+#Calcula a diferença de taxa       
 def __calcTotalInterestRate(initial_value, final_value):
     total_interest_rate = (final_value-initial_value) / initial_value
     total_interest_rate *= 100
     return total_interest_rate
-    
+
+#    
 def calcTotalProfitValues(initial_value, monthly_interest_rate_list):
     """
     Receives an 'Initial Value' and a 'Monthly Interest Rate List'.
@@ -39,6 +46,8 @@ def calcTotalProfitValues(initial_value, monthly_interest_rate_list):
     total_interest_rate = __calcTotalInterestRate(initial_value, total_profit_value)
     return total_profit_value, total_interest_rate
 
+
+#Cria lista de taxas
 def convertExcelToMonthlyInterestRateList(excel_excel_file_name):
     """
     Receives an 'Excel File Name' and returns a 'Monthly Interest Rate List', with values starting from January/2000.
@@ -53,6 +62,8 @@ def convertExcelToMonthlyInterestRateList(excel_excel_file_name):
     monthly_interest_rate_list = list(excel_table)
     return monthly_interest_rate_list
 
+
+#Printa valores
 def printTotalProfitValues(initial_value, total_profit_value, total_interest_rate, indexer_name, initial_date, final_date):
     """
     Print the 'Initial Value', 'Total Profit Value' and 'Total Interest Rate (%)' values per 'Indexer Name'.
@@ -66,6 +77,9 @@ def printTotalProfitValues(initial_value, total_profit_value, total_interest_rat
     print("Valor Final Total: R$ {:.2f}".format(total_profit_value))
     print('')
 
+
+
+#Converte valores da tabela para lista
 def convertMonthlyInterestRateListToTable(monthly_interest_rate_list):
     """
     Receives a 'Monthly Interest Rate List' and returns a 'Monthly Interest Rate Table' with the columns:
@@ -101,12 +115,103 @@ def calcPrintTotalProfitValuesFromDate(indexer_name, initial_value, initial_date
     profit_value, interest_rate = calcTotalProfitValuesFromDate(indexer_name, initial_value, initial_date, final_date)
     printTotalProfitValues(initial_value, profit_value, interest_rate, indexer_name, initial_date, final_date)  
 
-initial_date = "2020-03-01"
-final_date = "2021-04-01"
 
-calcPrintTotalProfitValuesFromDate("IPCA", 1000, initial_date, final_date)
-calcPrintTotalProfitValuesFromDate("SELIC", 1000, initial_date, final_date)
-calcPrintTotalProfitValuesFromDate("CDI", 1000, initial_date, final_date)
-calcPrintTotalProfitValuesFromDate("FGTS", 1000, initial_date, final_date)
-calcPrintTotalProfitValuesFromDate("Poupanca regra antiga", 1000, initial_date, final_date)
-calcPrintTotalProfitValuesFromDate("Poupanca regra nova", 1000, initial_date, final_date)
+#######################################################
+ 
+#função nova
+def teste(initial_value, monthly_interest_rate_list):
+    value=monthly_interest_rate_list
+  
+    value['Correcao']=""
+    total_profit_value=initial_value
+    for i in range(len(monthly_interest_rate_list)):
+        adjusted_monthly_interest_rate = (1 + monthly_interest_rate_list.iloc[i,1]/100)
+        total_profit_value = adjusted_monthly_interest_rate * total_profit_value
+        value.iloc[i,2]=total_profit_value
+    return value
+
+#Valor de base para cálculo
+valor = 4954.35
+d1 = "2017-04-07"
+d2 = "2019-05-17"
+
+indexer_name = "IPCA"
+monthly_interest_rate_list = convertExcelToMonthlyInterestRateList(indexer_dict[indexer_name])
+monthly_interest_rate_table = convertMonthlyInterestRateListToTable(monthly_interest_rate_list)
+monthly_interest_rate_table = cutMonthlyInterestRateTable(monthly_interest_rate_table, d1, d2)
+aux=teste(valor,monthly_interest_rate_table)
+plt.plot(aux['Data Base'],aux['Correcao'], label='IPCA')
+
+indexer_name = "CDI"
+monthly_interest_rate_list = convertExcelToMonthlyInterestRateList(indexer_dict[indexer_name])
+monthly_interest_rate_table = convertMonthlyInterestRateListToTable(monthly_interest_rate_list)
+monthly_interest_rate_table = cutMonthlyInterestRateTable(monthly_interest_rate_table, d1, d2)
+aux=teste(valor,monthly_interest_rate_table)
+plt.plot(aux['Data Base'],aux['Correcao'], label='CDI') 
+
+
+indexer_name = "SELIC"
+monthly_interest_rate_list = convertExcelToMonthlyInterestRateList(indexer_dict[indexer_name])
+monthly_interest_rate_table = convertMonthlyInterestRateListToTable(monthly_interest_rate_list)
+monthly_interest_rate_table = cutMonthlyInterestRateTable(monthly_interest_rate_table, d1, d2)
+aux=teste(valor,monthly_interest_rate_table)
+plt.plot(aux['Data Base'],aux['Correcao'], label='SELIC')
+
+indexer_name = "FGTS"
+monthly_interest_rate_list = convertExcelToMonthlyInterestRateList(indexer_dict[indexer_name])
+monthly_interest_rate_table = convertMonthlyInterestRateListToTable(monthly_interest_rate_list)
+monthly_interest_rate_table = cutMonthlyInterestRateTable(monthly_interest_rate_table, d1, d2)
+aux=teste(valor,monthly_interest_rate_table)
+plt.plot(aux['Data Base'],aux['Correcao'], label='FGTS')
+
+plt.legend(title='Legenda')
+plt.ylabel('R$1 ao longo do tempo')
+plt.xlabel('Tempo')
+plt.grid()
+plt.show()
+
+print(type(monthly_interest_rate_table))
+
+
+
+
+
+
+#monthly_interest_rate_short_table = cutMonthlyInterestRateTable(monthly_interest_rate_table, initial_date, final_date)
+#lista=convertExcelToMonthlyInterestRateList(indexer_dict[indexer_name])
+#print(monthly_interest_rate_short_table)
+#test=teste(1000,monthly_interest_rate_short_table)
+#print(test.iloc[:,1])
+
+#plt.plot( test.iloc[:,0], test.iloc[:,1], 'ro' )
+#plt.ylabel('Valor da operação')
+#plt.xlabel('Data')
+#plt.show()
+
+
+
+
+#calcPrintTotalProfitValuesFromDate("IPCA", 1000, initial_date, final_date)
+#calcPrintTotalProfitValuesFromDate("SELIC", 1000, initial_date, final_date)
+#calcPrintTotalProfitValuesFromDate("CDI", 1000, initial_date, final_date)
+#calcPrintTotalProfitValuesFromDate("FGTS", 1000, initial_date, final_date)
+#calcPrintTotalProfitValuesFromDate("Poupanca regra antiga", 1000, initial_date, final_date)
+#calcPrintTotalProfitValuesFromDate("Poupanca regra nova", 1000, initial_date, final_date)
+
+
+
+
+
+#calcTotalProfitValues(1000,monthly_interest_rate_short_table)
+
+#print (monthly_interest_rate_short_table)
+
+
+
+
+##Plota valor da operação
+#plt.plot( monthly_interest_rate_short_table.iloc[:,1], monthly_interest_rate_short_table.iloc[:,2], 'ro' )
+#plt.plot( monthly_interest_rate_short_table["Data Base"], monthly_interest_rate_short_table["Taxa Mensal"], 'ro' )
+#plt.ylabel('Valor da operação')
+#plt.xlabel('Data')
+#plt.show()
