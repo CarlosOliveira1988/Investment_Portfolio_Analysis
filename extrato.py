@@ -7,7 +7,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt     #Importação da biblioteca Matplotlib
 
 
-SOURCE_FILE_DIRECTORY = r"C:\Users\Fred\source\repos\Investment_Portfolio_Analysis"
+SOURCE_FILE_DIRECTORY = r"C:\Users\Fred\Documents\GitHub\Investment_Portfolio_Analysis"
 FILE_NAME = "\Extrato_Fred.xlsx"
 
 file = SOURCE_FILE_DIRECTORY+FILE_NAME
@@ -38,7 +38,7 @@ def overallTaxAndIncomes (file):
     return fee, incomeTax, dividend, jcp
 
 
-def filteredTable (file,ticker):
+def tableByTicker (file,ticker):
     """
     Reads the Excel file with all the operations.
 
@@ -49,11 +49,11 @@ def filteredTable (file,ticker):
     return filter
     
 
-def unitsTicker(file,ticker):
+def unitsTicker(file, ticker):
     """
     Returns how many stocks of the given ticker.
     """
-    table = filteredTable(file,TICKER)              #Filter the table by ticker
+    table = tableByTicker(file,ticker)              #Filter the table by ticker
     buy = table[table["Operação"]=="Compra"]        #Filter the table by buy operation
     buy = int(buy["Quantidade"].sum())              #Calculates the number of units bought
     sell = table[table["Operação"]=="Venda"]        #Filter the table by sell operation
@@ -148,6 +148,46 @@ def numberOperationsYear (file):
     
     return listYear, listBuy, listSell   
     
+
+
+def avgPriceTicker(file, ticker):
+    """
+    Return the average price of a given ticker
+    """
+    table = tableByTicker(file, ticker)
+    
+    avgPriceOld = 0
+    qtStockOld = 0
+    costs = 0
+    for index,row in table.iterrows():
+        #If the current operation is a buy event, then updates the average price
+        if row['Operação'] == "Compra":
+            #Get the number of stocks of the operation
+            qtStock = row["Quantidade"]                 
+            #Sum the costs
+            costs = row["Taxas"] + row["IR"]            
+            #Calculates the average price of the operation
+            avgPrice = (row["Quantidade"] * row["Preço Unitário"] + costs) / qtStock
+            #Calculates the average price considering also the previous operations
+            avgPrice = ((avgPriceOld * qtStockOld) + avgPrice * qtStock) / (qtStockOld + qtStock)
+            avgPriceOld = avgPrice
+            qtStockOld += row["Quantidade"]
+
+        #If the current operation is a sell event, then updates the number of stocks
+        elif row["Operação"] == "Venda":
+            qtStock -= row["Quantidade"]
+            qtStockOld -= row["Quantidade"]
+
+    numberStocks = qtStock
+    return avgPrice, numberStocks
+
+
+
+ticker = "TESTE11"
+avgPriceTicker, number = avgPriceTicker(file, ticker)
+print("Preço médio de", ticker, "é:", avgPriceTicker)
+print("Quandidade de", ticker, "é:", number)
+
 
 
 
