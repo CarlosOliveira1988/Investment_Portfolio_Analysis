@@ -150,12 +150,25 @@ def numberOperationsYear (file):
     
 
 
+def earningsByTicker (file, ticker):
+    """
+    Return the total earnings of a given ticker.
+    """
+    table = tableByTicker(file, ticker)
+    table = table[table["Operação"] == "Provento"]
+    #Returns the sum of dividens and JCP.
+    return (table["Dividendos"].sum() + table["JCP"].sum())
+
+
 def avgPriceTicker(file, ticker):
     """
     Return the average price of a given ticker
     """
     table = tableByTicker(file, ticker)
-    
+    #Fills with 0 the data that is not fullfilled in the dataframe. 
+    #It is important because non filled cells will return NaN, which will cause calculation issues.
+    table = table.fillna(0)
+
     avgPriceOld = 0
     qtStockOld = 0
     costs = 0
@@ -178,15 +191,74 @@ def avgPriceTicker(file, ticker):
             qtStock -= row["Quantidade"]
             qtStockOld -= row["Quantidade"]
 
-    numberStocks = qtStock
+    numberStocks = qtStockOld
     return avgPrice, numberStocks
 
 
+def currentWallet(file):
+    """
+    Analyzes the operations to get the current wallet. 
 
-ticker = "TESTE11"
-avgPriceTicker, number = avgPriceTicker(file, ticker)
-print("Preço médio de", ticker, "é:", avgPriceTicker)
-print("Quandidade de", ticker, "é:", number)
+    Return a dataframe containing the current wallet stocks.
+    """
+    table = readOperations(file)
+    table = table[ (table["Mercado"]== "Ações") | (table["Mercado"]== "FII")]
+    
+    table.drop_duplicates(subset ="Ticker", keep = 'first', inplace = True)
+    
+    #Creates the wallet
+    wallet = pd.DataFrame()
+    #Copies the ticker and market information
+    wallet["Ticker"] = table["Ticker"]
+    wallet["Mercado"] = table["Mercado"]
+    #Sort the data by market and ticker
+    wallet = wallet.sort_values(by=["Mercado", "Ticker"])
+    
+    wallet["Quantidade"] = ""           #Creates a blank column
+    wallet["Preço médio"] = ""          #Creates a blank column
+    wallet["Preço pago"] = ""          #Creates a blank column
+    wallet["Proventos"] = ""          #Creates a blank column
+
+
+
+    #Calculate of the quantity of all non duplicate tickers
+    for index, row in wallet.iterrows():
+        
+        avgPrice, numberStocks = avgPriceTicker (file, row["Ticker"] )
+        #Check the quantity. If zero, there drops it from the dataframe.             
+        if numberStocks == 0:
+            wallet = wallet.drop([index])
+        #If non zero, keeps the ticker and updates the quantity and the average price.    
+        else:
+            wallet.at[index, "Quantidade"]= int(numberStocks)
+            wallet.at[index, "Preço médio"] = avgPrice
+            wallet.at[index, "Proventos"] = earningsByTicker(file, row["Ticker"])
+    
+    #Calculates the price according with the average price
+    wallet["Preço pago"] = wallet["Quantidade"] * wallet["Preço médio"]
+
+    return wallet
+
+      
+    
+    #Creates the wallet dataframe
+    #wallet = pd.DataFrame()
+    #wallet["Ativos"] = table
+    #wallet["Mercado"] = ""
+    #print(wallet)
+
+
+print(currentWallet(file))
+
+# dropping ALL duplicte values
+#data.drop_duplicates(subset ="First Name",
+#                     keep = False, inplace = True)
+
+
+#ticker = "TESTE11"
+#avgPriceTicker, number = avgPriceTicker(file, ticker)
+#print("Preço médio de", ticker, "é:", avgPriceTicker)
+#print("Quandidade de", ticker, "é:", number)
 
 
 
