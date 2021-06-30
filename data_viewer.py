@@ -1,0 +1,55 @@
+from data_viewer_table import DataViewerTable
+from data_viewer_window import DataViewerWindow
+
+
+class DataViewer(DataViewerWindow):
+    """ 
+    This class creates a window with GUI components to handle dataframes and their respective filters/graphs.
+
+    Arguments:
+    - window_title: the title of the window
+    - columns_title_list: a list of columns titles
+
+    Public Attributes:
+    - self.DataViewerTable: the tree view table
+    """
+    def __init__(self, window_title, columns_title_list):
+        super().__init__(window_title)
+        self.DataViewerTable = DataViewerTable(self, columns_title_list)
+
+
+# Example of how to use the "DataViewer" class
+if __name__ == "__main__":
+    # Creates the application
+    import sys
+    from PyQt5 import QtWidgets
+    app = QtWidgets.QApplication(sys.argv)
+
+    # Creates the "DataViewer" object
+    main = DataViewer('DataViewer Test Window', ('Col0', 'Col1', 'Col2', 'Col3', 'Col4', 'Col5', 'Col6', 'Col7'))
+
+    # Creates 3 parent lines
+    parent_line_item_0 = main.DataViewerTable.insertParentLineItem('testing_0')
+    parent_line_item_1 = main.DataViewerTable.insertParentLineItem('testing_1')
+    parent_line_item_2 = main.DataViewerTable.insertParentLineItem('testing_2')
+
+    # Inserts data in the "parent_line_item_0"
+    main.DataViewerTable.insertChildrenLineData(parent_line_item_0, ['00', '01', '02', '03', '04', '05', '06', '07'])
+    main.DataViewerTable.insertChildrenLineData(parent_line_item_0, ['00', '01', '02', '03', '04', '05', '06', '07'])
+    main.DataViewerTable.insertChildrenLineData(parent_line_item_0, ['00', '01', '02', '03', '04', '05', '06', '07'])
+
+    # Inserts data in the "parent_line_item_1"
+    main.DataViewerTable.insertChildrenLineData(parent_line_item_1, ['10', '11', '12', '13', '14', '15', '16', '17'])
+    main.DataViewerTable.insertChildrenLineData(parent_line_item_1, ['10', '11', '12', '13', '14', '15', '16', '17'])
+    main.DataViewerTable.insertChildrenLineData(parent_line_item_1, ['10', '11', '12', '13', '14', '15', '16', '17'])
+
+    # Inserts data in the "parent_line_item_2"
+    main.DataViewerTable.insertChildrenLineData(parent_line_item_2, ['20', '21', '22', '23', '24', '25', '26', '27'])
+    main.DataViewerTable.insertChildrenLineData(parent_line_item_2, ['20', '21', '22', '23', '24', '25', '26', '27'])
+    main.DataViewerTable.insertChildrenLineData(parent_line_item_2, ['20', '21', '22', '23', '24', '25', '26', '27'])
+
+    # Shows the "DataViewer" object
+    main.showMaximized()
+
+    # Ends the application when everything is closed
+    sys.exit(app.exec_())
