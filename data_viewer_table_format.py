@@ -71,6 +71,19 @@ class DataViewerDataFrameFormat:
 
 
 class DataViewerTableColumn:
+    """
+    A collection of methods and attributes to format data frame columns as follows:
+    - Date: 2021-06-27
+    - Float: 1.00
+    - Percentage: 1.00%
+    - Currency: R$ 1,00
+    - String: String
+
+    Arguments:
+    - title: the column title
+    - format_type: the column format (date / float / percentage / currency / string)
+    - na_value: the string used to fill na values (example: 'R$ 0.00')
+    """
     def __init__(self, title, format_type, na_value):
         self.Title = title
         self.FormatType = format_type

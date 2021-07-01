@@ -26,23 +26,11 @@ class DataViewerTable:
     """
     Private methods
     """
-    def __convertValuesListToItemsList(self, columns_value_list):
-        item_list = []
-        for index in range(len(columns_value_list)):
-            item = QStandardItem(str(columns_value_list[index]))
-            item.setData(columns_value_list[index])
-            item_list.append(item)
-        return item_list
-
     def __createParentLine(self, parent_line_title):
         return QStandardItem(parent_line_title)
-    
-    def __insertParentLine(self, parent_line_item):
-        self.TreeViewModel.appendRow(parent_line_item)
 
     def __insertParentLineData(self, parent_line_item, item_list):
         parent_line_item.appendRow(item_list)
-        self.TreeViewModel.appendRow(parent_line_item)
 
     """
     Public methods
@@ -58,7 +46,7 @@ class DataViewerTable:
         - parent_line_item: the ID (a "QStandardItem") of the first cell of a line
         """
         parent_line_item = self.__createParentLine(parent_line_title)
-        self.__insertParentLine(parent_line_item)
+        self.insertParentLine(parent_line_item)
         return parent_line_item
 
     def insertChildrenLineData(self, parent_line_item, columns_value_list):
@@ -69,5 +57,26 @@ class DataViewerTable:
         - parent_line_item: the ID of the first cell of a line
         - columns_value_list: a list of columns values (must have the same order and length of the columns titles)
         """
-        item_list = self.__convertValuesListToItemsList(columns_value_list)
+        item_list = self.convertValuesListToItemsList(columns_value_list)
         self.__insertParentLineData(parent_line_item, item_list)
+
+    def convertValuesListToItemsList(self, columns_value_list):
+        """
+        Converts the values list to a items list.
+
+        Usually, 'items_list' may be used as 'parent_line_item'.
+        """
+        item_list = []
+        for index in range(len(columns_value_list)):
+            item = QStandardItem(str(columns_value_list[index]))
+            item.setData(columns_value_list[index])
+            item_list.append(item)
+        return item_list
+
+    def insertParentLine(self, parent_line_item):
+        """
+        Inserts a Parent Line Data.
+        
+        Usually, 'parent_line_item' may be used as 'items_list'.
+        """
+        self.TreeViewModel.appendRow(parent_line_item)

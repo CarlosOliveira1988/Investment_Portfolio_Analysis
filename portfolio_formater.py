@@ -7,6 +7,15 @@ from data_viewer_table_format import CurencyColumnType
 
 
 class PortfolioFormater:
+    """
+    This class is useful to format Portfolio DataFrames by setting:
+    - the columns order
+    - the columns types
+    - the number of columns
+
+    Arguments:
+    - portfolio_data_frame: the portfolio pandas dataframe
+    """
     def __init__(self, portfolio_data_frame):
         self.FormatedPortolioDataFrame = portfolio_data_frame
         self.__assignColumnVariables()
