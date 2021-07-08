@@ -1,9 +1,9 @@
-from data_viewer_table_format import RequiredStringColumnType
-from data_viewer_table_format import NonRequiredStringColumnType
-from data_viewer_table_format import DateColumnType
-from data_viewer_table_format import PercentageColumnType
-from data_viewer_table_format import FloatColumnType
-from data_viewer_table_format import CurencyColumnType
+from treeview_format import RequiredStringColumnType
+from treeview_format import NonRequiredStringColumnType
+from treeview_format import DateColumnType
+from treeview_format import PercentageColumnType
+from treeview_format import FloatColumnType
+from treeview_format import CurencyColumnType
 
 
 class PortfolioFormater:

@@ -2,7 +2,7 @@ import pandas as pd
 import locale
 
 
-class DataViewerValueFormat:
+class TreeviewValueFormat:
     """
     A collection of methods to format values as follows:
     - Date: 2021/06/27
@@ -40,7 +40,7 @@ class DataViewerValueFormat:
         return string_value
 
 
-class DataViewerDataFrameFormat:
+class TreeviewDataframeFormat:
     """
     A collection of methods to format data frame columns as follows:
     - Date: 2021-06-27
@@ -50,27 +50,27 @@ class DataViewerDataFrameFormat:
     - String: String
     """
     def setDateFormat(data_frame, date_column):
-        date_list = [DataViewerValueFormat.setDateFormat(date_string) for date_string in list(data_frame[date_column])]
+        date_list = [TreeviewValueFormat.setDateFormat(date_string) for date_string in list(data_frame[date_column])]
         data_frame[date_column] = date_list
 
     def setFloatFormat(data_frame, float_column):
-        float_list = [DataViewerValueFormat.setFloatFormat(float_value) for float_value in list(data_frame[float_column])]
+        float_list = [TreeviewValueFormat.setFloatFormat(float_value) for float_value in list(data_frame[float_column])]
         data_frame[float_column] = float_list
 
     def setPercentageFormat(data_frame, percentage_column):
-        percentage_list = [DataViewerValueFormat.setPercentageFormat(percentage_value) for percentage_value in list(data_frame[percentage_column])]
+        percentage_list = [TreeviewValueFormat.setPercentageFormat(percentage_value) for percentage_value in list(data_frame[percentage_column])]
         data_frame[percentage_column] = percentage_list
 
     def setCurrencyFormat(data_frame, currency_column):
-        currency_list = [DataViewerValueFormat.setCurrencyFormat(currency_value) for currency_value in list(data_frame[currency_column])]
+        currency_list = [TreeviewValueFormat.setCurrencyFormat(currency_value) for currency_value in list(data_frame[currency_column])]
         data_frame[currency_column] = currency_list
 
     def setStringFormat(data_frame, string_column):
-        string_list = [DataViewerValueFormat.setStringFormat(string_value) for string_value in list(data_frame[string_column])]
+        string_list = [TreeviewValueFormat.setStringFormat(string_value) for string_value in list(data_frame[string_column])]
         data_frame[string_column] = string_list
 
 
-class DataViewerTableColumn:
+class TreeviewColumn:
     """
     A collection of methods and attributes to format data frame columns as follows:
     - Date: 2021-06-27
@@ -91,27 +91,27 @@ class DataViewerTableColumn:
 
     def formatValue(self, value):
         if self.FormatType == 'date':
-            return DataViewerValueFormat.setDateFormat(value)
+            return TreeviewValueFormat.setDateFormat(value)
         elif self.FormatType == 'float':
-            return DataViewerValueFormat.setFloatFormat(value)
+            return TreeviewValueFormat.setFloatFormat(value)
         elif self.FormatType == 'percentage':
-            return DataViewerValueFormat.setPercentageFormat(value)
+            return TreeviewValueFormat.setPercentageFormat(value)
         elif self.FormatType == 'currency':
-            return DataViewerValueFormat.setCurrencyFormat(value)
+            return TreeviewValueFormat.setCurrencyFormat(value)
         elif self.FormatType == 'string':
-            return DataViewerValueFormat.setStringFormat(value)
+            return TreeviewValueFormat.setStringFormat(value)
 
     def formatDataFrameColumnValues(self, data_frame):
         if self.FormatType == 'date':
-            DataViewerDataFrameFormat.setDateFormat(data_frame, self.Title)
+            TreeviewDataframeFormat.setDateFormat(data_frame, self.Title)
         elif self.FormatType == 'float':
-            DataViewerDataFrameFormat.setFloatFormat(data_frame, self.Title)
+            TreeviewDataframeFormat.setFloatFormat(data_frame, self.Title)
         elif self.FormatType == 'percentage':
-            DataViewerDataFrameFormat.setPercentageFormat(data_frame, self.Title)
+            TreeviewDataframeFormat.setPercentageFormat(data_frame, self.Title)
         elif self.FormatType == 'currency':
-            DataViewerDataFrameFormat.setCurrencyFormat(data_frame, self.Title)
+            TreeviewDataframeFormat.setCurrencyFormat(data_frame, self.Title)
         elif self.FormatType == 'string':
-            DataViewerDataFrameFormat.setStringFormat(data_frame, self.Title)
+            TreeviewDataframeFormat.setStringFormat(data_frame, self.Title)
 
     def fillNaDataFrameColumnValues(self, data_frame):
         data_frame[self.Title].fillna(value=self.NaValue, inplace=True)
@@ -120,31 +120,31 @@ class DataViewerTableColumn:
         return self.Title
 
 
-class RequiredStringColumnType(DataViewerTableColumn):
+class RequiredStringColumnType(TreeviewColumn):
     def __init__(self, title):
         super(RequiredStringColumnType, self).__init__(title, 'string', 'NA')
 
 
-class NonRequiredStringColumnType(DataViewerTableColumn):
+class NonRequiredStringColumnType(TreeviewColumn):
     def __init__(self, title):
         super(NonRequiredStringColumnType, self).__init__(title, 'string', ' ')
 
 
-class DateColumnType(DataViewerTableColumn):
+class DateColumnType(TreeviewColumn):
     def __init__(self, title):
         super(DateColumnType, self).__init__(title, 'date', ' ')
 
 
-class PercentageColumnType(DataViewerTableColumn):
+class PercentageColumnType(TreeviewColumn):
     def __init__(self, title):
         super(PercentageColumnType, self).__init__(title, 'percentage', ' ')
 
 
-class FloatColumnType(DataViewerTableColumn):
+class FloatColumnType(TreeviewColumn):
     def __init__(self, title):
         super(FloatColumnType, self).__init__(title, 'float', '0.00')
 
 
-class CurencyColumnType(DataViewerTableColumn):
+class CurencyColumnType(TreeviewColumn):
     def __init__(self, title):
         super(CurencyColumnType, self).__init__(title, 'currency', '0.00')

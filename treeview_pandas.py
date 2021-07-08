@@ -1,18 +1,18 @@
-from data_viewer_window import DataViewerWindow
-from data_viewer_table import DataViewerTable
+from window import Window
+from treeview import Treeview
 
 
-class DataViewerPandas(DataViewerTable):
+class TreeviewPandas(Treeview):
     """ 
     This class provides methods and attributes to show Pandas DataFrames in a table.
 
     Arguments:
-    - DataViewerWindow: the 'DataViewerWindow' window object
+    - CentralWidget: the widget where the table will be placed
     - PandasDataFrame: the pandas dataframe
     """
-    def __init__(self, DataViewerWindow, PandasDataFrame):
+    def __init__(self, CentralWidget, PandasDataFrame):
         self.PandasDataFrame = PandasDataFrame
-        super().__init__(DataViewerWindow, list(self.PandasDataFrame))
+        super().__init__(CentralWidget, list(self.PandasDataFrame))
 
     def showPandas(self):
         for line_data_row in self.PandasDataFrame.itertuples(index=False):
@@ -21,13 +21,13 @@ class DataViewerPandas(DataViewerTable):
             self.insertParentLine(items_list)
 
 
-# Example of how to use the "DataViewerPandas" class
+# Example of how to use the "TreeviewPandas" class
 if __name__ == "__main__":
 
     # Define the constants
-    SOURCE_FILE_DIRECTORY = r'D:\Dudu\Finanças\Investimentos\Mercado Financeiro'
-    FILE_NAME = r'\Poupanca_one_tab.xlsx'
-    FILE_SHEET = r'Saldo Custódia RICO'
+    SOURCE_FILE_DIRECTORY = r'D:\Dudu\Finanças\Investimentos\Mercado Financeiro\Investment_Portfolio_Analysis'
+    FILE_NAME = r'\PORTFOLIO_TEMPLATE.xlsx'
+    FILE_SHEET = r'Extrato'
     FILE = SOURCE_FILE_DIRECTORY + FILE_NAME
 
     # Creates the application
@@ -37,17 +37,17 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
     # Creates the data viewer window
-    data_viewer_window = DataViewerWindow('Testing Pandas Data Viewer')
+    window = Window('Testing Pandas Data Viewer')
 
     # Creates the pandas dataframe
     pandas_dataframe = readOperations(FILE)
 
     # Creates the pandas data viewer
-    pandas_data_viewer = DataViewerPandas(data_viewer_window, pandas_dataframe)
+    pandas_data_viewer = TreeviewPandas(window.getCentralWidget(), pandas_dataframe)
     pandas_data_viewer.showPandas()
 
-    # Shows the "DataViewerWindow" object
-    data_viewer_window.showMaximized()
+    # Shows the "Window" object
+    window.showMaximized()
 
     # Ends the application when everything is closed
     sys.exit(app.exec_())
