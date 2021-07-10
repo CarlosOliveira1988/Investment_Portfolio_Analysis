@@ -2,10 +2,11 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
-
-
 import matplotlib.pyplot as plt     #Importação da biblioteca Matplotlib
+import pandas_datareader.data as web
+import yfinance as yf
 
+yf.pdr_override()
 
 SOURCE_FILE_DIRECTORY = r"C:\Users\Fred\Documents\GitHub\Investment_Portfolio_Analysis"
 FILE_NAME = "\Extrato_Fred.xlsx"
@@ -195,6 +196,21 @@ def avgPriceTicker(file, ticker):
     return avgPrice, numberStocks
 
 
+
+def currentMarketPriceByTicker(ticker):
+    """
+    Returns the last price of the stock.
+
+    I had issues when downloading data for Fundos imobiliários. It was necessary to work with period of 30d.
+    I believe that is mandatory period or start/end date. With start/end I also had issues for reading the values.
+    The solution was to consider "30d" as the period. I compared the results from function in Google and they were correct.
+    """
+    data = yf.download(ticker, period = "30d")
+    data = data['Adj Close'].tail(1)
+    return float(data)
+    
+
+
 def currentWallet(file):
     """
     Analyzes the operations to get the current wallet. 
@@ -216,8 +232,11 @@ def currentWallet(file):
     
     wallet["Quantidade"] = ""           #Creates a blank column
     wallet["Preço médio"] = ""          #Creates a blank column
-    wallet["Preço pago"] = ""          #Creates a blank column
-    wallet["Proventos"] = ""          #Creates a blank column
+    wallet["Cotação"] = ""              #Creates a blank column
+    wallet["Preço pago"] = ""           #Creates a blank column
+    wallet["Preço mercado"] = ""        #Creates a blank column
+    wallet["Proventos"] = ""            #Creates a blank column
+    wallet["Resultado liquido"] = ""            #Creates a blank column
 
 
 
@@ -232,10 +251,19 @@ def currentWallet(file):
         else:
             wallet.at[index, "Quantidade"]= int(numberStocks)
             wallet.at[index, "Preço médio"] = avgPrice
+            #Modifies the name of the ticker so Yahoo Finance can understand
+            newTicker = row["Ticker"]+".SA"
+            wallet.at[index, "Cotação"] = currentMarketPriceByTicker(newTicker )
+            
             wallet.at[index, "Proventos"] = earningsByTicker(file, row["Ticker"])
-    
+
+
     #Calculates the price according with the average price
     wallet["Preço pago"] = wallet["Quantidade"] * wallet["Preço médio"]
+    #Calculates the price according with the current market value
+    wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
+    #Calculates the liquid result of the ticker
+    wallet["Resultado liquido"] =  wallet["Preço mercado"] + wallet["Proventos"] - wallet["Preço pago"]
 
     return wallet
 
@@ -248,7 +276,16 @@ def currentWallet(file):
     #print(wallet)
 
 
+
+
+
 print(currentWallet(file))
+
+
+#currentMarketPriceByTicker(ticker)
+#print(price)
+
+
 
 # dropping ALL duplicte values
 #data.drop_duplicates(subset ="First Name",
