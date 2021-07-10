@@ -1,6 +1,8 @@
 name: Pylint
 
-on: [push]
+on:
+  push:
+    branches: [cezaroliveira-patch-1]
 
 jobs:
   build:
