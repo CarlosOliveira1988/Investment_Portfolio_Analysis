@@ -210,6 +210,18 @@ def currentMarketPriceByTicker(ticker):
     return float(data)
     
 
+def sectorOfTicker(ticker):
+    """
+    Returns the sector of a given ticker
+
+    The function uses the yfinance library to get the information.
+    """
+
+    ticker = ticker + ".SA"
+    data = yf.Ticker(ticker)
+    return data.info['sector'] 
+    
+
 
 def currentWallet(file):
     """
@@ -229,15 +241,15 @@ def currentWallet(file):
     wallet["Mercado"] = table["Mercado"]
     #Sort the data by market and ticker
     wallet = wallet.sort_values(by=["Mercado", "Ticker"])
-    
+    wallet["Setor"] = ""                #Creates a blank column
     wallet["Quantidade"] = ""           #Creates a blank column
     wallet["Preço médio"] = ""          #Creates a blank column
     wallet["Cotação"] = ""              #Creates a blank column
     wallet["Preço pago"] = ""           #Creates a blank column
     wallet["Preço mercado"] = ""        #Creates a blank column
     wallet["Proventos"] = ""            #Creates a blank column
-    wallet["Resultado liquido"] = ""            #Creates a blank column
-
+    wallet["Resultado liquido"] = ""    #Creates a blank column
+    wallet["Porcentagem"] = ""          #Creates a blank column
 
 
     #Calculate of the quantity of all non duplicate tickers
@@ -249,12 +261,13 @@ def currentWallet(file):
             wallet = wallet.drop([index])
         #If non zero, keeps the ticker and updates the quantity and the average price.    
         else:
+            wallet.at[index, "Setor"]= sectorOfTicker(row["Ticker"])
             wallet.at[index, "Quantidade"]= int(numberStocks)
             wallet.at[index, "Preço médio"] = avgPrice
-            #Modifies the name of the ticker so Yahoo Finance can understand
+            #Modifies the name of the ticker so Yahoo Finance can understand. Yahoo Finance adds the ".SA" to the ticker name.
             newTicker = row["Ticker"]+".SA"
             wallet.at[index, "Cotação"] = currentMarketPriceByTicker(newTicker )
-            
+            #Calculates the earnings by ticket
             wallet.at[index, "Proventos"] = earningsByTicker(file, row["Ticker"])
 
 
@@ -264,6 +277,24 @@ def currentWallet(file):
     wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
     #Calculates the liquid result of the ticker
     wallet["Resultado liquido"] =  wallet["Preço mercado"] + wallet["Proventos"] - wallet["Preço pago"]
+
+    #Filter the stocks
+    walletStock = wallet[wallet["Mercado"]== "Ações"]
+    #Calculates the market value of stocks
+    marketValueStock = walletStock["Preço mercado"].sum()
+    #Filter the FIIs
+    walletFII = wallet[wallet["Mercado"]== "FII"]
+    #Calculates the market value of FIIs
+    marketValueFII = walletFII["Preço mercado"].sum()
+    
+    #Calculates the percentage of stocks and FIIs in the wallet
+    for index, row in wallet.iterrows():
+        if row["Mercado"] == "Ações":
+            wallet.at[index, "Porcentagem"] = 100 * row["Preço mercado"] / marketValueStock
+        elif row["Mercado"] == "FII":
+            wallet.at[index, "Porcentagem"] = 100 * row["Preço mercado"] / marketValueFII
+    
+
 
     return wallet
 
@@ -277,10 +308,14 @@ def currentWallet(file):
 
 
 
+#print(currentWallet(file))
+carteira = currentWallet(file)
+carteira.to_excel('data.xlsx')
 
 
-print(currentWallet(file))
 
+#ticker = "EGIE3"
+#print(sectorOfTicker(ticker))
 
 #currentMarketPriceByTicker(ticker)
 #print(price)
