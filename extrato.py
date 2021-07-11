@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime
 
 
-import matplotlib.pyplot as plt     #Importação da biblioteca Matplotlib
+import matplotlib.pyplot as plt  # Importação da biblioteca Matplotlib
 
 
 SOURCE_FILE_DIRECTORY = r"C:\Users\Fred\source\repos\Investment_Portfolio_Analysis"
@@ -13,17 +13,17 @@ FILE_NAME = "\Extrato_Fred.xlsx"
 file = SOURCE_FILE_DIRECTORY+FILE_NAME
 
 
-def readOperations (file):
+def readOperations(file):
     """
     Reads the Excel file with all the operations.
-    
+
     Returns the a data frame containing the full table.
     """
     fullTable = pd.read_excel(file)
     return fullTable
 
 
-def overallTaxAndIncomes (file):
+def overallTaxAndIncomes(file):
     """
     Reads the Excel file with all the operations.
 
@@ -38,45 +38,46 @@ def overallTaxAndIncomes (file):
     return fee, incomeTax, dividend, jcp
 
 
-def filteredTable (file,ticker):
+def filteredTable(file, ticker):
     """
     Reads the Excel file with all the operations.
 
     Returns a filtered table according to the ticker.
     """
     table = readOperations(file)
-    filter = table[table["Ticker"]==ticker]
+    filter = table[table["Ticker"] == ticker]
     return filter
-    
 
-def unitsTicker(file,ticker):
+
+def unitsTicker(file, ticker):
     """
     Returns how many stocks of the given ticker.
     """
-    table = filteredTable(file,TICKER)              #Filter the table by ticker
-    buy = table[table["Operação"]=="Compra"]        #Filter the table by buy operation
-    buy = int(buy["Quantidade"].sum())              #Calculates the number of units bought
-    sell = table[table["Operação"]=="Venda"]        #Filter the table by sell operation
-    sell = int(sell["Quantidade"].sum())            #Calculates the number of units sold
-    
+    table = filteredTable(file, TICKER)  # Filter the table by ticker
+    # Filter the table by buy operation
+    buy = table[table["Operação"] == "Compra"]
+    buy = int(buy["Quantidade"].sum())  # Calculates the number of units bought
+    # Filter the table by sell operation
+    sell = table[table["Operação"] == "Venda"]
+    sell = int(sell["Quantidade"].sum())  # Calculates the number of units sold
+
     return buy, sell, buy-sell
 
 
-def tesouroSelic (file):
+def tesouroSelic(file):
     """
     Reads the Excel file with all the operations
 
     Return all operations in Tesouro SELIC
     """
     table = readOperations(file)
-    table = table[table["Mercado"]=="Tesouro Direto"]
-    table = table[table["Indexador"]=="SELIC"]
+    table = table[table["Mercado"] == "Tesouro Direto"]
+    table = table[table["Indexador"] == "SELIC"]
     #filtered = table[table["Mercado"]=="Tesouro Direto"]
     return table
 
 
-
-def customTable (file, ticker, market, dueDate, profitability, index, operation):
+def customTable(file, ticker, market, dueDate, profitability, index, operation):
     """
     Reads the Excel file with all the operations.
 
@@ -96,25 +97,23 @@ def customTable (file, ticker, market, dueDate, profitability, index, operation)
     if operation != "all":
         table = table[table["Operação"] == operation]
     return table
-    
 
 
-def customTableDate (file, ticker, market, dueDate, profitability, index, operation, startDate, endDate):
+def customTableDate(file, ticker, market, dueDate, profitability, index, operation, startDate, endDate):
     """
     Reads the Excel file with all the operations.
 
     Returns a filtered dataframe according with the desired parameters and a certain time range.
     """
 
-    table = customTable(file, ticker, market, dueDate, profitability, index, operation)
+    table = customTable(file, ticker, market, dueDate,
+                        profitability, index, operation)
     table = table[table["Data"] >= startDate]
     table = table[table["Data"] <= endDate]
     return table
 
 
-
-
-def numberOperationsYear (file):
+def numberOperationsYear(file):
     """
     Reads the Excel file with all the operations.
 
@@ -123,46 +122,42 @@ def numberOperationsYear (file):
 
     table = readOperations(file)
 
-    firstYear = table["Data"].min()     #Calculate the year of the first operation
-    lastYear = table["Data"].max()      #Calculate the yar of the last operation
-    
-    #Create the empy lists
+    # Calculate the year of the first operation
+    firstYear = table["Data"].min()
+    lastYear = table["Data"].max()  # Calculate the yar of the last operation
+
+    # Create the empy lists
     listYear = []
     listBuy = []
     listSell = []
-    janFirst = '-01-01'     #Auxiliary variable to create the first date of the year
-    decLast = '-12-31'      #Auxiliary variable to create the last date of the year
-    
-    #Collect the number of operations per year
+    janFirst = '-01-01'  # Auxiliary variable to create the first date of the year
+    decLast = '-12-31'  # Auxiliary variable to create the last date of the year
+
+    # Collect the number of operations per year
     for i in range(firstYear.year, lastYear.year+1):
         start = str(i) + janFirst
         end = str(i) + decLast
-        #Get filtered table according to the year
-        filtered = table[ (table["Data"] >= start) & (table["Data"] <= end) ]
-        filteredBuy = filtered[ (filtered["Operação"] == "Compra") ]
-        filteredSell = filtered[ (filtered["Operação"] == "Venda")]
-        #Add the values in the lists
+        # Get filtered table according to the year
+        filtered = table[(table["Data"] >= start) & (table["Data"] <= end)]
+        filteredBuy = filtered[(filtered["Operação"] == "Compra")]
+        filteredSell = filtered[(filtered["Operação"] == "Venda")]
+        # Add the values in the lists
         listYear.append(i)
         listBuy.append(len(filteredBuy.index))
         listSell.append(len(filteredSell.index))
-    
-    return listYear, listBuy, listSell   
-    
 
+    return listYear, listBuy, listSell
 
 
 #width = 0.3
 #ax = plt.figure()
 #plt.bar(a , b, label='Buy', width=width)
 #lt.bar(a , c , label='Sell', width=width)
-#plt.legend(title='Legenda')
-#lt.grid()
-#plt.show()
+# plt.legend(title='Legenda')
+# lt.grid()
+# plt.show()
 
 #customTable (file, "all", "FII", "NA", "NA", "all", "Compra")
-#print(overallTaxAndIncomes(file))
-#a,b,c=units(file,TICKER)
-#filteredTable(file,TICKER)
-
-
-
+# print(overallTaxAndIncomes(file))
+# a,b,c=units(file,TICKER)
+# filteredTable(file,TICKER)

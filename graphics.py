@@ -3,17 +3,16 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
-import matplotlib.pyplot as plt     #Importação da biblioteca Matplotlib
+import matplotlib.pyplot as plt  # Importação da biblioteca Matplotlib
 
 #from extrato import numberOperationsYear
-from extrato import * 
-
+from extrato import *
 
 
 from urllib.request import urlopen
 
 ###############################################################################################
-#Definitions
+# Definitions
 SOURCE_FILE_DIRECTORY = r"C:\Users\Fred\source\repos\Investment_Portfolio_Analysis"
 FILE_NAME = "\Extrato_Fred.xlsx"
 
@@ -21,22 +20,21 @@ file = SOURCE_FILE_DIRECTORY+FILE_NAME
 
 
 ###############################################################################################
-#Tests
-#https://statusinvest.com.br/acoes/itsa4
+# Tests
+# https://statusinvest.com.br/acoes/itsa4
 
 #link = "https://statusinvest.com.br/acoes/itsa4"
 #f = urlopen(link)
 #myfile = f.read()
-#print(myfile)
+# print(myfile)
 
 #date1 = "2019-01-01"
 #date2 = "2020-12-31"
 #customTableDate (file, "all", "FII", "NA", "NA", "all", "Compra", date1, date2)
 
 
-
 ##############################################################
-#Teste para plotar a função numberOperationsYear
+# Teste para plotar a função numberOperationsYear
 date, buy, sell = numberOperationsYear(file)
 
 x = np.arange(len(date))
