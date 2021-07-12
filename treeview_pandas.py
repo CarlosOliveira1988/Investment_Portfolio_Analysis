@@ -14,21 +14,21 @@ class TreeviewPandas(Treeview):
         self.PandasDataFrame = PandasDataFrame
         super().__init__(CentralWidget, list(self.PandasDataFrame))
 
-    def showPandas(self):
+    def showPandas(self, resize_per_contents=True):
         for line_data_row in self.PandasDataFrame.itertuples(index=False):
             line_data_row_list = list(line_data_row)
             items_list = self.convertValuesListToItemsList(line_data_row_list)
             self.insertParentLine(items_list)
+            if resize_per_contents:
+                self.resizeColumnsToContents()
 
 
 # Example of how to use the "TreeviewPandas" class
 if __name__ == "__main__":
 
     # Define the constants
-    SOURCE_FILE_DIRECTORY = r'D:\Dudu\Finanças\Investimentos\Mercado Financeiro\Investment_Portfolio_Analysis'
-    FILE_NAME = r'\PORTFOLIO_TEMPLATE.xlsx'
+    FILE_NAME = '\PORTFOLIO_TEMPLATE.xlsx'
     FILE_SHEET = r'Extrato'
-    FILE = SOURCE_FILE_DIRECTORY + FILE_NAME
 
     # Creates the application
     import sys
@@ -36,11 +36,21 @@ if __name__ == "__main__":
     from extrato import readOperations
     app = QtWidgets.QApplication(sys.argv)
 
+    # Get the path of the main folder 'Investment_Portfolio_Analysis'
+    def getMainPath():
+        main_file_path = None
+        file_path_list = sys.path
+        for path_item in file_path_list:
+            if '\Investment_Portfolio_Analysis' in path_item:
+                main_file_path = path_item
+        return main_file_path
+
     # Creates the data viewer window
     window = Window('Testing Pandas Data Viewer')
 
     # Creates the pandas dataframe
-    pandas_dataframe = readOperations(FILE)
+    source_file_directory = getMainPath()
+    pandas_dataframe = readOperations(source_file_directory + FILE_NAME)
 
     # Creates the pandas data viewer
     pandas_data_viewer = TreeviewPandas(window.getCentralWidget(), pandas_dataframe)

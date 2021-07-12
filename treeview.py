@@ -123,7 +123,7 @@ class Treeview:
             self.TreeView.resizeColumnToContents(column_index)
 
 
-# Example of how to use the "TreeviewPandas" class
+# Example of how to use the "Treeview" class
 if __name__ == "__main__":
 
     # Creates the application

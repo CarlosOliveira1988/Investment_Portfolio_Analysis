@@ -11,9 +11,15 @@ class MainWindow(Window):
         super().__init__('Investment Portfolio Analysis')
         self.PortfolioViewerManager = PortfolioViewerManager(portolio_dataframe)
         self.PortfolioViewerWidget = PortfolioViewerWidget(self.getCentralWidget(), self.PortfolioViewerManager.getColumnsTitleList())
+        self.__initTreeviewData()
+
+    def __initTreeviewData(self):
         self.Treeview = self.PortfolioViewerWidget.getTreeview()
         self.__insertTreeviewParentLines()
         self.__insertTreeviewChildrenLines()
+        self.Treeview.expandParentLines()
+        self.Treeview.resizeColumnsToContents()
+        self.Treeview.collapseParentLines()
 
     def __insertTreeviewParentLines(self):
         self.TreeviewParentLinesDictionary = {}
@@ -34,19 +40,27 @@ class MainWindow(Window):
 if __name__ == "__main__":
 
     # Define the constants
-    SOURCE_FILE_DIRECTORY = r'D:\Dudu\Finanças\Investimentos\Mercado Financeiro\Investment_Portfolio_Analysis'
-    FILE_NAME = r'\PORTFOLIO_TEMPLATE.xlsx'
+    FILE_NAME = '\PORTFOLIO_TEMPLATE.xlsx'
     FILE_SHEET = r'Extrato'
-    FILE = SOURCE_FILE_DIRECTORY + FILE_NAME
 
     # Creates the application
-    from PyQt5 import QtWidgets
     import sys
-    import pandas as pd
+    from PyQt5 import QtWidgets
+    from extrato import readOperations
     app = QtWidgets.QApplication(sys.argv)
 
+    # Get the path of the main folder 'Investment_Portfolio_Analysis'
+    def getMainPath():
+        main_file_path = None
+        file_path_list = sys.path
+        for path_item in file_path_list:
+            if '\Investment_Portfolio_Analysis' in path_item:
+                main_file_path = path_item
+        return main_file_path
+
     # Creates the dataframe
-    portolio_dataframe = pd.read_excel(FILE, sheet_name=FILE_SHEET)
+    source_file_directory = getMainPath()
+    portolio_dataframe = readOperations(source_file_directory + FILE_NAME)
 
     # Creates and shows the "MainWindow" object
     main = MainWindow(portolio_dataframe)

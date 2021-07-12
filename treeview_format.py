@@ -18,21 +18,21 @@ class TreeviewValueFormat:
             return date_string
 
     def setFloatFormat(float_value):
-        if isinstance(float_value, float):
-            return '{0:.2f}'.format(float_value)
+        if isinstance(float_value, float) or isinstance(float_value, int):
+            return '{0:.2f}'.format(float(float_value))
         else:
             return float_value
 
     def setPercentageFormat(percentage_value):
-        if isinstance(percentage_value, float):
-            return '{0:.2f}%'.format(percentage_value*100)
+        if isinstance(percentage_value, float) or isinstance(percentage_value, int):
+            return '{0:.2f}%'.format(float(percentage_value)*100)
         else:
             return percentage_value
 
     def setCurrencyFormat(currency_value):
         locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
-        if isinstance(currency_value, float):
-            return locale.currency(currency_value, grouping=True)
+        if isinstance(currency_value, float) or isinstance(currency_value, int):
+            return locale.currency(float(currency_value), grouping=True)
         else:
             return currency_value
 

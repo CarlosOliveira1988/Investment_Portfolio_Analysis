@@ -21,8 +21,8 @@ class InterestCalculation:
     def setDividedRatesBy100(self, divide_rates_by_100):
         """
         Sets the value of the 'divide_rates_by_100' flag.
-        - False: '6.02 (%)' is represented by the float '0.0602'
-        - True:  '6.02 (%)' is represented by the float '6.02'
+        - False: the value '6.02 (%)' is represented by the float '0.0602'
+        - True:  the value '6.02 (%)' is represented by the float '6.02'
         """
         self.__divide_rates_by_100 = divide_rates_by_100
 
@@ -35,6 +35,7 @@ class InterestCalculation:
     def calculateInterestValueByValues(self, initial_value, final_value):
         """
         Calculates the total interest value based on 'initial' and 'final' values.
+        Basically, returns the difference between the 'final' and 'initial' values.
 
         Arguments:
         - initial_value(float)
@@ -49,7 +50,8 @@ class InterestCalculation:
         Arguments:
         - interest_rate_list(float): a list of interest rates
         - initial_value(float): the initial value
-        - divide_rates_by_100(boolean): if TRUE: 0.62% -> 0.0062 / if FALSE: 0.62% -> 0.62
+        
+        Note related to the 'divide_rates_by_100' flag: if TRUE: 0.62% -> 0.0062 / if FALSE: 0.62% -> 0.62
         """
         total_interest_value = initial_value
         for interest_rate in interest_rate_list:
@@ -67,7 +69,8 @@ class InterestCalculation:
         Arguments:
         - initial_value(float)
         - final_value(float)
-        - multiply_rates_by_100(boolean): if TRUE: 0.62 -> 62.00% / if FALSE: 0.62 -> 0.62%
+
+        Note related to the 'divide_rates_by_100' flag: if TRUE: 0.62 -> 62.00% / if FALSE: 0.62 -> 0.62%
         """
         total_interest_rate = self.calculateInterestValueByValues(initial_value, final_value) / initial_value
         if self.__divide_rates_by_100:
@@ -81,16 +84,9 @@ class InterestCalculation:
         Arguments:
         - interest_rate_list(float): a list of interest rates
         - initial_value(float): the initial value
-        - divide_rates_by_100(boolean): if TRUE: 0.62% -> 0.0062 / if FALSE: 0.62% -> 0.62
+
+        Note related to the 'divide_rates_by_100' flag: if TRUE: 0.62% -> 0.0062 / if FALSE: 0.62% -> 0.62
         """
         final_value = self.calculateInterestValue(interest_rate_list, initial_value)
         total_interest_rate = self.calculateInterestRateByValues(initial_value, final_value)
         return total_interest_rate
-
-"""
-    TO DO LIST: finish the conversion from 'Investment_Portfolio_Analysis.py' file:
-        convertMonthlyInterestRateListToTable()
-        cutMonthlyInterestRateTable()
-        convertMonthlyInterestRateTableToList()
-        calcTotalProfitValuesFromDate()
-"""

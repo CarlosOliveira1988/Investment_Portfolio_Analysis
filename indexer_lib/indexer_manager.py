@@ -7,7 +7,7 @@ class IndexerManager:
     This class is useful to manipulate the 'indexer' Excel files, in order to provide information
     related to some Economic Indexers (such as IPCA, etc).
 
-    The 'interest rate' data (%) exported by this class is outputed in the following format:
+    The 'interest rate' data (%) imported by this class is inputed in the following format:
     -  0.62% --> 0.62
     - 10.51% --> 10.51
 
@@ -37,6 +37,7 @@ class IndexerManager:
         self.__createPeriodVariables()
         self.__createFileVariables(FileName)
         self.__createDataframes()
+        self.__divideInterestValuesPer100()
         self.__setInitialFinalPeriods()
 
     """
@@ -100,6 +101,11 @@ class IndexerManager:
         self.__OriginalDataframe = self.__setOriginalColumnFormat(self.__OriginalDataframe)
         self.__StackedDataframe = self.__setStackedColumnFormat(self.__OriginalDataframe)
     
+    def __divideInterestValuesPer100(self):
+        for month in IndexerManager.MONTHS_LIST:
+            self.__OriginalDataframe[month] /= 100
+        self.__StackedDataframe[IndexerManager.STACKED_MONTHLY_INTEREST_COLUMN] /= 100
+
     def __setInitialFinalPeriods(self):
         year_list = list(self.__StackedDataframe[IndexerManager.STACKED_YEAR_COLUMN])
         self.__InitialYear = year_list[0]
@@ -113,12 +119,21 @@ class IndexerManager:
     """
     def getDataframe(self, stacked=True):
         """
-        Returns the dataframe related to the data series, in 'original' or 'stacked'(default) format
+        Returns the dataframe related to the data series, in 'original' or 'stacked' (default) format
+
+        - Original Format: 13 columns ('Ano', 'Janeiro', 'Fevereiro', ..., 'Dezembro'), where:
+          > 'Ano': all available years in the data series (2000, 2001, etc)
+          > 'Janeiro' to 'Dezembro': the interest rates per month
+        
+        - Stacked Format: 3 columns ('Ano', 'Mês', 'Taxa Mensal'), where:
+          > 'Ano': all available years in the data series (2000, 2001, etc)
+          > 'Mês': all available months in the data series ('Janeiro', 'Fevereiro', etc)
+          > 'Taxa Mensal': the interest rates per month
         """
         if stacked:
             return self.__StackedDataframe
         else:
-            self.__OriginalDataframe
+            return self.__OriginalDataframe
     
     def getFileName(self):
         """
@@ -126,14 +141,23 @@ class IndexerManager:
         """
         return self.__FileName
     
-    def getSeriesInitialPeriod(self):
+    def getSeriesInitialPeriod(self, month_as_string=True):
         """
-        Returns the initial period related to the available data series
+        Returns the initial period (Year and Month) related to the available data series
+
+        If 'month_as_string' is 'True', return 'Janeiro', 'Fevereiro', etc.
+        If 'month_as_string' is 'False', return '1', '2', etc.
         """
-        return self.__InitialYear, self.__InitialMonth
+        if month_as_string:
+            return self.__InitialYear, self.__InitialMonth
+        else:
+            return self.__InitialYear, (self.__MonthsList.index(self.__InitialMonth)+1)
     
-    def getSeriesFinalPeriod(self):
+    def getSeriesFinalPeriod(self, month_as_string=True):
         """
-        Returns the final period related to the available data series
+        Returns the final period (Year and Month) related to the available data series
         """
-        return self.__FinalYear, self.__FinalMonth
+        if month_as_string:
+            return self.__FinalYear, self.__FinalMonth
+        else:
+            return self.__FinalYear, (self.__MonthsList.index(self.__FinalMonth)+1)

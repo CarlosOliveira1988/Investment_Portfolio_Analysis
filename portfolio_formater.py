@@ -40,9 +40,10 @@ class PortfolioFormater:
         self.TotalPrice = CurencyColumnType('Preço Total')
         self.Fees = CurencyColumnType('Taxas')
         self.IncomeTax = CurencyColumnType('IR')
+        self.Divided = CurencyColumnType('Dividendos')
+        self.Jcp = CurencyColumnType('JCP')
         self.TotalCost = CurencyColumnType('Custo Total')
-        self.NetValue = CurencyColumnType('Líquido Total')
-        self.Goal = NonRequiredStringColumnType('Objetivo')
+        self.Notes = NonRequiredStringColumnType('Notas')
         self.ColumnsVariableList = []
 
     def __appendColumnsVariableList(self):
@@ -58,9 +59,10 @@ class PortfolioFormater:
         self.ColumnsVariableList.append('TotalPrice')
         self.ColumnsVariableList.append('Fees')
         self.ColumnsVariableList.append('IncomeTax')
+        self.ColumnsVariableList.append('Divided')
+        self.ColumnsVariableList.append('Jcp')
         self.ColumnsVariableList.append('TotalCost')
-        self.ColumnsVariableList.append('NetValue')
-        self.ColumnsVariableList.append('Goal')
+        self.ColumnsVariableList.append('Notes')
 
     def __fillNaValues(self):
         for column_variable_string in self.ColumnsVariableList:
