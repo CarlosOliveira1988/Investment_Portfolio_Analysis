@@ -175,7 +175,9 @@ def avgPriceTicker(file, ticker):
     #It is important because non filled cells will return NaN, which will cause calculation issues.
     table = table.fillna(0)
 
+    avgPrice = 0
     avgPriceOld = 0
+    qtStock = 0
     qtStockOld = 0
     costs = 0
     for index,row in table.iterrows():
@@ -339,3 +341,52 @@ def currentWallet(file):
 
       
     
+    #Creates the wallet dataframe
+    #wallet = pd.DataFrame()
+    #wallet["Ativos"] = table
+    #wallet["Mercado"] = ""
+    #print(wallet)
+
+
+
+print(currentWallet(file))
+#carteira = currentWallet(file)
+#carteira.to_excel('data.xlsx')
+
+
+
+
+
+#ticker = "PETR4"
+#market = "Ações"
+#print(sectorOfTicker(ticker))
+
+#currentMarketPriceByTicker(ticker)
+#print(price)
+
+#print(currentMarketPriceByTickerWebScrappingStatusInvest(ticker, market))
+
+
+#ticker = "TESTE11"
+#avgPriceTicker, number = avgPriceTicker(file, ticker)
+#print("Preço médio de", ticker, "é:", avgPriceTicker)
+#print("Quandidade de", ticker, "é:", number)
+
+
+
+
+#width = 0.3
+#ax = plt.figure()
+#plt.bar(a , b, label='Buy', width=width)
+#lt.bar(a , c , label='Sell', width=width)
+#plt.legend(title='Legenda')
+#lt.grid()
+#plt.show()
+
+#customTable (file, "all", "FII", "NA", "NA", "all", "Compra")
+#print(overallTaxAndIncomes(file))
+#a,b,c=units(file,TICKER)
+#filteredTable(file,TICKER)
+
+
+
