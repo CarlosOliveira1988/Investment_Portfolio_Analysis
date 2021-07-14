@@ -6,6 +6,11 @@ import matplotlib.pyplot as plt     #Importação da biblioteca Matplotlib
 import pandas_datareader.data as web
 import yfinance as yf
 
+#Libraries for web scrapping
+import requests
+from bs4 import BeautifulSoup
+from urllib.request import urlopen
+
 yf.pdr_override()
 
 SOURCE_FILE_DIRECTORY = r"C:\Users\Fred\Documents\GitHub\Investment_Portfolio_Analysis"
@@ -210,6 +215,35 @@ def currentMarketPriceByTicker(ticker):
     return float(data)
     
 
+def currentMarketPriceByTickerWebScrappingStatusInvest(ticker, market):
+    """
+    Returns the last price of the stock from website Status Invest.
+
+    Sucessive requests have taken about 10s to get processed.
+    """
+    #Prepares the correct URL
+    if market == "Ações":
+        url = "https://statusinvest.com.br/acoes/"
+    elif market == "FII":
+        url = "https://statusinvest.com.br/fundos-imobiliarios/"
+    elif market == "ETF":
+        url = "https://statusinvest.com.br/etfs/"
+    
+    #Adds the ticket to the URL for search
+    url += ticker
+    #Get information from URL
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    #Get the current value from ticker
+    value = soup.find(class_='value').get_text()
+    #Replace the comma to point in order to transform the string in a number.
+    value = value.replace(',','.')
+    
+    return float(value)
+
+
+
+
 def sectorOfTicker(ticker):
     """
     Returns the sector of a given ticker
@@ -227,10 +261,10 @@ def currentWallet(file):
     """
     Analyzes the operations to get the current wallet. 
 
-    Return a dataframe containing the current wallet stocks.
+    Return a dataframe containing the current wallet stocks/FIIs.
     """
     table = readOperations(file)
-    table = table[ (table["Mercado"]== "Ações") | (table["Mercado"]== "FII")]
+    table = table[ (table["Mercado"]== "Ações") | (table["Mercado"]== "ETF") | (table["Mercado"]== "FII")]
     
     table.drop_duplicates(subset ="Ticker", keep = 'first', inplace = True)
     
@@ -267,6 +301,7 @@ def currentWallet(file):
             #Modifies the name of the ticker so Yahoo Finance can understand. Yahoo Finance adds the ".SA" to the ticker name.
             newTicker = row["Ticker"]+".SA"
             wallet.at[index, "Cotação"] = currentMarketPriceByTicker(newTicker )
+
             #Calculates the earnings by ticket
             wallet.at[index, "Proventos"] = earningsByTicker(file, row["Ticker"])
 
@@ -282,6 +317,10 @@ def currentWallet(file):
     walletStock = wallet[wallet["Mercado"]== "Ações"]
     #Calculates the market value of stocks
     marketValueStock = walletStock["Preço mercado"].sum()
+    #Filter the ETFs
+    walletETF = wallet[wallet["Mercado"]== "ETF"]
+    #Calculates the market value of ETFs
+    marketValueETF = walletETF["Preço mercado"].sum()
     #Filter the FIIs
     walletFII = wallet[wallet["Mercado"]== "FII"]
     #Calculates the market value of FIIs
@@ -291,62 +330,12 @@ def currentWallet(file):
     for index, row in wallet.iterrows():
         if row["Mercado"] == "Ações":
             wallet.at[index, "Porcentagem"] = 100 * row["Preço mercado"] / marketValueStock
+        elif row["Mercado"] == "ETF":
+            wallet.at[index, "Porcentagem"] = 100 * row["Preço mercado"] / marketValueETF
         elif row["Mercado"] == "FII":
             wallet.at[index, "Porcentagem"] = 100 * row["Preço mercado"] / marketValueFII
     
-
-
     return wallet
 
       
     
-    #Creates the wallet dataframe
-    #wallet = pd.DataFrame()
-    #wallet["Ativos"] = table
-    #wallet["Mercado"] = ""
-    #print(wallet)
-
-
-
-#print(currentWallet(file))
-carteira = currentWallet(file)
-carteira.to_excel('data.xlsx')
-
-
-
-#ticker = "EGIE3"
-#print(sectorOfTicker(ticker))
-
-#currentMarketPriceByTicker(ticker)
-#print(price)
-
-
-
-# dropping ALL duplicte values
-#data.drop_duplicates(subset ="First Name",
-#                     keep = False, inplace = True)
-
-
-#ticker = "TESTE11"
-#avgPriceTicker, number = avgPriceTicker(file, ticker)
-#print("Preço médio de", ticker, "é:", avgPriceTicker)
-#print("Quandidade de", ticker, "é:", number)
-
-
-
-
-#width = 0.3
-#ax = plt.figure()
-#plt.bar(a , b, label='Buy', width=width)
-#lt.bar(a , c , label='Sell', width=width)
-#plt.legend(title='Legenda')
-#lt.grid()
-#plt.show()
-
-#customTable (file, "all", "FII", "NA", "NA", "all", "Compra")
-#print(overallTaxAndIncomes(file))
-#a,b,c=units(file,TICKER)
-#filteredTable(file,TICKER)
-
-
-
