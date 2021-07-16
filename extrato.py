@@ -269,7 +269,6 @@ def sectorOfTicker(ticker):
     return data.info['sector'] 
     
 
-
 def currentWallet(file):
     """
     Analyzes the operations to get the current wallet. 
@@ -298,7 +297,6 @@ def currentWallet(file):
     wallet["Resultado liquido"] = ""    #Creates a blank column
     wallet["Porcentagem"] = ""          #Creates a blank column
 
-
     #Calculate of the quantity of all non duplicate tickers
     for index, row in wallet.iterrows():
 
@@ -309,15 +307,29 @@ def currentWallet(file):
             wallet = wallet.drop([index])
         #If non zero, keeps the ticker and updates the quantity and the average price.    
         else:
-            wallet.at[index, "Setor"] = sectorOfTicker(row["Ticker"])
+            #wallet.at[index, "Setor"] = sectorOfTicker(row["Ticker"])
             wallet.at[index, "Quantidade"] = int(numberStocks)
             wallet.at[index, "Preço médio"] = avgPrice
             #Modifies the name of the ticker so Yahoo Finance can understand. Yahoo Finance adds the ".SA" to the ticker name.
-            newTicker = row["Ticker"]+".SA"
-            wallet.at[index, "Cotação"] = currentMarketPriceByTicker(newTicker )
+            #newTicker = row["Ticker"]+".SA"
+            #wallet.at[index, "Cotação"] = currentMarketPriceByTicker(newTicker )
             #Calculates the earnings by ticket
             wallet.at[index, "Proventos"] = earningsByTicker(file, row["Ticker"])
  
+
+    #Creates a list of ticker to be used for finding current prices of the ticker
+    listTicker = wallet["Ticker"].tolist()
+    for i in range(len(listTicker)):
+        listTicker[i] = listTicker[i] + ".SA"
+    #Gets the current values of all tickers in the wallet
+    currentPricesTickers = currentMarketPriceByTickerList(listTicker)
+    
+    for index, row in wallet.iterrows():
+        ticker = row["Ticker"] + ".SA"
+        wallet.at[index, "Cotação"] = float(currentPricesTickers[ticker])        
+    
+
+
     #Calculates the price according with the average price
     wallet["Preço pago"] = wallet["Quantidade"] * wallet["Preço médio"]
     #Calculates the price according with the current market value
@@ -348,6 +360,3 @@ def currentWallet(file):
             wallet.at[index, "Porcentagem"] = 100 * row["Preço mercado"] / marketValueFII
     
     return wallet
-
-      
-    
