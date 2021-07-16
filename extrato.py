@@ -163,7 +163,7 @@ def earningsByTicker (file, ticker):
     table = tableByTicker(file, ticker)
     table = table[table["Operação"] == "Provento"]
     #Returns the sum of dividens and JCP.
-    return (table["Dividendos"].sum() + table["JCP"].sum())
+    return (float(table["Dividendos"].sum() + table["JCP"].sum()))
 
 
 def avgPriceTicker(file, ticker):
@@ -216,12 +216,23 @@ def currentMarketPriceByTicker(ticker):
     data = data['Adj Close'].tail(1)
     return float(data)
     
+def currentMarketPriceByTickerList(list):
+    """
+    Returns a dataframe with the last price of the stocks in the list.
+
+    """
+    data = yf.download(list, period = "1d")
+    data = data['Adj Close'].tail(1)
+    return data
+
+
+
 
 def currentMarketPriceByTickerWebScrappingStatusInvest(ticker, market):
     """
     Returns the last price of the stock from website Status Invest.
 
-    Sucessive requests have taken about 10s to get processed.
+    Requests have taken about 1s to get processed.
     """
     #Prepares the correct URL
     if market == "Ações":
@@ -290,24 +301,23 @@ def currentWallet(file):
 
     #Calculate of the quantity of all non duplicate tickers
     for index, row in wallet.iterrows():
-        
+
         avgPrice, numberStocks = avgPriceTicker (file, row["Ticker"] )
+
         #Check the quantity. If zero, there drops it from the dataframe.             
         if numberStocks == 0:
             wallet = wallet.drop([index])
         #If non zero, keeps the ticker and updates the quantity and the average price.    
         else:
-            wallet.at[index, "Setor"]= sectorOfTicker(row["Ticker"])
-            wallet.at[index, "Quantidade"]= int(numberStocks)
+            wallet.at[index, "Setor"] = sectorOfTicker(row["Ticker"])
+            wallet.at[index, "Quantidade"] = int(numberStocks)
             wallet.at[index, "Preço médio"] = avgPrice
             #Modifies the name of the ticker so Yahoo Finance can understand. Yahoo Finance adds the ".SA" to the ticker name.
             newTicker = row["Ticker"]+".SA"
             wallet.at[index, "Cotação"] = currentMarketPriceByTicker(newTicker )
-
             #Calculates the earnings by ticket
             wallet.at[index, "Proventos"] = earningsByTicker(file, row["Ticker"])
-
-
+ 
     #Calculates the price according with the average price
     wallet["Preço pago"] = wallet["Quantidade"] * wallet["Preço médio"]
     #Calculates the price according with the current market value
@@ -341,52 +351,3 @@ def currentWallet(file):
 
       
     
-    #Creates the wallet dataframe
-    #wallet = pd.DataFrame()
-    #wallet["Ativos"] = table
-    #wallet["Mercado"] = ""
-    #print(wallet)
-
-
-
-print(currentWallet(file))
-#carteira = currentWallet(file)
-#carteira.to_excel('data.xlsx')
-
-
-
-
-
-#ticker = "PETR4"
-#market = "Ações"
-#print(sectorOfTicker(ticker))
-
-#currentMarketPriceByTicker(ticker)
-#print(price)
-
-#print(currentMarketPriceByTickerWebScrappingStatusInvest(ticker, market))
-
-
-#ticker = "TESTE11"
-#avgPriceTicker, number = avgPriceTicker(file, ticker)
-#print("Preço médio de", ticker, "é:", avgPriceTicker)
-#print("Quandidade de", ticker, "é:", number)
-
-
-
-
-#width = 0.3
-#ax = plt.figure()
-#plt.bar(a , b, label='Buy', width=width)
-#lt.bar(a , c , label='Sell', width=width)
-#plt.legend(title='Legenda')
-#lt.grid()
-#plt.show()
-
-#customTable (file, "all", "FII", "NA", "NA", "all", "Compra")
-#print(overallTaxAndIncomes(file))
-#a,b,c=units(file,TICKER)
-#filteredTable(file,TICKER)
-
-
-
