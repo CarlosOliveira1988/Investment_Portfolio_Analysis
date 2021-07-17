@@ -10,7 +10,7 @@ sys.path.append(main_path)
 # Customized modules imports
 from window import Window
 from treeview_pandas import TreeviewPandas
-from economic_indexers import EconomicIndexer
+from economic_indexers_widget import EconomicIndexerWidget
 
 # Creates the application
 app = QtWidgets.QApplication(sys.argv)
@@ -19,15 +19,7 @@ app = QtWidgets.QApplication(sys.argv)
 window = Window('Testing Economic Indexers')
 
 # Creates the IPCA formated dataframe
-economic_indexer = EconomicIndexer()
-
-# Decides which format to show
-show_stacked = False
-dataframe = economic_indexer.IPCA.getFormatedDataframe(show_stacked)
-
-# Creates the pandas data viewer
-pandas_data_viewer = TreeviewPandas(window.getCentralWidget(), dataframe)
-pandas_data_viewer.showPandas(resize_per_contents=False)
+economic_indexer_widget = EconomicIndexerWidget(window.getCentralWidget())
 
 # Shows the "Window" object
 window.showMaximized()

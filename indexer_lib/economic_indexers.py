@@ -42,3 +42,6 @@ class EconomicIndexer:
         self.FGTS = FGTS()
         self.NovaPoupanca = NovaPoupanca()
         self.AntigaPoupanca = AntigaPoupanca()
+
+    def getNamesList(self):
+        return self.__dict__.keys()
