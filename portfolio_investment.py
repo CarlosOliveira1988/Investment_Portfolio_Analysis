@@ -335,14 +335,30 @@ class PorfolioInvestment:
         return wallet
 
 
+   
 
-    
+    def currentPortfolioGoogleDrive(self):
+        dataframe = self.current
+        
+        
+        for index, row in dataframe.iterrows():
+            dataframe["Cotação"] = "=googlefinance(\"" + dataframe["Ticker"] + "\")"
+
+        return dataframe
+
+
 
 
 portfolio = PorfolioInvestment(file)
+carteiraGD = portfolio.currentPortfolioGoogleDrive()
+carteiraGD.to_excel("carteiraGD.xlsx") 
+print(carteiraGD)
+
+
+
 
 #Examples:
-print(portfolio.operations)
+#print(portfolio.operations)
 #print(portfolio.overallTaxAndIncomes())
 #print(portfolio.customTableDate("ITSA4", "Ações", "NA", "NA", "all", "all", "20/04/2021", "19/05/2021"))
 #print(portfolio.numberOperationsYear())
