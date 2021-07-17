@@ -1,8 +1,3 @@
-from indexer_manager import IndexerManager
-from treeview_format import RequiredStringColumnType
-from treeview_format import PercentageColumnType
-
-
 class StackedIndexerFormater:
     """
     This class is useful to format Economic Indexers as "Stacked Format" by setting:
@@ -14,7 +9,9 @@ class StackedIndexerFormater:
     - data_frame: the portfolio pandas dataframe
     """
     def __init__(self, data_frame):
+        from indexer_manager import StackedFormatConstants
         self.__FormatedDataFrame = data_frame
+        self.__StackedConstants = StackedFormatConstants()
         self.__assignColumnVariables()
         self.__appendColumnsVariableList()
         self.__setColumnOrder()
@@ -25,9 +22,11 @@ class StackedIndexerFormater:
     Private methods
     """
     def __assignColumnVariables(self):
-        self.Year = RequiredStringColumnType(IndexerManager.STACKED_YEAR_COLUMN)
-        self.Month = RequiredStringColumnType(IndexerManager.STACKED_MONTH_COLUMN)
-        self.InterestRate = PercentageColumnType(IndexerManager.STACKED_MONTHLY_INTEREST_COLUMN)
+        from treeview_format import RequiredStringColumnType
+        from treeview_format import PercentageColumnType
+        self.Year = RequiredStringColumnType(self.__StackedConstants.getYearTitle())
+        self.Month = RequiredStringColumnType(self.__StackedConstants.getMonthTitle())
+        self.InterestRate = PercentageColumnType(self.__StackedConstants.getInterestTitle())
         self.ColumnsVariableList = []
 
     def __appendColumnsVariableList(self):
@@ -73,7 +72,9 @@ class OriginalIndexerFormater:
     - data_frame: the portfolio pandas dataframe
     """
     def __init__(self, data_frame):
+        from indexer_manager import OriginalFormatConstants
         self.__FormatedDataFrame = data_frame
+        self.__OriginalConstants = OriginalFormatConstants()
         self.__assignColumnVariables()
         self.__appendColumnsVariableList()
         self.__setColumnOrder()
@@ -84,19 +85,22 @@ class OriginalIndexerFormater:
     Private methods
     """
     def __assignColumnVariables(self):
-        self.Year = RequiredStringColumnType(IndexerManager.ORIGINAL_YEAR_COLUMN)
-        self.January = PercentageColumnType(IndexerManager.MONTHS_LIST[0])
-        self.February = PercentageColumnType(IndexerManager.MONTHS_LIST[1])
-        self.March = PercentageColumnType(IndexerManager.MONTHS_LIST[2])
-        self.April = PercentageColumnType(IndexerManager.MONTHS_LIST[3])
-        self.May = PercentageColumnType(IndexerManager.MONTHS_LIST[4])
-        self.June = PercentageColumnType(IndexerManager.MONTHS_LIST[5])
-        self.July = PercentageColumnType(IndexerManager.MONTHS_LIST[6])
-        self.August = PercentageColumnType(IndexerManager.MONTHS_LIST[7])
-        self.September = PercentageColumnType(IndexerManager.MONTHS_LIST[8])
-        self.October = PercentageColumnType(IndexerManager.MONTHS_LIST[9])
-        self.November = PercentageColumnType(IndexerManager.MONTHS_LIST[10])
-        self.December = PercentageColumnType(IndexerManager.MONTHS_LIST[11])
+        from treeview_format import RequiredStringColumnType
+        from treeview_format import PercentageColumnType
+        months_list = self.__OriginalConstants.getMonthsList()
+        self.Year = RequiredStringColumnType(self.__OriginalConstants.getYearTitle())
+        self.January = PercentageColumnType(months_list[0])
+        self.February = PercentageColumnType(months_list[1])
+        self.March = PercentageColumnType(months_list[2])
+        self.April = PercentageColumnType(months_list[3])
+        self.May = PercentageColumnType(months_list[4])
+        self.June = PercentageColumnType(months_list[5])
+        self.July = PercentageColumnType(months_list[6])
+        self.August = PercentageColumnType(months_list[7])
+        self.September = PercentageColumnType(months_list[8])
+        self.October = PercentageColumnType(months_list[9])
+        self.November = PercentageColumnType(months_list[10])
+        self.December = PercentageColumnType(months_list[11])
         self.ColumnsVariableList = []
 
     def __appendColumnsVariableList(self):
