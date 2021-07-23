@@ -214,3 +214,9 @@ class IndexerManager:
             return self.__FinalYear, self.__FinalMonth
         else:
             return self.__FinalYear, (self.__MonthsList.index(self.__FinalMonth)+1)
+
+    def getMonthsList(self):
+        return self.__MonthsList
+
+    def getYearsList(self):
+        return self.__YearsList

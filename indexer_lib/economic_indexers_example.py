@@ -9,7 +9,6 @@ sys.path.append(main_path)
 
 # Customized modules imports
 from window import Window
-from treeview_pandas import TreeviewPandas
 from economic_indexers_widget import EconomicIndexerWidget
 
 # Creates the application

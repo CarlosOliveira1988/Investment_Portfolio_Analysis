@@ -1,40 +1,6 @@
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-
 from window import Window
 from treeview import Treeview
-
-
-class PushButton:
-    """ 
-    This class is used to create a Standard Push Button.
-
-    Arguments:
-    - CentralWidget: the widget where the push button will be placed
-    - title: the text on the button
-    - coordinate_X: the window X coordinate where the PushButton will be placed
-    - coordinate_Y: the window Y coordinate where the PushButton will be placed
-    - width: the width of the PushButton
-    - height: the height of the PushButton
-    - onClickMethod: the callback method of the "onClick" event
-    """
-
-    # Contants related to the push button
-    DEFAULT_WIDTH = 200
-    DEFAULT_HEIGHT = 20
-
-    def __init__(self, CentralWidget, title, coordinate_X=0, coordinate_Y=0, 
-    width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, onClickMethod=None):
-        self.PushButton = QtWidgets.QPushButton(CentralWidget)
-        self.PushButton.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, height))
-        self.PushButton.setText(title)
-        self.PushButton.clicked.connect(onClickMethod)
-
-    """
-    Public methods
-    """
-    def setTitle(self, title):
-        self.PushButton.setText(title)
+from gui_lib.pushbutton import StandardPushButton
 
 
 class ExpandCollapsePushButton:
@@ -53,7 +19,7 @@ class ExpandCollapsePushButton:
 
     def __init__(self, CentralWidget, onExpandMethod=None, onCollapseMethod=None):
         # Push button
-        self.__PushButton = PushButton(CentralWidget, ExpandCollapsePushButton.EXPAND_TEXT, 
+        self.__PushButton = StandardPushButton(CentralWidget, ExpandCollapsePushButton.EXPAND_TEXT, 
         coordinate_X=(Treeview.DEFAULT_WIDTH + 2*Window.DEFAULT_BORDER_SIZE), 
         coordinate_Y=(Window.DEFAULT_BORDER_SIZE), 
         onClickMethod=self.__expandCollapseAll)
