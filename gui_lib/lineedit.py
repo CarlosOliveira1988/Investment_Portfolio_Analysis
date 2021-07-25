@@ -2,18 +2,20 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 
 from gui_lib.label import StandardLabel
+from gui_lib.widget_interface import WidgetInterface
 
 
-class StandardLineEdit:
+class StandardLineEdit(QtWidgets.QLineEdit):
+
     """ 
-    This class is used to create a Standard Line Edit.
+    This class is used to create a Standard LineEdit inheriting the "QtWidgets.QLineEdit" class.
 
     Arguments:
-    - CentralWidget: the widget where the line edit will be placed
-    - coordinate_X: the window X coordinate where the line edit will be placed
-    - coordinate_Y: the window Y coordinate where the line edit will be placed
-    - width: the width of the line edit
-    - height: the height of the line edit
+    - CentralWidget: the widget where the LineEdit will be placed
+    - coordinate_X: the window X coordinate where the LineEdit will be placed
+    - coordinate_Y: the window Y coordinate where the LineEdit will be placed
+    - width: the width of the LineEdit
+    - height: the height of the LineEdit
     """
 
     # Contants related to the push button
@@ -22,24 +24,14 @@ class StandardLineEdit:
 
     def __init__(self, CentralWidget, coordinate_X=0, coordinate_Y=0, 
     width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
-        # Dimensions
-        self.width = width
-        self.height = height
-
-        # Initialization
-        self.LineEdit = QtWidgets.QLineEdit(CentralWidget)
-        self.LineEdit.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, height))
-
-    def getWidth(self):
-        return self.width
-    
-    def getHeight(self):
-        return self.height
+        super().__init__(CentralWidget)
+        self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, height))
 
 
-class ParameterLineEdit:
+class ParameterLineEdit(WidgetInterface):
+
     """ 
-    This class is used to create a special Line Edit for user value input.
+    This class is used to create a special LineEdit for any type of user value input.
 
     Basically, it is a join of:
     - a 'QLabel' located in the first line
@@ -48,28 +40,22 @@ class ParameterLineEdit:
     Arguments:
     - CentralWidget: the widget where all the components will be placed
     - title: the text on the label
-    - coordinate_X: the window X coordinate where the label will be placed
-    - coordinate_Y: the window Y coordinate where the label will be placed
-    - width: the width value used to create both 'QLabel' and 'QLineEdit' components
+    - coordinate_X: the window X coordinate where the components will be placed
+    - coordinate_Y: the window Y coordinate where the components will be placed
+    - width: the width value used to create all related components
     """
 
     def __init__(self, CentralWidget, title, coordinate_X=0, coordinate_Y=0, width=StandardLineEdit.DEFAULT_WIDTH):
-        # Width
-        self.width = width
-        self.height = StandardLabel.DEFAULT_HEIGHT + StandardLineEdit.DEFAULT_HEIGHT
-        
+       # Internal central widget
+        super().__init__(CentralWidget)
+
         # Label
-        Label_coordinate_X = coordinate_X
-        Label_coordinate_Y = coordinate_Y
-        self.StandardLabel = StandardLabel(CentralWidget, title, Label_coordinate_X, Label_coordinate_Y, width=width)
+        self.Label = StandardLabel(self, title, coordinate_Y=self.getInternalHeight(), width=width)
+        self.incrementInternalHeight(self.Label.height())
 
         # LineEdit
-        LineEdit_coordinate_X = coordinate_X
-        LineEdit_coordinate_Y = Label_coordinate_Y + StandardLabel.DEFAULT_HEIGHT
-        self.StandardLineEdit = StandardLineEdit(CentralWidget, LineEdit_coordinate_X, LineEdit_coordinate_Y, width=width)
+        self.LineEdit = StandardLineEdit(self, coordinate_Y=self.getInternalHeight(), width=width)
+        self.incrementInternalHeight(self.LineEdit.height())
 
-    def getWidth(self):
-        return self.width
-    
-    def getHeight(self):
-        return self.height
+        # Widget dimensions
+        self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, self.getInternalHeight()))

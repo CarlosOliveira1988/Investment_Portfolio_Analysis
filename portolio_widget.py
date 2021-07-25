@@ -45,12 +45,12 @@ class ExpandCollapsePushButton:
     """
     def expandAll(self):
         self.__IsExpandedFlag = True
-        self.__PushButton.setTitle(ExpandCollapsePushButton.COLLAPSE_TEXT)
+        self.__PushButton.setText(ExpandCollapsePushButton.COLLAPSE_TEXT)
         self.__expandEvent()
 
     def collapseAll(self):
         self.__IsExpandedFlag = False
-        self.__PushButton.setTitle(ExpandCollapsePushButton.EXPAND_TEXT)
+        self.__PushButton.setText(ExpandCollapsePushButton.EXPAND_TEXT)
         self.__collapseEvent()
 
 

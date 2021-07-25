@@ -2,47 +2,39 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 
 from gui_lib.label import StandardLabel
+from gui_lib.widget_interface import WidgetInterface
 
 
-class StandardComboBox:
+class StandardComboBox(QtWidgets.QComboBox):
+
     """ 
-    This class is used to create a Standard Combo Box.
+    This class is used to create a Standard ComboBox inheriting the "QtWidgets.QComboBox" class.
 
     Arguments:
-    - CentralWidget: the widget where the combo box will be placed
-    - coordinate_X: the window X coordinate where the combo box will be placed
-    - coordinate_Y: the window Y coordinate where the combo box will be placed
-    - width: the width of the combo box
-    - height: the height of the combo box
-    - onSelectionMethod: the callback method of the "currentIndexChanged" event
+    - CentralWidget: the widget where the ComboBox will be placed
+    - coordinate_X: the window X coordinate where the ComboBox will be placed
+    - coordinate_Y: the window Y coordinate where the ComboBox will be placed
+    - width: the width of the ComboBox
+    - height: the height of the ComboBox
+    - onSelectionMethod: the callback method of the "currentIndexChanged" ComboBox event
     """
 
-    # Contants related to the combo box
+    # Contants related to the ComboBox
     DEFAULT_WIDTH = 200
     DEFAULT_HEIGHT = 20
 
     def __init__(self, CentralWidget, coordinate_X=0, coordinate_Y=0, 
     width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, onSelectionMethod=None):
-        # Dimensions
-        self.width = width
-        self.height = height
-
-        # Initialization
-        self.ComboBox = QtWidgets.QComboBox(CentralWidget)
-        self.ComboBox.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, height))
+        super().__init__(CentralWidget)
+        self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, height))
         if onSelectionMethod:
-            self.ComboBox.currentIndexChanged.connect(onSelectionMethod)
-
-    def getWidth(self):
-        return self.width
-    
-    def getHeight(self):
-        return self.height
+            self.currentIndexChanged.connect(onSelectionMethod)
 
 
-class DateComboBox:
+class DateComboBox(WidgetInterface):
+
     """ 
-    This class is used to create a special Combo Box for Date Selection.
+    This class is used to create a special ComboBox for Date Selection.
 
     Basically, it is a join of:
     - 1 'QLabel' located in the first line
@@ -51,39 +43,32 @@ class DateComboBox:
     Arguments:
     - CentralWidget: the widget where all the components will be placed
     - title: the text on the label
-    - coordinate_X: the window X coordinate where the label will be placed
-    - coordinate_Y: the window Y coordinate where the label will be placed
-    - width: the width value used to create both 'QLabel' and 'QLineEdit' components
+    - coordinate_X: the window X coordinate where the components will be placed
+    - coordinate_Y: the window Y coordinate where the components will be placed
+    - width: the width value used to create all related components
     """
-
+    
     def __init__(self, CentralWidget, title, coordinate_X=0, coordinate_Y=0, width=StandardComboBox.DEFAULT_WIDTH):
-        # Dimensions
-        self.width = width
-        self.height = StandardLabel.DEFAULT_HEIGHT + 2*StandardComboBox.DEFAULT_HEIGHT
+        # Internal central widget
+        super().__init__(CentralWidget)
 
         # Date's Label
-        self.Label = StandardLabel(CentralWidget, title, coordinate_X=coordinate_X, coordinate_Y=coordinate_Y, width=width)
+        self.Label = StandardLabel(self, title, coordinate_Y=self.getInternalHeight(), width=width)
+        self.incrementInternalHeight(self.Label.height())
 
         # Month's ComboBox
-        CbMonth_coordinate_X = coordinate_X
-        CbMonth_coordinate_Y = coordinate_Y + StandardLabel.DEFAULT_HEIGHT
-        self.CbMonth = StandardComboBox(CentralWidget, coordinate_X=CbMonth_coordinate_X,
-        coordinate_Y=CbMonth_coordinate_Y, width=width)
+        self.ComboBoxMonth = StandardComboBox(self, coordinate_Y=self.getInternalHeight(), width=width)
+        self.incrementInternalHeight(self.ComboBoxMonth.height())
         
         # Year's ComboBox
-        CbYear_coordinate_X = coordinate_X
-        CbYear_coordinate_Y = CbMonth_coordinate_Y + StandardComboBox.DEFAULT_HEIGHT
-        self.CbYear = StandardComboBox(CentralWidget, coordinate_X=CbYear_coordinate_X,
-        coordinate_Y=CbYear_coordinate_Y, width=width)
+        self.ComboBoxYear = StandardComboBox(self, coordinate_Y=self.getInternalHeight(), width=width)
+        self.incrementInternalHeight(self.ComboBoxYear.height())
+
+        # Widget dimensions
+        self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, self.getInternalHeight()))
 
     def addMonthsItems(self, months_list):
-        self.CbMonth.ComboBox.addItems(months_list)
+        self.ComboBoxMonth.addItems(months_list)
 
     def addYearsItems(self, years_list):
-        self.CbYear.ComboBox.addItems(years_list)
-
-    def getWidth(self):
-        return self.width
-    
-    def getHeight(self):
-        return self.height
+        self.ComboBoxYear.addItems(years_list)

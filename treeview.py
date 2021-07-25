@@ -7,7 +7,7 @@ from PyQt5.QtGui import QStandardItem
 from window import Window
 
 
-class Treeview:
+class Treeview(QtWidgets.QTreeView):
     """ 
     This class provides methods and attributes to create a treeview table.
 
@@ -27,13 +27,11 @@ class Treeview:
     def __init__(self, CentralWidget, columns_title_list, 
     coordinate_X=Window.DEFAULT_BORDER_SIZE, coordinate_Y=Window.DEFAULT_BORDER_SIZE, 
     width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
+        super().__init__(CentralWidget)
         self.ColumnsTitleList = columns_title_list
-        self.TreeView = QtWidgets.QTreeView(CentralWidget)
-        self.TreeView.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, height))
+        self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, height))
         self.__createTreeViewModel(columns_title_list)
-        self.TreeView.setModel(self.TreeViewModel)
-        self.TreeViewWidth = width
-        self.TreeViewHeigth = height
+        self.setModel(self.TreeViewModel)
 
     """
     Private methods
@@ -42,7 +40,7 @@ class Treeview:
         return title.replace(' ', '\n')
 
     def __createTreeViewModel(self, columns_title_list):
-        self.TreeViewModel = QStandardItemModel(0, len(columns_title_list), self.TreeView)
+        self.TreeViewModel = QStandardItemModel(0, len(columns_title_list), self)
         for column_index in range(len(columns_title_list)):
             title = self.__splitBigTitle(columns_title_list[column_index])
             self.TreeViewModel.setHeaderData(column_index, Qt.Horizontal, title)
@@ -109,22 +107,22 @@ class Treeview:
         """
         Expand all items.
         """
-        self.TreeView.expandAll()
+        self.expandAll()
 
     def collapseParentLines(self):
         """
         Collapse all items.
         """
-        self.TreeView.collapseAll()
+        self.collapseAll()
 
     def resizeColumnsToContents(self):
         """
         Adjust the columns size according the columns contents.
         """
         for column_index in range(len(self.ColumnsTitleList)):
-            self.TreeView.resizeColumnToContents(column_index)
+            self.resizeColumnToContents(column_index)
     
     def resizeColumnsToTreeViewWidth(self):
-        column_width = round(self.TreeViewWidth / self.TreeViewModel.columnCount())
+        column_width = round((self.width() - 25)/ self.TreeViewModel.columnCount())
         for column_index in range(self.TreeViewModel.columnCount()):
-            self.TreeView.setColumnWidth(column_index, column_width)
+            self.setColumnWidth(column_index, column_width)
