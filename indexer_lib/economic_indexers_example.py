@@ -17,7 +17,7 @@ app = QtWidgets.QApplication(sys.argv)
 # Creates the data viewer window
 window = Window('Testing Economic Indexers')
 
-# Creates the IPCA formated dataframe
+# Creates the Indexer Widget
 economic_indexer_widget = EconomicIndexerWidget(window.getCentralWidget())
 
 # Shows the "Window" object

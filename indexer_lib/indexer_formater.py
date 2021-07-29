@@ -101,6 +101,7 @@ class OriginalIndexerFormater:
         self.October = PercentageColumnType(months_list[9])
         self.November = PercentageColumnType(months_list[10])
         self.December = PercentageColumnType(months_list[11])
+        self.YearlyInterestRate = PercentageColumnType(self.__OriginalConstants.getYearlyInterestRateTitle())
         self.ColumnsVariableList = []
 
     def __appendColumnsVariableList(self):
@@ -117,6 +118,7 @@ class OriginalIndexerFormater:
         self.ColumnsVariableList.append('October')
         self.ColumnsVariableList.append('November')
         self.ColumnsVariableList.append('December')
+        self.ColumnsVariableList.append('YearlyInterestRate')
 
     def __fillNaValues(self):
         for column_variable_string in self.ColumnsVariableList:

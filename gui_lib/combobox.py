@@ -1,3 +1,4 @@
+from datetime import datetime
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 
@@ -68,7 +69,34 @@ class DateComboBox(WidgetInterface):
         self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, self.getInternalHeight()))
 
     def addMonthsItems(self, months_list):
+        """
+        Adds the months strings to be displayed in the comboboxes.
+        """
         self.ComboBoxMonth.addItems(months_list)
 
     def addYearsItems(self, years_list):
+        """
+        Adds the years strings to be displayed in the comboboxes.
+        """
         self.ComboBoxYear.addItems(years_list)
+
+    def getSelectedPeriod(self, as_string=True):
+        """
+        Returns the selected period (Year and Month).
+
+        If 'as_string' is 'True', return 'Janeiro', 'Fevereiro', etc.
+        If 'as_string' is 'False', return '1', '2', etc.
+        """
+        if as_string:
+            return self.ComboBoxYear.currentText(), self.ComboBoxMonth.currentText()
+        else:
+            return int(self.ComboBoxYear.currentText()), self.ComboBoxMonth.currentIndex()+1
+
+    def getSelectedPeriodAsDate(self, day=1):
+        """
+        Returns the selected period as a datetime.
+        """
+        year, month = self.getSelectedPeriod(as_string=False)
+        date_tuple = str(year), str(month), str(day)
+        date_string = '/'.join(date_tuple)
+        return datetime.strptime(date_string, '%Y/%m/%d')

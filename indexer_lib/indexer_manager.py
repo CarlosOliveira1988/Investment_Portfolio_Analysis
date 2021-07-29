@@ -2,6 +2,7 @@ import pandas as pd
 
 from indexer_formater import StackedIndexerFormater
 from indexer_formater import OriginalIndexerFormater
+from interest_calculation import InterestCalculation
 
 
 class OriginalFormatConstants:
@@ -10,17 +11,22 @@ class OriginalFormatConstants:
     MONTHS_LIST = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
-    # Contants related to the "Original" dataframe format (13 columns: similar to the observed in the Excel file)
+    # Contants related to the "Original" dataframe format (14 columns: similar to the observed in the Excel file)
     ORIGINAL_YEAR_COLUMN = 'Ano'
+    ORIGINAL_YEARLY_RATE_COLUMN = 'Anual'
     ORIGINAL_FORMAT_COLUMNS = [ORIGINAL_YEAR_COLUMN]
     ORIGINAL_FORMAT_COLUMNS.extend(MONTHS_LIST)
+    ORIGINAL_FORMAT_COLUMNS.extend([ORIGINAL_YEARLY_RATE_COLUMN])
 
     def __init__(self):
         pass
     
     def getYearTitle(self):
         return OriginalFormatConstants.ORIGINAL_YEAR_COLUMN
-    
+
+    def getYearlyInterestRateTitle(self):
+        return OriginalFormatConstants.ORIGINAL_YEARLY_RATE_COLUMN
+
     def getMonthsList(self):
         return OriginalFormatConstants.MONTHS_LIST
 
@@ -80,6 +86,7 @@ class IndexerManager:
         self.__createDataframes()
         self.__divideInterestValuesPer100()
         self.__setInitialFinalPeriods()
+        self.__setValuesToYearlyRateColumn()
 
     """
     Private methods
@@ -116,7 +123,7 @@ class IndexerManager:
             months = self.__MonthsList
             year_column_list.extend(years)
             month_column_list.extend(months)
-            interest_rate_column_list.extend(line_data_row_list[1:])
+            interest_rate_column_list.extend(line_data_row_list[1:13])
         return year_column_list, month_column_list, interest_rate_column_list
 
     def __createStackedDataframe(self, year_column_list, month_column_list, interest_rate_column_list):
@@ -125,7 +132,7 @@ class IndexerManager:
         stack_formated_dictionary[self.__StackedConstants.getMonthTitle()] = month_column_list
         stack_formated_dictionary[self.__StackedConstants.getInterestTitle()] = interest_rate_column_list
         stack_formated_dataframe = pd.DataFrame(stack_formated_dictionary)
-        stack_formated_dataframe.dropna(subset = [self.__StackedConstants.getInterestTitle()], inplace=True)
+        stack_formated_dataframe = stack_formated_dataframe.fillna(0.0)
         return stack_formated_dataframe
 
     def __setStackedColumnFormat(self, original_formated_dataframe):
@@ -133,8 +140,14 @@ class IndexerManager:
         stack_formated_dataframe = self.__createStackedDataframe(year_column_list, month_column_list, interest_rate_column_list)
         return stack_formated_dataframe
 
+    def __addYearlyRateColumnToOriginalDF(self):
+        empty_column_list = [''] * len(self.__OriginalDataframe)
+        column_position = len(OriginalFormatConstants.ORIGINAL_FORMAT_COLUMNS) - 1
+        self.__OriginalDataframe.insert(column_position, OriginalFormatConstants.ORIGINAL_YEARLY_RATE_COLUMN, empty_column_list, True)
+
     def __createDataframes(self):
         self.__OriginalDataframe = pd.read_excel(self.__File)
+        self.__addYearlyRateColumnToOriginalDF()
         self.__OriginalDataframe = self.__setOriginalColumnFormat(self.__OriginalDataframe)
         self.__StackedDataframe = self.__setStackedColumnFormat(self.__OriginalDataframe)
     
@@ -150,6 +163,19 @@ class IndexerManager:
         month_list = list(self.__StackedDataframe[self.__StackedConstants.getMonthTitle()])
         self.__InitialMonth = month_list[0]
         self.__FinalMonth = month_list[-1]
+    
+    def __setValuesToYearlyRateColumn(self):
+        interest_rate_list = []
+        interest_calculation = InterestCalculation()
+        dataframe_list = self.__OriginalDataframe.values.tolist()
+        total_value = 1000.0
+        for list_per_year in dataframe_list:
+            rates_per_month_list = list_per_year[1:13]
+            interest_rate = interest_calculation.calculateInterestRate(rates_per_month_list, total_value)
+            interest_rate_list.append(interest_rate)
+            interest_value_per_month = interest_calculation.calculateInterestValue(rates_per_month_list, total_value)
+            total_value += interest_value_per_month
+        self.__OriginalDataframe[self.__OriginalConstants.getYearlyInterestRateTitle()] = interest_rate_list
 
     """
     Puclic methods
@@ -173,6 +199,9 @@ class IndexerManager:
             return self.__OriginalDataframe
 
     def getFormatedDataframe(self, stacked=True):
+        """
+        Returns the formated dataframe related to the data series, in 'original' or 'stacked' (default) format
+        """
         if stacked:
             stacked_formater = StackedIndexerFormater(self.getDataframe(stacked=True))
             formated_dataframe = stacked_formater.getFormatedDataFrame()
@@ -216,7 +245,13 @@ class IndexerManager:
             return self.__FinalYear, (self.__MonthsList.index(self.__FinalMonth)+1)
 
     def getMonthsList(self):
+        """
+        Returns a list of months as strings (Janeiro, Fevereiro, etc.)
+        """
         return self.__MonthsList
 
     def getYearsList(self):
+        """
+        Returns a list of years related to the Initial and Final periods of the data series
+        """
         return self.__YearsList
