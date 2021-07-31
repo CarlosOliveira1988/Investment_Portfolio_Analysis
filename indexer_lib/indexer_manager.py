@@ -1,3 +1,4 @@
+from datetime import datetime
 import pandas as pd
 
 from indexer_formater import StackedIndexerFormater
@@ -39,8 +40,9 @@ class StackedFormatConstants:
     # Contants related to the "Stacked" dataframe format (3 columns)
     STACKED_YEAR_COLUMN = 'Ano'
     STACKED_MONTH_COLUMN = 'Mês'
+    STACKED_ADJUSTED_DATE_COLUMN = 'Data Ajustada'
     STACKED_MONTHLY_INTEREST_COLUMN = 'Taxa Mensal'
-    STACKED_FORMAT_COLUMNS = [STACKED_YEAR_COLUMN, STACKED_MONTH_COLUMN, STACKED_MONTHLY_INTEREST_COLUMN]
+    STACKED_FORMAT_COLUMNS = [STACKED_YEAR_COLUMN, STACKED_MONTH_COLUMN, STACKED_ADJUSTED_DATE_COLUMN, STACKED_MONTHLY_INTEREST_COLUMN]
 
     def __init__(self):
         pass
@@ -50,6 +52,9 @@ class StackedFormatConstants:
 
     def getMonthTitle(self):
         return StackedFormatConstants.STACKED_MONTH_COLUMN
+
+    def getAdjustedDateTitle(self):
+        return StackedFormatConstants.STACKED_ADJUSTED_DATE_COLUMN
 
     def getInterestTitle(self):
         return StackedFormatConstants.STACKED_MONTHLY_INTEREST_COLUMN
@@ -79,9 +84,9 @@ class IndexerManager:
     EXCEL_DATA_FOLDER_NAME = 'data'
     EXCEL_DATA_PATH = MODULE_PATH + '\\' + EXCEL_DATA_FOLDER_NAME
 
-    def __init__(self, FileName):
+    def __init__(self, FileName, day=1):
         self.__createConstantObjects()
-        self.__createPeriodVariables()
+        self.__createPeriodVariables(day)
         self.__createFileVariables(FileName)
         self.__createDataframes()
         self.__divideInterestValuesPer100()
@@ -95,9 +100,11 @@ class IndexerManager:
         self.__OriginalConstants = OriginalFormatConstants()
         self.__StackedConstants = StackedFormatConstants()
 
-    def __createPeriodVariables(self):
+    def __createPeriodVariables(self, day):
         self.__MonthsList = self.__OriginalConstants.getMonthsList()
+        self.__MonthsIndexList = range(1, 13)
         self.__YearsList = []
+        self.__Day = day
 
     def __createFileVariables(self, FileName):
         self.__FileName = FileName
@@ -109,9 +116,20 @@ class IndexerManager:
         original_formated_dataframe = original_formated_dataframe.sort_values(by=[self.__OriginalConstants.getYearTitle()])
         return original_formated_dataframe
 
+    def __getAdjustedDateList(self, year):
+        year_string = str(year)
+        day_string = str(self.__Day)
+        adjusted_date_list = []
+        for month_index in self.__MonthsIndexList:
+            month_string = str(month_index)
+            adjusted_date_string = year_string + '/' + month_string + '/' + day_string
+            adjusted_date_list.append(datetime.strptime(adjusted_date_string, '%Y/%m/%d'))
+        return adjusted_date_list
+
     def __createStackedColumnsLists(self, original_formated_dataframe):
         year_column_list = []
         month_column_list = []
+        adjusted_date_column_list = []
         interest_rate_column_list = []
         # Iterate over each line of the original dataframe to create a stacked dataframe
         for line_data_row in original_formated_dataframe.itertuples(index=False):
@@ -123,21 +141,23 @@ class IndexerManager:
             months = self.__MonthsList
             year_column_list.extend(years)
             month_column_list.extend(months)
+            adjusted_date_column_list.extend(self.__getAdjustedDateList(line_data_row_list[0]))
             interest_rate_column_list.extend(line_data_row_list[1:13])
-        return year_column_list, month_column_list, interest_rate_column_list
+        return year_column_list, month_column_list, adjusted_date_column_list, interest_rate_column_list
 
-    def __createStackedDataframe(self, year_column_list, month_column_list, interest_rate_column_list):
+    def __createStackedDataframe(self, year_column_list, month_column_list, adjusted_date_column_list, interest_rate_column_list):
         stack_formated_dictionary = {}
         stack_formated_dictionary[self.__StackedConstants.getYearTitle()] = year_column_list
         stack_formated_dictionary[self.__StackedConstants.getMonthTitle()] = month_column_list
+        stack_formated_dictionary[self.__StackedConstants.getAdjustedDateTitle()] = adjusted_date_column_list
         stack_formated_dictionary[self.__StackedConstants.getInterestTitle()] = interest_rate_column_list
         stack_formated_dataframe = pd.DataFrame(stack_formated_dictionary)
         stack_formated_dataframe = stack_formated_dataframe.fillna(0.0)
         return stack_formated_dataframe
 
     def __setStackedColumnFormat(self, original_formated_dataframe):
-        year_column_list, month_column_list, interest_rate_column_list = self.__createStackedColumnsLists(original_formated_dataframe)
-        stack_formated_dataframe = self.__createStackedDataframe(year_column_list, month_column_list, interest_rate_column_list)
+        year_column_list, month_column_list, adjusted_date_column_list, interest_rate_column_list = self.__createStackedColumnsLists(original_formated_dataframe)
+        stack_formated_dataframe = self.__createStackedDataframe(year_column_list, month_column_list, adjusted_date_column_list, interest_rate_column_list)
         return stack_formated_dataframe
 
     def __addYearlyRateColumnToOriginalDF(self):

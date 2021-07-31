@@ -3,10 +3,13 @@ from PyQt5 import QtGui
 from PyQt5 import QtCore
 
 from economic_indexers import EconomicIndexer
+from indexer_manager import StackedFormatConstants
 from treeview_pandas import TreeviewPandas
 from window import Window
 from dataframe_filter import DataframeFilter
-from interest_calculation import InterestCalculation
+from interest_calculation import InterestOnCurve
+from interest_calculation import InterestOnCurvePrefixed
+from interest_calculation import InterestOnCurveProportional
 from gui_lib.tab import StandardTab
 from gui_lib.combobox import DateComboBox
 from gui_lib.combobox import StandardComboBox
@@ -252,7 +255,7 @@ class IndexerPanelWidget(WidgetInterface):
         super().__init__(CentralWidget)
 
         # ParameterWidget
-        self.ParameterWidget = ParameterWidget(self, coordinate_X=self.getInternalWidth(), coordinate_Y=0, onCalculateClick=self.onCalculateClick)
+        self.ParameterWidget = ParameterWidget(self, coordinate_X=self.getInternalWidth(), coordinate_Y=0, onCalculateClick=self.__onCalculateClick)
         self.incrementInternalWidth(self.ParameterWidget.width() + IndexerPanelWidget.EMPTY_SPACE)
 
         # TreeviewPandas
@@ -262,97 +265,75 @@ class IndexerPanelWidget(WidgetInterface):
         self.incrementInternalWidth(self.TreeviewPandas.width())
 
         # Auxiliary variables
-        self.indexer_name = indexer_name
-        self.stacked_dataframe = self.__adjustStackedDataframe(stacked_dataframe)
+        self.StackedFormatConstants = StackedFormatConstants()
         self.DataframeFilter = DataframeFilter()
-        self.InterestCalculation = InterestCalculation()
+        self.indexer_name = indexer_name
+        self.stacked_dataframe = stacked_dataframe
+        self.filtered_dataframe = None
+        self.inital_period = None
+        self.final_period = None
+        self.period_list = []
+        self.initial_value = 0
+        self.interest_value = 0
+        self.interest_rate = 0
+        self.final_value = 0
+        self.additional_interest_rate = 0
+        self.monthly_interest_rate_list = []
+        self.cumulative_interest_value_list = []
+        self.cumulative_monthly_interest_rate_list = []
 
         # Widget dimensions
         self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, self.getInternalWidth(), self.ParameterWidget.height()))
 
-    def __adjustStackedDataframe(self, stacked_dataframe):
-        # Years list
-        years_as_number_list = stacked_dataframe['Ano'].tolist()
-        years_as_number_list = [int(year) for year in years_as_number_list]
+    """
+    Private methods
+    """
+    def __getUserWidgetValues(self):
+        self.inital_period, self.final_period = self.ParameterWidget.getSelectedPeriod()
+        self.initial_value = self.ParameterWidget.getInitialValue()
+        self.filtered_dataframe = self.DataframeFilter.filterDataframePerPeriod(self.stacked_dataframe, self.StackedFormatConstants.getAdjustedDateTitle(), self.inital_period, self.final_period)
+        self.monthly_interest_rate_list = self.DataframeFilter.getListFromDataframeColumn(self.filtered_dataframe, self.StackedFormatConstants.getInterestTitle())
+        self.period_list = self.DataframeFilter.getListFromDataframeColumn(self.filtered_dataframe, self.StackedFormatConstants.getAdjustedDateTitle())
+        self.additional_interest_rate = self.ParameterWidget.getAdditionalInterestRate()
 
-        # Months list
-        months_list = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
-        months_as_string_list = stacked_dataframe['Mês'].tolist()
-        months_as_number_list = [months_list.index(month)+1 for month in months_as_string_list]
+    def __calculate(self, InterestOnCurveObject):
+        InterestOnCurveObject.calculateValues()
+        self.final_value = InterestOnCurveObject.getFinalValue()
+        self.interest_value = InterestOnCurveObject.getInterestValue()
+        self.interest_rate = InterestOnCurveObject.getInterestRate()
+        self.cumulative_interest_value_list = InterestOnCurveObject.getInterestValueList()
+        self.cumulative_monthly_interest_rate_list = InterestOnCurveObject.getInterestRateList()
 
-        # Adjusted date list
-        adjusted_date_list = [str(years_as_number_list[i])+'/'+str(months_as_number_list[i])+'/1' for i in range(len(months_as_number_list))]
-        adjusted_date_list = [datetime.strptime(adjusted_date, '%Y/%m/%d') for adjusted_date in adjusted_date_list]
+    def __showResults(self):
+        print('Dados de entrada:')
+        print(' - Indicador Econômico:', self.indexer_name)
+        print(' - Montante inicial:', TreeviewValueFormat.setCurrencyFormat(self.initial_value))
+        print(' - Período total em meses:', len(self.period_list))
+        print(' - Taxa Adicional:', TreeviewValueFormat.setPercentageFormat(self.ParameterWidget.getAdditionalInterestRate()))
+        print(' - Tipo:', self.ParameterWidget.getAdditionalInterestRateTypeString())
+        print('Valores brutos:')
+        print(' - Montante final:', TreeviewValueFormat.setCurrencyFormat(self.final_value))
+        print(' - Valor de Juros total:', TreeviewValueFormat.setCurrencyFormat(self.interest_value))
+        print(' - Taxa de Juros total:', TreeviewValueFormat.setPercentageFormat(self.interest_rate))
+        print('')
 
-        # New column
-        adjusted_stacked_dataframe = stacked_dataframe
-        adjusted_stacked_dataframe.insert(2, 'Data Ajustada', adjusted_date_list, True)
-        adjusted_stacked_dataframe = adjusted_stacked_dataframe[['Data Ajustada', 'Taxa Mensal']]
-        return adjusted_stacked_dataframe
+    def __onCalculateClick(self):
+        self.__getUserWidgetValues()
+        if self.ParameterWidget.isValidSelectedPeriod():
+            if self.ParameterWidget.isAdditionalRateNone():
+                InterestOnCurveObject = InterestOnCurve(self.initial_value, self.monthly_interest_rate_list)
+            elif self.ParameterWidget.isAdditionalRatePrefixed():
+                InterestOnCurveObject = InterestOnCurvePrefixed(self.initial_value, self.monthly_interest_rate_list, self.additional_interest_rate)
+            elif self.ParameterWidget.isAdditionalRateProportional():
+                InterestOnCurveObject = InterestOnCurveProportional(self.initial_value, self.monthly_interest_rate_list, self.additional_interest_rate)
+            self.__calculate(InterestOnCurveObject)
+            self.__showResults()
+        else:
+            print('O período selecionado é inválido. Por favor, selecione um \'Período Final\' maior ou igual ao \'Período Inicial\'.\n')
 
     """
     Puclic methods
     """
-    def calculateValuesPerIndexerCurve(self, initial_value, monthly_interest_rate_list):
-        final_value = initial_value + self.InterestCalculation.calculateInterestValue(monthly_interest_rate_list, initial_value)
-        cumulative_interest_value_list = self.InterestCalculation.getCumulativeInterestValueList(monthly_interest_rate_list, initial_value)
-        cumulative_monthly_interest_rate_list = self.InterestCalculation.getCumulativeInterestRateList(cumulative_interest_value_list, initial_value)
-        return final_value, cumulative_interest_value_list, cumulative_monthly_interest_rate_list
-
-    def sumValuesPerPrefixedInterestRate(self, initial_value, monthly_interest_rate_list, cumulative_interest_value_list):
-        additional_rate_per_month = self.InterestCalculation.calculateMeanInterestRatePerPeriod(self.ParameterWidget.getAdditionalInterestRate(), 12)
-        additional_monthly_interest_rate_list = self.InterestCalculation.getPrefixedInterestRateList(additional_rate_per_month, len(monthly_interest_rate_list))
-        additional_cumulative_interest_value_list = self.InterestCalculation.getCumulativeInterestValueList(additional_monthly_interest_rate_list, initial_value)
-        cumulative_interest_value_list = [sum(values) for values in zip(cumulative_interest_value_list, additional_cumulative_interest_value_list)]
-        cumulative_monthly_interest_rate_list = self.InterestCalculation.getCumulativeInterestRateList(cumulative_interest_value_list, initial_value)
-        final_value = initial_value + self.InterestCalculation.calculateInterestValue(cumulative_monthly_interest_rate_list, initial_value)
-        return final_value, cumulative_interest_value_list, cumulative_monthly_interest_rate_list
-
-    def sumValuesPerProportionalInterestRate(self, initial_value, cumulative_interest_value_list):
-        cumulative_interest_value_list = [value*self.ParameterWidget.getAdditionalInterestRate() for value in cumulative_interest_value_list]
-        cumulative_monthly_interest_rate_list = self.InterestCalculation.getCumulativeInterestRateList(cumulative_interest_value_list, initial_value)
-        final_value = initial_value + self.InterestCalculation.calculateInterestValue(cumulative_monthly_interest_rate_list, initial_value)
-        return final_value, cumulative_interest_value_list, cumulative_monthly_interest_rate_list
-
-    def onCalculateClick(self):
-        inital_period, final_period = self.ParameterWidget.getSelectedPeriod()
-        initial_value = self.ParameterWidget.getInitialValue()
-        filtered_dataframe = self.DataframeFilter.filterDataframePerPeriod(self.stacked_dataframe, 'Data Ajustada', inital_period, final_period)
-        monthly_interest_rate_list = self.DataframeFilter.getListFromDataframeColumn(filtered_dataframe, 'Taxa Mensal')
-        period_list = self.DataframeFilter.getListFromDataframeColumn(filtered_dataframe, 'Data Ajustada')
-        if self.ParameterWidget.isValidSelectedPeriod():
-            values_tuple = self.calculateValuesPerIndexerCurve(initial_value, monthly_interest_rate_list)
-            final_value = values_tuple[0]
-            cumulative_interest_value_list = values_tuple[1]
-            cumulative_monthly_interest_rate_list = values_tuple[2]
-            if self.ParameterWidget.isAdditionalRatePrefixed():
-                values_tuple = self.sumValuesPerPrefixedInterestRate(initial_value, monthly_interest_rate_list, cumulative_interest_value_list)
-                final_value = values_tuple[0]
-                cumulative_interest_value_list = values_tuple[1]
-                cumulative_monthly_interest_rate_list = values_tuple[2]
-            elif self.ParameterWidget.isAdditionalRateProportional():
-                values_tuple = self.sumValuesPerProportionalInterestRate(initial_value, cumulative_interest_value_list)
-                final_value = values_tuple[0]
-                cumulative_interest_value_list = values_tuple[1]
-                cumulative_monthly_interest_rate_list = values_tuple[2]
-            print('Dados de entrada:')
-            print(' - Indicador Econômico:', self.indexer_name)
-            print(' - Montante inicial:', TreeviewValueFormat.setCurrencyFormat(initial_value))
-            print(' - Período total em meses:', len(period_list))
-            print(' - Taxa Adicional:', TreeviewValueFormat.setPercentageFormat(self.ParameterWidget.getAdditionalInterestRate()))
-            print(' - Tipo:', self.ParameterWidget.getAdditionalInterestRateTypeString())
-            print('Valores brutos:')
-            print(' - Montante final:', TreeviewValueFormat.setCurrencyFormat(final_value))
-            print(' - Valor de Juros total:', TreeviewValueFormat.setCurrencyFormat(self.InterestCalculation.calculateInterestValueByValues(initial_value, final_value)))
-            print(' - Taxa de Juros total:', TreeviewValueFormat.setPercentageFormat(self.InterestCalculation.calculateInterestRateByValues(initial_value, final_value)))
-            print('')
-            # print('\nValor de Juros mensal (R$):\n', cumulative_interest_value_list)
-            # print('\nTaxa de Juros mensal (%):\n', cumulative_monthly_interest_rate_list)
-            # print('\nLista de meses:', period_list)
-        else:
-            print('O período selecionado é inválido. Por favor, selecione um \'Período Final\' maior ou igual ao \'Período Inicial\'.\n')
-
     def setMonthsItems(self, months_list):
         months_list = [str(month) for month in months_list]
         self.ParameterWidget.setMonthsItems(months_list)
@@ -363,11 +344,11 @@ class IndexerPanelWidget(WidgetInterface):
 
     def setDefaultValues(self, indexer_name):
         if ('IPCA' in indexer_name):
-            self.ParameterWidget.setDefaultValues(1)
+            self.ParameterWidget.setDefaultValues(InterestRateSelection.ADDITIONAL_RATE_PREFIXED_INDEX)
         elif ('CDI' in indexer_name) or ('SELIC' in indexer_name):
-            self.ParameterWidget.setDefaultValues(2)
+            self.ParameterWidget.setDefaultValues(InterestRateSelection.ADDITIONAL_RATE_PROPORTIONAL_INDEX)
         else:
-            self.ParameterWidget.setDefaultValues(0)
+            self.ParameterWidget.setDefaultValues(InterestRateSelection.ADDITIONAL_RATE_NONE_INDEX)
 
 
 class EconomicIndexerWidget:

@@ -24,14 +24,17 @@ class StackedIndexerFormater:
     def __assignColumnVariables(self):
         from treeview_format import RequiredStringColumnType
         from treeview_format import PercentageColumnType
+        from treeview_format import DateColumnType
         self.Year = RequiredStringColumnType(self.__StackedConstants.getYearTitle())
         self.Month = RequiredStringColumnType(self.__StackedConstants.getMonthTitle())
+        self.AdjustedDate = DateColumnType(self.__StackedConstants.getAdjustedDateTitle())
         self.InterestRate = PercentageColumnType(self.__StackedConstants.getInterestTitle())
         self.ColumnsVariableList = []
 
     def __appendColumnsVariableList(self):
         self.ColumnsVariableList.append('Year')
         self.ColumnsVariableList.append('Month')
+        self.ColumnsVariableList.append('AdjustedDate')
         self.ColumnsVariableList.append('InterestRate')
 
     def __fillNaValues(self):
