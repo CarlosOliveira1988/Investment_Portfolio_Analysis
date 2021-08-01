@@ -51,12 +51,7 @@ if __name__ == "__main__":
 
     # Get the path of the main folder 'Investment_Portfolio_Analysis'
     def getMainPath():
-        main_file_path = None
-        file_path_list = sys.path
-        for path_item in file_path_list:
-            if '\Investment_Portfolio_Analysis' in path_item:
-                main_file_path = path_item
-        return main_file_path
+        return sys.path[0]
 
     # Creates the dataframe
     source_file_directory = getMainPath()
