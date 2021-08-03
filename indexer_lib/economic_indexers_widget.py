@@ -1,12 +1,14 @@
-from datetime import datetime
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 
 from economic_indexers import EconomicIndexer
+from economic_indexers import CDI
+from economic_indexers import IPCA
 from indexer_manager import StackedFormatConstants
 from treeview_pandas import TreeviewPandas
 from window import Window
 from dataframe_filter import DataframeFilter
+from interest_calculation import InterestCalculation
 from interest_calculation import InterestOnCurve
 from interest_calculation import InterestOnCurvePrefixed
 from interest_calculation import InterestOnCurveProportional
@@ -41,7 +43,7 @@ class InterestRateSelection(WidgetInterface):
     ADDITIONAL_RATE_NONE_INDEX = 0
     ADDITIONAL_RATE_NONE_DEFAULT = '0,00'
 
-    ADDITIONAL_RATE_PREFIXED = 'Prefixado (+)'
+    ADDITIONAL_RATE_PREFIXED = 'Préfixado (+)'
     ADDITIONAL_RATE_PREFIXED_INDEX = 1
     ADDITIONAL_RATE_PREFIXED_DEFAULT = '0,00'
 
@@ -99,7 +101,11 @@ class InterestRateSelection(WidgetInterface):
     
     def getAdditionalInterestRateTypeString(self):
         selected_text = self.StandardComboBox.currentText()
-        return selected_text[:-4]
+        if selected_text == InterestRateSelection.ADDITIONAL_RATE_NONE:
+            selected_type = InterestRateSelection.ADDITIONAL_RATE_NONE
+        else:
+            selected_type = TreeviewValueFormat.setPercentageFormat(self.getAdditionalInterestRate()) + ' ' + selected_text[:-4]
+        return selected_type
 
 
 class ParameterWidget(WidgetInterface):
@@ -267,6 +273,7 @@ class IndexerPanelWidget(WidgetInterface):
         # Auxiliary variables
         self.StackedFormatConstants = StackedFormatConstants()
         self.DataframeFilter = DataframeFilter()
+        self.InterestCalculation = InterestCalculation()
         self.indexer_name = indexer_name
         self.stacked_dataframe = stacked_dataframe
         self.filtered_dataframe = None
@@ -304,17 +311,51 @@ class IndexerPanelWidget(WidgetInterface):
         self.cumulative_interest_value_list = InterestOnCurveObject.getInterestValueList()
         self.cumulative_monthly_interest_rate_list = InterestOnCurveObject.getInterestRateList()
 
+    def __getMonthlyEquivalentInterestRate(self):
+        return self.InterestCalculation.calculateMeanInterestRatePerPeriod(self.interest_rate, len(self.period_list))
+
+    def __getYearlyEquivalentInterestRate(self):
+        equivalent_monthly = self.__getMonthlyEquivalentInterestRate()
+        equivalent_monthly_list = self.InterestCalculation.getPrefixedInterestRateList(equivalent_monthly, 12)
+        return self.InterestCalculation.calculateInterestRate(equivalent_monthly_list)
+
+    def __getInterestValueFromIndexer(self, economic_indexer):
+        dataframe = economic_indexer.getDataframe()
+        filtered_dataframe = self.DataframeFilter.filterDataframePerPeriod(dataframe, self.StackedFormatConstants.getAdjustedDateTitle(), self.inital_period, self.final_period)
+        monthly_interest_rate_list = self.DataframeFilter.getListFromDataframeColumn(filtered_dataframe, self.StackedFormatConstants.getInterestTitle())
+        return self.InterestCalculation.calculateInterestValue(monthly_interest_rate_list, self.initial_value)
+
+    def __getCDIEquivalentInterestRate(self):
+        cdi = CDI()
+        cdi_interest_value = self.__getInterestValueFromIndexer(cdi)
+        return self.interest_value / cdi_interest_value
+
+    def __getIPCAEquivalentInterestRate(self):
+        ipca = IPCA()
+        ipca_interest_value = self.__getInterestValueFromIndexer(ipca)
+        prefixed_interest_value = self.interest_value - ipca_interest_value
+        prefixed_interest_rate = self.InterestCalculation.calculateInterestRateByValues(self.initial_value, (self.initial_value+prefixed_interest_value))
+        monthly_prefixed_interest_rate = self.InterestCalculation.calculateMeanInterestRatePerPeriod(prefixed_interest_rate, len(self.period_list))
+        monthly_prefixed_interest_rate_list = self.InterestCalculation.getPrefixedInterestRateList(monthly_prefixed_interest_rate, 12)
+        return self.InterestCalculation.calculateInterestRate(monthly_prefixed_interest_rate_list)
+
     def __showResults(self):
         print('Dados de entrada:')
-        print(' - Indicador Econômico:', self.indexer_name)
         print(' - Montante inicial:', TreeviewValueFormat.setCurrencyFormat(self.initial_value))
+        print(' - Período inicial:', TreeviewValueFormat.setDateFormat(self.inital_period))
+        print(' - Período final:', TreeviewValueFormat.setDateFormat(self.final_period))
         print(' - Período total em meses:', len(self.period_list))
-        print(' - Taxa Adicional:', TreeviewValueFormat.setPercentageFormat(self.ParameterWidget.getAdditionalInterestRate()))
-        print(' - Tipo:', self.ParameterWidget.getAdditionalInterestRateTypeString())
-        print('Valores brutos:')
+        print(' - Indicador de referência:', self.indexer_name)
+        print(' - Taxa adicional:', TreeviewValueFormat.setPercentageFormat(self.ParameterWidget.getAdditionalInterestRateTypeString()))
+        print('Resultado final:')
         print(' - Montante final:', TreeviewValueFormat.setCurrencyFormat(self.final_value))
-        print(' - Valor de Juros total:', TreeviewValueFormat.setCurrencyFormat(self.interest_value))
-        print(' - Taxa de Juros total:', TreeviewValueFormat.setPercentageFormat(self.interest_rate))
+        print(' - Taxa de juros total:', TreeviewValueFormat.setPercentageFormat(self.interest_rate))
+        print(' - Valor de juros total:', TreeviewValueFormat.setCurrencyFormat(self.interest_value))
+        print('Benchmarking:')
+        print(' - Equivalente mensal:', TreeviewValueFormat.setPercentageFormat(self.__getMonthlyEquivalentInterestRate()))
+        print(' - Equivalente anual:', TreeviewValueFormat.setPercentageFormat(self.__getYearlyEquivalentInterestRate()))
+        print(' - Equivalente CDI anual:', TreeviewValueFormat.setPercentageFormat(self.__getCDIEquivalentInterestRate()))
+        print(' - Equivalente IPCA anual:', TreeviewValueFormat.setPercentageFormat(self.__getIPCAEquivalentInterestRate()))
         print('')
 
     def __onCalculateClick(self):

@@ -1,3 +1,4 @@
+from datetime import datetime
 import pandas as pd
 import locale
 
@@ -12,7 +13,7 @@ class TreeviewValueFormat:
     - String: String
     """
     def setDateFormat(date_string):
-        if isinstance(date_string, pd.Timestamp):
+        if isinstance(date_string, pd.Timestamp) or isinstance(date_string, datetime):
             return str(date_string.strftime("%Y/%m/%d"))
         else:
             return date_string
