@@ -11,29 +11,10 @@ class InterestCalculation:
     The 'Interest Rate' (a float number) is the portion/fraction of interest, usually expressed in '%'.
     Example: 6.02 (%)
 
-    The 'Interest Rate' in this class may be expressed in 2 different ways as shown in the example.
-    Example: 6.02 (%) => 6.02 or 0.0602
-
-    By the default, the '0.0602' format (divide_rates_by_100=False) is adopted. It means, you need
-    to work with 'raw' rates. If you prefer to work with 'adjusted' rates like '6.02', then set
-    the flag correctly (divide_rates_by_100=True).
+    The 'Interest Rate' in this class is expressed in a 'raw' way, where '0.0602' means '6.02%'.
     """
-    def __init__(self, divide_rates_by_100=False):
-        self.__divide_rates_by_100 = divide_rates_by_100
-
-    def setDividedRatesBy100(self, divide_rates_by_100):
-        """
-        Sets the value of the 'divide_rates_by_100' flag.
-        - False: the value '6.02 (%)' is represented by the float '0.0602'
-        - True:  the value '6.02 (%)' is represented by the float '6.02'
-        """
-        self.__divide_rates_by_100 = divide_rates_by_100
-
-    def getDividedRatesBy100(self):
-        """
-        Returns the value of the 'divide_rates_by_100' flag.
-        """
-        return self.__divide_rates_by_100
+    def __init__(self):
+        pass
 
     def calculateInterestValueByValues(self, initial_value, final_value):
         """
@@ -55,18 +36,13 @@ class InterestCalculation:
         Arguments:
         - interest_rate_list(float): a list of interest rates
         - initial_value(float): the initial value
-        
-        Note related to the 'divide_rates_by_100' flag: if TRUE: 0.62% -> 0.0062 / if FALSE: 0.62% -> 0.62
         """
         total_value = initial_value
         for interest_rate in interest_rate_list:
             interest_rate = float(interest_rate)
             if math.isnan(interest_rate):
                 interest_rate = 0.0
-            if self.__divide_rates_by_100:
-                adjusted_interest_rate = (1 + interest_rate/100.0)
-            else:
-                adjusted_interest_rate = (1 + interest_rate)
+            adjusted_interest_rate = (1 + interest_rate)
             total_value = adjusted_interest_rate * total_value
         return self.calculateInterestValueByValues(initial_value, total_value)
 
@@ -113,12 +89,8 @@ class InterestCalculation:
         Arguments:
         - initial_value(float)
         - final_value(float)
-
-        Note related to the 'divide_rates_by_100' flag: if TRUE: 0.62 -> 62.00% / if FALSE: 0.62 -> 0.62%
         """
         total_interest_rate = self.calculateInterestValueByValues(initial_value, final_value) / initial_value
-        if self.__divide_rates_by_100:
-            total_interest_rate *= 100.0
         return total_interest_rate
 
     def calculateInterestRate(self, interest_rate_list, initial_value=1.00):
@@ -128,8 +100,6 @@ class InterestCalculation:
         Arguments:
         - interest_rate_list(float): a list of interest rates
         - initial_value(float): the initial value
-
-        Note related to the 'divide_rates_by_100' flag: if TRUE: 0.62% -> 0.0062 / if FALSE: 0.62% -> 0.62
         """
         interest_value = self.calculateInterestValue(interest_rate_list, initial_value)
         total_interest_rate = self.calculateInterestRateByValues(initial_value, (initial_value+interest_value))
@@ -181,8 +151,23 @@ class InterestOnCurve:
         self.final_interest_rate_list = []
 
     """
-    Private methods
+    Protected methods
     """
+    def _setFinalValue(self, value):
+        self.final_value = value
+
+    def _setInterestValue(self, value):
+        self.interest_value = value
+
+    def _setInterestRate(self, value):
+        self.interest_rate = value
+
+    def _setInterestRateList(self, value_list):
+        self.interest_rate_list = value_list
+
+    def _setInterestValueList(self, value_list):
+        self.interest_value_list = value_list
+
     def _calculate(self, external_interest_rate_list=None):
         if external_interest_rate_list:
             interest_rate_list = external_interest_rate_list
@@ -199,32 +184,17 @@ class InterestOnCurve:
     def getInitialValue(self):
         return self.initial_value
 
-    def setFinalValue(self, value):
-        self.final_value = value
-
     def getFinalValue(self):
         return self.final_value
-
-    def setInterestValue(self, value):
-        self.interest_value = value
 
     def getInterestValue(self):
         return self.interest_value
 
-    def setInterestRate(self, value):
-        self.interest_rate = value
-
     def getInterestRate(self):
         return self.interest_rate
 
-    def setInterestRateList(self, value_list):
-        self.interest_rate_list = value_list
-
     def getInterestRateList(self):
         return self.interest_rate_list
-
-    def setInterestValueList(self, value_list):
-        self.interest_value_list = value_list
 
     def getInterestValueList(self):
         return self.interest_value_list
@@ -248,6 +218,9 @@ class InterestOnCurvePrefixed(InterestOnCurve):
         self.additional_interest_rate_period = 12
         self.additional_interest_rate_per_month = self.InterestCalculation.calculateMeanInterestRatePerPeriod(self.additional_interest_rate, self.additional_interest_rate_period)
 
+    """
+    Puclic methods
+    """
     def getYearlyPrefixedInterestRate(self):
         return self.additional_interest_rate
 
@@ -261,11 +234,11 @@ class InterestOnCurvePrefixed(InterestOnCurve):
         cumulative_interest_value_list = [sum(values) for values in zip(self.getInterestValueList(), additional_cumulative_interest_value_list)]
         cumulative_monthly_interest_rate_list = self.InterestCalculation.getCumulativeInterestRateList(cumulative_interest_value_list, self.getInitialValue())
         final_value = self.getInitialValue() + self.InterestCalculation.calculateInterestValue(cumulative_monthly_interest_rate_list, self.getInitialValue())
-        self.setFinalValue(final_value)
-        self.setInterestValue(self.InterestCalculation.calculateInterestValueByValues(self.getInitialValue(), self.getFinalValue()))
-        self.setInterestValueList(cumulative_interest_value_list)
-        self.setInterestRate(self.InterestCalculation.calculateInterestRateByValues(self.getInitialValue(), self.getFinalValue()))
-        self.setInterestRateList(cumulative_monthly_interest_rate_list)
+        self._setFinalValue(final_value)
+        self._setInterestValue(self.InterestCalculation.calculateInterestValueByValues(self.getInitialValue(), self.getFinalValue()))
+        self._setInterestValueList(cumulative_interest_value_list)
+        self._setInterestRate(self.InterestCalculation.calculateInterestRateByValues(self.getInitialValue(), self.getFinalValue()))
+        self._setInterestRateList(cumulative_monthly_interest_rate_list)
 
 
 class InterestOnCurveProportional(InterestOnCurve):
@@ -280,13 +253,87 @@ class InterestOnCurveProportional(InterestOnCurve):
         self.input_interest_rate_list = interest_rate_list
         self.interest_rate_factor = interest_rate_factor
 
+    """
+    Puclic methods
+    """
     def calculateValues(self):
         self._calculate(self.input_interest_rate_list)
         cumulative_interest_value_list = [value*self.interest_rate_factor for value in self.getInterestValueList()]
         cumulative_monthly_interest_rate_list = self.InterestCalculation.getCumulativeInterestRateList(cumulative_interest_value_list, self.getInitialValue())
         final_value = self.getInitialValue() + self.InterestCalculation.calculateInterestValue(cumulative_monthly_interest_rate_list, self.getInitialValue())
-        self.setFinalValue(final_value)
-        self.setInterestValue(self.InterestCalculation.calculateInterestValueByValues(self.getInitialValue(), self.getFinalValue()))
-        self.setInterestValueList(cumulative_interest_value_list)
-        self.setInterestRate(self.InterestCalculation.calculateInterestRateByValues(self.getInitialValue(), self.getFinalValue()))
-        self.setInterestRateList(cumulative_monthly_interest_rate_list)
+        self._setFinalValue(final_value)
+        self._setInterestValue(self.InterestCalculation.calculateInterestValueByValues(self.getInitialValue(), self.getFinalValue()))
+        self._setInterestValueList(cumulative_interest_value_list)
+        self._setInterestRate(self.InterestCalculation.calculateInterestRateByValues(self.getInitialValue(), self.getFinalValue()))
+        self._setInterestRateList(cumulative_monthly_interest_rate_list)
+
+
+class Benchmark:
+    """
+    This class is useful to perform comparison with common Benchmarks used in the market, such as
+    IPCA and SELIC.
+
+    Also, we can get the interest rates in a 'monthly basis' and in an 'yearly basis'.
+    """
+    def __init__(self):
+        from indexer_manager import StackedFormatConstants
+        from dataframe_filter import DataframeFilter
+        from economic_indexers import CDI
+        from economic_indexers import IPCA
+        self.InterestCalculation = InterestCalculation()
+        self.StackedFormatConstants = StackedFormatConstants()
+        self.DataframeFilter = DataframeFilter()
+        self.CDI = CDI()
+        self.IPCA = IPCA()
+        self.initial_value = 0
+        self.final_value = 0
+        self.interest_value = 0
+        self.initial_period = None
+        self.final_period = None
+        self.total_months = 0
+
+    """
+    Private methods
+    """
+    def __getInterestValueFromIndexer(self, economic_indexer):
+        dataframe = economic_indexer.getDataframe()
+        filtered_dataframe = self.DataframeFilter.filterDataframePerPeriod(dataframe, self.StackedFormatConstants.getAdjustedDateTitle(), self.initial_period, self.final_period)
+        monthly_interest_rate_list = self.DataframeFilter.getListFromDataframeColumn(filtered_dataframe, self.StackedFormatConstants.getInterestTitle())
+        return self.InterestCalculation.calculateInterestValue(monthly_interest_rate_list, self.initial_value)
+
+    """
+    Public methods
+    """
+    def setValues(self, initial_value, final_value):
+        self.initial_value = initial_value
+        self.final_value = final_value
+    
+    def setPeriods(self, initial_period, final_period):
+        self.initial_period = initial_period
+        self.final_period = final_period
+    
+    def setTotalMonths(self, total_months):
+        self.total_months = total_months
+
+    def getMonthlyEquivalentInterestRate(self):
+        interest_rate = self.InterestCalculation.calculateInterestRateByValues(self.initial_value, self.final_value)
+        return self.InterestCalculation.calculateMeanInterestRatePerPeriod(interest_rate, self.total_months)
+
+    def getYearlyEquivalentInterestRate(self):
+        equivalent_monthly = self.getMonthlyEquivalentInterestRate()
+        equivalent_monthly_list = self.InterestCalculation.getPrefixedInterestRateList(equivalent_monthly, 12)
+        return self.InterestCalculation.calculateInterestRate(equivalent_monthly_list)
+
+    def getCDIEquivalentInterestRate(self):
+        interest_value = self.InterestCalculation.calculateInterestValueByValues(self.initial_value, self.final_value)
+        cdi_interest_value = self.__getInterestValueFromIndexer(self.CDI)
+        return interest_value / cdi_interest_value
+
+    def getIPCAEquivalentInterestRate(self):
+        interest_value = self.InterestCalculation.calculateInterestValueByValues(self.initial_value, self.final_value)
+        ipca_interest_value = self.__getInterestValueFromIndexer(self.IPCA)
+        prefixed_interest_value = interest_value - ipca_interest_value
+        prefixed_interest_rate = self.InterestCalculation.calculateInterestRateByValues(self.initial_value, (self.initial_value+prefixed_interest_value))
+        monthly_prefixed_interest_rate = self.InterestCalculation.calculateMeanInterestRatePerPeriod(prefixed_interest_rate, self.total_months)
+        monthly_prefixed_interest_rate_list = self.InterestCalculation.getPrefixedInterestRateList(monthly_prefixed_interest_rate, 12)
+        return self.InterestCalculation.calculateInterestRate(monthly_prefixed_interest_rate_list)
