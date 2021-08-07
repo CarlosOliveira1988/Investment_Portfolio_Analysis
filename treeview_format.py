@@ -18,6 +18,12 @@ class TreeviewValueFormat:
         else:
             return date_string
 
+    def setDateTimeFormat(date_string):
+        if isinstance(date_string, pd.Timestamp) or isinstance(date_string, datetime):
+            return str(date_string.strftime("%Y/%m/%d %H:%M:%S"))
+        else:
+            return date_string
+
     def setFloatFormat(float_value):
         if isinstance(float_value, float) or isinstance(float_value, int):
             return '{0:.2f}'.format(float(float_value))

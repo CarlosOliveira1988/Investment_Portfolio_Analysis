@@ -1,5 +1,7 @@
 from PyQt5 import QtGui
 from PyQt5 import QtCore
+from PyQt5.QtGui import QTextCursor
+from datetime import datetime
 
 from economic_indexers import EconomicIndexer
 from treeview_pandas import TreeviewPandas
@@ -13,6 +15,7 @@ from gui_lib.combobox import StandardComboBox
 from gui_lib.lineedit import ParameterLineEdit
 from gui_lib.pushbutton import StandardPushButton
 from gui_lib.widget_interface import WidgetInterface
+from gui_lib.textedit import StandardTextEdit
 from treeview_format import TreeviewValueFormat
 
 
@@ -247,11 +250,12 @@ class IndexerPanelWidget(WidgetInterface):
     - coordinate_X: the window X coordinate where the components will be placed
     - coordinate_Y: the window Y coordinate where the components will be placed
     - width: the width of the widget
+    - height: the height of the widget
     """
 
     EMPTY_SPACE = StandardComboBox.DEFAULT_HEIGHT
 
-    def __init__(self, CentralWidget, indexer_name, stacked_dataframe, formated_dataframe, coordinate_X, coordinate_Y, width):
+    def __init__(self, CentralWidget, ResultsWidget, indexer_name, stacked_dataframe, formated_dataframe, coordinate_X, coordinate_Y, width, height):
         # Internal central widget
         super().__init__(CentralWidget)
 
@@ -260,7 +264,7 @@ class IndexerPanelWidget(WidgetInterface):
         self.incrementInternalWidth(self.ParameterWidget.width() + IndexerPanelWidget.EMPTY_SPACE)
 
         # TreeviewPandas
-        self.TreeviewPandas = TreeviewPandas(self, formated_dataframe, coordinate_X=self.getInternalWidth(), coordinate_Y=0, width=width-self.getInternalWidth(), height=self.ParameterWidget.height())
+        self.TreeviewPandas = TreeviewPandas(self, formated_dataframe, coordinate_X=self.getInternalWidth(), coordinate_Y=0, width=width-self.getInternalWidth(), height=height)
         self.TreeviewPandas.showPandas()
         self.TreeviewPandas.resizeColumnsToTreeViewWidth()
         self.incrementInternalWidth(self.TreeviewPandas.width())
@@ -269,6 +273,7 @@ class IndexerPanelWidget(WidgetInterface):
         from interest_calculation import Benchmark
         from indexer_manager import StackedFormatConstants
         from dataframe_filter import DataframeFilter
+        self.ResultsWidget = ResultsWidget
         self.Benchmark = Benchmark()
         self.StackedFormatConstants = StackedFormatConstants()
         self.DataframeFilter = DataframeFilter()
@@ -287,7 +292,7 @@ class IndexerPanelWidget(WidgetInterface):
         self.cumulative_monthly_interest_rate_list = []
 
         # Widget dimensions
-        self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, self.getInternalWidth(), self.ParameterWidget.height()))
+        self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, self.getInternalWidth(), height))
 
     """
     Private methods
@@ -313,23 +318,29 @@ class IndexerPanelWidget(WidgetInterface):
         self.Benchmark.setTotalMonths(len(self.period_list))
 
     def __showResults(self):
-        print('Dados de entrada:')
-        print(' - Montante inicial:', TreeviewValueFormat.setCurrencyFormat(self.initial_value))
-        print(' - Período inicial:', TreeviewValueFormat.setDateFormat(self.inital_period))
-        print(' - Período final:', TreeviewValueFormat.setDateFormat(self.final_period))
-        print(' - Período total em meses:', len(self.period_list))
-        print(' - Indicador de referência:', self.indexer_name)
-        print(' - Taxa adicional:', TreeviewValueFormat.setPercentageFormat(self.additional_interest_rate_string))
-        print('Resultado final:')
-        print(' - Montante final:', TreeviewValueFormat.setCurrencyFormat(self.final_value))
-        print(' - Taxa de juros total:', TreeviewValueFormat.setPercentageFormat(self.interest_rate))
-        print(' - Valor de juros total:', TreeviewValueFormat.setCurrencyFormat(self.interest_value))
-        print('Benchmarking:')
-        print(' - Equivalente mensal:', TreeviewValueFormat.setPercentageFormat(self.Benchmark.getMonthlyEquivalentInterestRate()))
-        print(' - Equivalente anual:', TreeviewValueFormat.setPercentageFormat(self.Benchmark.getYearlyEquivalentInterestRate()))
-        print(' - Equivalente CDI anual:', TreeviewValueFormat.setPercentageFormat(self.Benchmark.getCDIEquivalentInterestRate()))
-        print(' - Equivalente IPCA anual:', TreeviewValueFormat.setPercentageFormat(self.Benchmark.getIPCAEquivalentInterestRate()))
-        print('')
+        self.ResultsWidget.addResult('')
+        self.ResultsWidget.addResult('Estudo ' + TreeviewValueFormat.setDateTimeFormat(datetime.now()))
+        self.ResultsWidget.addResult('')
+        self.ResultsWidget.addResult('Dados de entrada: ')
+        self.ResultsWidget.addResult(' - Montante inicial: ' + TreeviewValueFormat.setCurrencyFormat(self.initial_value))
+        self.ResultsWidget.addResult(' - Período inicial: ' + TreeviewValueFormat.setDateFormat(self.inital_period))
+        self.ResultsWidget.addResult(' - Período final: ' + TreeviewValueFormat.setDateFormat(self.final_period))
+        self.ResultsWidget.addResult(' - Período total em meses: ' + str(len(self.period_list)))
+        self.ResultsWidget.addResult(' - Indicador de referência: ' + self.indexer_name)
+        self.ResultsWidget.addResult(' - Taxa adicional: ' + TreeviewValueFormat.setPercentageFormat(self.additional_interest_rate_string))
+        self.ResultsWidget.addResult('')
+        self.ResultsWidget.addResult('Resultado final: ')
+        self.ResultsWidget.addResult(' - Montante final: ' + TreeviewValueFormat.setCurrencyFormat(self.final_value))
+        self.ResultsWidget.addResult(' - Taxa de juros total: ' + TreeviewValueFormat.setPercentageFormat(self.interest_rate))
+        self.ResultsWidget.addResult(' - Valor de juros total: ' + TreeviewValueFormat.setCurrencyFormat(self.interest_value))
+        self.ResultsWidget.addResult('')
+        self.ResultsWidget.addResult('Benchmarking: ')
+        self.ResultsWidget.addResult(' - Equivalente mensal:' + TreeviewValueFormat.setPercentageFormat(self.Benchmark.getMonthlyEquivalentInterestRate()))
+        self.ResultsWidget.addResult(' - Equivalente anual: ' + TreeviewValueFormat.setPercentageFormat(self.Benchmark.getYearlyEquivalentInterestRate()))
+        self.ResultsWidget.addResult(' - Equivalente CDI anual: ' + TreeviewValueFormat.setPercentageFormat(self.Benchmark.getCDIEquivalentInterestRate()))
+        self.ResultsWidget.addResult(' - Equivalente IPCA anual: ' + TreeviewValueFormat.setPercentageFormat(self.Benchmark.getIPCAEquivalentInterestRate()))
+        self.ResultsWidget.addResult('')
+        self.ResultsWidget.addResult('-----------------------------------------------')
 
     def __onCalculateClick(self):
         self.__getUserWidgetValues()
@@ -365,7 +376,44 @@ class IndexerPanelWidget(WidgetInterface):
             self.ParameterWidget.setDefaultValues(InterestRateSelection.ADDITIONAL_RATE_NONE_INDEX)
 
 
-class EconomicIndexerWidget:
+class ResultsWidget(WidgetInterface):
+
+    CLEAR_BUTTON_TEXT = 'Limpar resultados'
+
+    RESULTS_WIDTH = 250
+
+    EMPTY_SPACE = StandardPushButton.DEFAULT_HEIGHT
+
+    def __init__(self, CentralWidget, coordinate_X=0, coordinate_Y=0, width=RESULTS_WIDTH, height=StandardTextEdit.DEFAULT_HEIGHT):
+        # Internal central widget
+        super().__init__(CentralWidget)
+
+        # Define initial dimensions
+        total_height = height
+        button_height = StandardPushButton.DEFAULT_HEIGHT
+        text_height = total_height - 2*ResultsWidget.EMPTY_SPACE - button_height
+
+        # Text results
+        self.TextResult = StandardTextEdit(self, width=width, height=text_height)
+        self.incrementInternalWidth(self.TextResult.width())
+        self.incrementInternalHeight(self.TextResult.height() + ResultsWidget.EMPTY_SPACE)
+
+        # Clear button
+        self.Clear = StandardPushButton(self, ResultsWidget.CLEAR_BUTTON_TEXT, coordinate_Y=self.getInternalHeight(), width=width, height=button_height, onClickMethod=self.__clearResults)
+        self.incrementInternalHeight(self.TextResult.height())
+
+        # Widget dimensions
+        self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, self.getInternalWidth(), self.getInternalHeight()))
+
+    def __clearResults(self):
+        self.TextResult.clear()
+
+    def addResult(self, text):
+        self.TextResult.moveCursor(QTextCursor.End)
+        self.TextResult.insertPlainText(text + '\n')
+
+
+class EconomicIndexerWidget(WidgetInterface):
 
     """ 
     This class is used to create a special widget for user input related to some Economic Indexer.
@@ -378,19 +426,35 @@ class EconomicIndexerWidget:
     - CentralWidget: the widget where all the components will be placed
     """
 
-    TAB_WIDTH = 1300
-    TAB_HEIGHT = 660
-    TAB_WIDTH_USEFUL = TAB_WIDTH - 2*Window.DEFAULT_BORDER_SIZE
-    TAB_HEIGHT_USEFUL = TAB_HEIGHT - 3*Window.DEFAULT_BORDER_SIZE
+    EMPTY_SPACE = Window.DEFAULT_BORDER_SIZE
+    TAB_WIDTH = 1070
+    TAB_HEIGHT = 500
+    TAB_WIDTH_USEFUL = TAB_WIDTH - 2*EMPTY_SPACE
+    TAB_HEIGHT_USEFUL = TAB_HEIGHT - 3*EMPTY_SPACE
 
-    def __init__(self, CentralWidget):
+    def __init__(self, CentralWidget, coordinate_X=0, coordinate_Y=0):
+        # Internal central widget
+        super().__init__(CentralWidget)
+
         # Economic indexers (IPCA, SELIC, etc.)
         self.Indexers = EconomicIndexer()
 
         # Tab panel widget
         self.TabPanel = StandardTab(CentralWidget, width=EconomicIndexerWidget.TAB_WIDTH, height=EconomicIndexerWidget.TAB_HEIGHT)
+        self.incrementInternalWidth(self.TabPanel.width() + EconomicIndexerWidget.EMPTY_SPACE)
+        self.incrementInternalHeight(self.TabPanel.height())
 
-        # Fill the tabs according to each Economic Indexer available
+        # Results widget
+        self.Results = ResultsWidget(CentralWidget, coordinate_X=self.getInternalWidth(), coordinate_Y=EconomicIndexerWidget.EMPTY_SPACE)
+        self.incrementInternalWidth(self.Results.width())
+
+        # Tab panel widget
+        self.__addIndexerPanels()
+
+        # Widget dimensions
+        self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, self.getInternalWidth(), self.getInternalHeight()))
+
+    def __addIndexerPanels(self):
         for indexer_name in self.Indexers.getNamesList():
             tab_central_widget = self.TabPanel.addNewTab(indexer_name)
             dataframe = self.Indexers.__getattribute__(indexer_name).getDataframe(stacked=True)
@@ -398,7 +462,8 @@ class EconomicIndexerWidget:
             coordinate_X = Window.DEFAULT_BORDER_SIZE
             coordinate_Y = Window.DEFAULT_BORDER_SIZE
             width = EconomicIndexerWidget.TAB_WIDTH_USEFUL
-            indexer_panel = IndexerPanelWidget(tab_central_widget, indexer_name, dataframe, formated_dataframe, coordinate_X=coordinate_X, coordinate_Y=coordinate_Y, width=width)
+            height = EconomicIndexerWidget.TAB_HEIGHT_USEFUL
+            indexer_panel = IndexerPanelWidget(tab_central_widget, self.Results, indexer_name, dataframe, formated_dataframe, coordinate_X=coordinate_X, coordinate_Y=coordinate_Y, width=width, height=height)
             indexer_panel.setMonthsItems(self.Indexers.__getattribute__(indexer_name).getMonthsList())
             indexer_panel.setYearsItems(self.Indexers.__getattribute__(indexer_name).getYearsList())
             indexer_panel.setDefaultValues(indexer_name)
