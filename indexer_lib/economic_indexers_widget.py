@@ -2,6 +2,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtGui import QTextCursor
 from datetime import datetime
+from matplotlib import pyplot as plt
 
 from economic_indexers import EconomicIndexer
 from treeview_pandas import TreeviewPandas
@@ -133,11 +134,10 @@ class ParameterWidget(WidgetInterface):
     ADDITIONAL_INTEREST_RATE_LABEL = 'Taxa Adicional (%)'
     CALCULATE_BUTTON_LABEL = 'Calcular'
     PLOT_BUTTON_LABEL = 'Gráfico'
-    DEFAULT_BUTTON_LABEL = 'Restaurar'
 
     INITIAL_VALUE_DEFAULT = '1000,00'
 
-    def __init__(self, CentralWidget, coordinate_X=0, coordinate_Y=0, onCalculateClick=None):
+    def __init__(self, CentralWidget, coordinate_X=0, coordinate_Y=0, onCalculateClick=None, onPlotClick=None):
         # Internal central widget
         super().__init__(CentralWidget)
 
@@ -163,14 +163,8 @@ class ParameterWidget(WidgetInterface):
         self.incrementInternalHeight(self.Calculate.height() + ParameterWidget.EMPTY_SPACE)
 
         # Plot button
-        self.Plot = StandardPushButton(self, ParameterWidget.PLOT_BUTTON_LABEL, coordinate_Y=self.getInternalHeight(), width=ParameterWidget.WIDTH)
-        self.Plot.setEnabled(False)
+        self.Plot = StandardPushButton(self, ParameterWidget.PLOT_BUTTON_LABEL, coordinate_Y=self.getInternalHeight(), width=ParameterWidget.WIDTH, onClickMethod=onPlotClick)
         self.incrementInternalHeight(self.Plot.height() + ParameterWidget.EMPTY_SPACE)
-
-        # Default button
-        self.Default = StandardPushButton(self, ParameterWidget.DEFAULT_BUTTON_LABEL, coordinate_Y=self.getInternalHeight(), width=ParameterWidget.WIDTH)
-        self.Default.setEnabled(False)
-        self.incrementInternalHeight(self.Default.height())
 
         # Widget dimensions
         self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, ParameterWidget.WIDTH, self.getInternalHeight()))
@@ -260,7 +254,7 @@ class IndexerPanelWidget(WidgetInterface):
         super().__init__(CentralWidget)
 
         # ParameterWidget
-        self.ParameterWidget = ParameterWidget(self, coordinate_X=self.getInternalWidth(), coordinate_Y=0, onCalculateClick=self.__onCalculateClick)
+        self.ParameterWidget = ParameterWidget(self, coordinate_X=self.getInternalWidth(), coordinate_Y=0, onCalculateClick=self.__onCalculateClick, onPlotClick=self.__onPlotClick)
         self.incrementInternalWidth(self.ParameterWidget.width() + IndexerPanelWidget.EMPTY_SPACE)
 
         # TreeviewPandas
@@ -337,12 +331,13 @@ class IndexerPanelWidget(WidgetInterface):
         self.ResultsWidget.addResult('Benchmarking: ')
         self.ResultsWidget.addResult(' - Equivalente mensal:' + TreeviewValueFormat.setPercentageFormat(self.Benchmark.getMonthlyEquivalentInterestRate()))
         self.ResultsWidget.addResult(' - Equivalente anual: ' + TreeviewValueFormat.setPercentageFormat(self.Benchmark.getYearlyEquivalentInterestRate()))
-        self.ResultsWidget.addResult(' - Equivalente CDI anual: ' + TreeviewValueFormat.setPercentageFormat(self.Benchmark.getCDIEquivalentInterestRate()))
-        self.ResultsWidget.addResult(' - Equivalente IPCA anual: ' + TreeviewValueFormat.setPercentageFormat(self.Benchmark.getIPCAEquivalentInterestRate()))
+        self.ResultsWidget.addResult(' - Equivalente Pós x CDI anual: ' + TreeviewValueFormat.setPercentageFormat(self.Benchmark.getCDIEquivalentInterestRate()))
+        self.ResultsWidget.addResult(' - Equivalente Pré + IPCA anual: ' + TreeviewValueFormat.setPercentageFormat(self.Benchmark.getIPCAEquivalentInterestRate()))
         self.ResultsWidget.addResult('')
         self.ResultsWidget.addResult('-----------------------------------------------')
 
     def __onCalculateClick(self):
+        successful_flag = False
         self.__getUserWidgetValues()
         if self.ParameterWidget.isValidSelectedPeriod():
             if self.ParameterWidget.isAdditionalRateNone():
@@ -353,8 +348,48 @@ class IndexerPanelWidget(WidgetInterface):
                 InterestOnCurveObject = InterestOnCurveProportional(self.initial_value, self.monthly_interest_rate_list, self.additional_interest_rate)
             self.__calculate(InterestOnCurveObject)
             self.__showResults()
+            successful_flag = True
         else:
             print('O período selecionado é inválido. Por favor, selecione um \'Período Final\' maior ou igual ao \'Período Inicial\'.\n')
+        return successful_flag
+
+    def __showPlot(self, subplot_row, subplot_col, subplot_axs, x_list, y_list, x_label, y_label, plot_label, plot_window_title):
+        # Custom information
+        subplot_axs[subplot_row, subplot_col].plot(x_list, y_list, label=plot_label)
+        subplot_axs[subplot_row, subplot_col].set_title(plot_window_title)
+        subplot_axs[subplot_row, subplot_col].set(xlabel=x_label, ylabel=y_label)
+
+        # Common information
+        subplot_axs[subplot_row, subplot_col].legend(title='Referente ao:')
+        subplot_axs[subplot_row, subplot_col].grid()
+
+    def __getAccumulatedValueList(self, initial_value, interest_value_list):
+        value = initial_value
+        value_list = []
+        for interest_value in interest_value_list:
+            value += interest_value
+            value_list.append(value)
+        return value_list
+
+    def __onPlotClick(self):
+        if self.__onCalculateClick():
+            plt.close()
+            fig, axs = plt.subplots(2, 2)
+            
+            value_list = self.__getAccumulatedValueList(self.initial_value, self.cumulative_interest_value_list)
+            self.__showPlot(0, 0, axs, self.period_list, value_list, 'Meses', 'Valor total (R$)', 'Valor aportado', 'Valor total acumulado (R$)')
+            
+            value_list = self.__getAccumulatedValueList(0, self.cumulative_interest_value_list)
+            self.__showPlot(0, 1, axs, self.period_list, value_list, 'Meses', 'Valor total (R$)', 'Valor aportado', 'Valor de juros acumulado (R$)')
+            
+            self.__showPlot(1, 0, axs, self.period_list, self.cumulative_interest_value_list, 'Meses', 'Valor total (R$)', 'Valor aportado', 'Valor de juros mensal (R$)')
+            
+            adjusted_list = [100*rate for rate in self.cumulative_monthly_interest_rate_list]
+            self.__showPlot(1, 1, axs, self.period_list, adjusted_list, 'Meses', 'Taxa (%)', 'Valor aportado', 'Taxa de juros mensal (%)')
+            
+            fig.tight_layout()
+            plt.show()
+            plt.gcf().canvas.set_window_title('Gráfico')
 
     """
     Puclic methods
