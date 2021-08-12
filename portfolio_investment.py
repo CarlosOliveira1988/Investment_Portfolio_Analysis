@@ -6,7 +6,9 @@ import yfinance as yf           #Imports the Yahoo Finance library to work with 
 from datetime import date, datetime
 from datetime import timedelta
 import xlsxwriter
-
+#Imports to use web scrapper functions
+import requests
+from bs4 import BeautifulSoup
 
 SOURCE_FILE_DIRECTORY = r"C:\Users\Fred\Documents\GitHub\Investment_Portfolio_Analysis"
 FILE_NAME = "\Extrato_Fred.xlsx"
@@ -161,8 +163,8 @@ class PorfolioInvestment:
 
         avgPrice = 0
         avgPriceOld = 0
-        qtStock = 0
-        qtStockOld = 0
+        qtStock = 0.0
+        qtStockOld = 0.0
         costs = 0
         for index,row in dataframe.iterrows():
             #If the current operation is a buy event, then updates the average price
@@ -183,8 +185,8 @@ class PorfolioInvestment:
                 qtStock -= row["Quantidade"]
                 qtStockOld -= row["Quantidade"]
 
-        numberStocks = qtStockOld
-        return avgPrice, numberStocks
+        #numberStocks = qtStockOld
+        return avgPrice, qtStockOld
     
     def currentMarketPriceByTicker (self, ticker):
         """
@@ -462,9 +464,141 @@ class PorfolioInvestment:
 
         return dataframe
 
+        
+    def currentMarketPriceTesouroWebScrappingStatusInvest(self, ticker):
+        """
+        Returns the last price of the stock from website Status Invest.
+
+        LFT = Letras Financeira do Tesouro = Tesouro Selic
+        LTN = Letras do Tesouro Nacional = Tesouro Prefixado
+        NTN-B Principal = Notas do Tesouro Nacional = Tesouro IPCA (sem cupons)
+        NTN-B = Notas do Tesouro Nacional = Tesouro IPCA (cupom semestral)
+
+
+
+        """
+        # #Prepares the correct URL
+        # if market == "Ações":
+        #     url = "https://statusinvest.com.br/acoes/"
+        # elif market == "FII":
+        #     url = "https://statusinvest.com.br/fundos-imobiliarios/"
+        # elif market == "ETF":
+        #     url = "https://statusinvest.com.br/etfs/"
+
+        value = 0
+        url = False
+
+        #Check if it is a Tesouro Selic
+        if ticker == "Tesouro SELIC 2023" or ticker == "LFT 010323":
+            url = "https://statusinvest.com.br/tesouro/tesouro-selic-2023"
+        elif ticker == "Tesouro SELIC 2024" or ticker == "LFT 010324":
+            url = "https://statusinvest.com.br/tesouro/tesouro-selic-2024"
+        elif ticker == "Tesouro SELIC 2025" or ticker == "LFT 010325":
+            url = "https://statusinvest.com.br/tesouro/tesouro-selic-2025"
+        elif ticker == "Tesouro SELIC 2027" or ticker == "LFT 010327":
+            url = "https://statusinvest.com.br/tesouro/tesouro-selic-2027"
+        #Check if it is a Tesouro IPCA+
+        elif ticker == "Tesouro IPCA+ 2024" or ticker == "NTN-B Principal 150824":
+            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-2024"
+        elif ticker == "Tesouro IPCA+ 2026" or ticker == "NTN-B Principal 150826":
+            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-2026"
+        elif ticker == "Tesouro IPCA+ 2035" or ticker == "NTN-B Principal 150545":
+            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-2035"
+        elif ticker == "Tesouro IPCA+ 2045" or ticker == "NTN-B Principal 150545":
+            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-2045"
+        #Check if it is a Tesouro IPCA+ com Juros semestrais
+        elif ticker == "Tesouro IPCA+ semestral 2024" or ticker == "NTN-B Principal com Juros Semestrais 150824":
+            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-2024"
+        elif ticker == "Tesouro IPCA+ semestral 2026" or ticker == "NTN-B Principal com Juros Semestrais 150826":
+            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-2026"
+        elif ticker == "Tesouro IPCA+ semestral 2030" or ticker == "NTN-B Principal com Juros Semestrais 150830":
+            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-2030"
+        elif ticker == "Tesouro IPCA+ semestral 2035" or ticker == "NTN-B Principal com Juros Semestrais 150535":
+            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-2035"
+        elif ticker == "Tesouro IPCA+ semestral 2040" or ticker == "NTN-B Principal com Juros Semestrais 150840":
+            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-2040"
+
+
+        if url != False:
+            #Get information from URL
+            page = requests.get(url)
+            soup = BeautifulSoup(page.content, 'html.parser')
+            #Get the current value from ticker
+            value = soup.find(class_='value').get_text()
+
+            #Replace the point to empty in order to transform the string in a number.
+            value = value.replace(".","")
+            #Replace comma to point because Python uses point as decimal spacer. 
+            value = value.replace(',','.')
+
+        return float(value)
+
+
+
+
+
+
+    def currentTesouroDireto(self):
+            """
+            Creates a dataframe with all open operations of Tesouro Direto.            
+            """
+            dataframe = self.operations
+            dataframe = dataframe[ dataframe["Mercado"] == "Tesouro Direto" ]
+            dataframe = dataframe[ dataframe["Operação"] != "Cobrança" ]
+
+            dataframe.drop_duplicates(subset ="Ticker", keep = 'first', inplace = True)
+
+            #Creates the wallet
+            wallet = pd.DataFrame()
+            #Copies the ticker and market information
+            wallet["Ticker"] = dataframe["Ticker"]
+            wallet["Mercado"] = dataframe["Mercado"]
+            wallet["Indexador"] = dataframe["Indexador"]
+
+            #Sort the data by market and ticker
+            #wallet = wallet.sort_values(by=["Mercado", "Ticker"])
+            wallet["Quantidade"] = ""           #Creates a blank column
+            wallet["Cotação"] = ""              #Creates a blank column
+            #wallet["Preço pago"] = ""           #Creates a blank column
+            wallet["Preço mercado"] = ""        #Creates a blank column
+            #wallet["Resultado liquido"] = ""    #Creates a blank column
+            wallet["Porcentagem carteira"] = "" #Creates a blank column
+
+
+            #Sort the data by ticker
+            wallet = wallet.sort_values(by=["Ticker"])
+            
+            #Calculate of the quantity of all non duplicate tickers
+            for index, row in wallet.iterrows():
+
+                avgPrice, numberStocks = self.avgPriceTicker (row["Ticker"])
+
+                #Check the quantity. If zero, there drops it from the dataframe.             
+                if round(numberStocks,2) == 0:
+                    wallet = wallet.drop([index])
+                #If non zero, keeps the ticker and updates the quantity and the average price.    
+                else:
+                    wallet.at[index, "Quantidade"] = float(numberStocks)
+                    wallet.at[index, "Cotação"] = portfolio.currentMarketPriceTesouroWebScrappingStatusInvest(row["Ticker"] )
+                    
+
+
+            #Calculates the price according with the current market value
+            wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
+
+            totalTesouroDireto = wallet["Preço mercado"].sum()
+
+            #Calculates the percentage of stocks and FIIs in the wallet
+            for index, row in wallet.iterrows():
+                wallet.at[index, "Porcentagem carteira"] = 100 * row["Preço mercado"] / totalTesouroDireto
+                
+            return wallet
+
+
 
 #Example:      
-portfolio = PorfolioInvestment(file)
-carteiraGD = portfolio.currentPortfolioGoogleDrive()
+#portfolio = PorfolioInvestment(file)
+#carteiraGD = portfolio.currentPortfolioGoogleDrive()
 
-    
+#print( portfolio.currentTesouroDireto() )
+
