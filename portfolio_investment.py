@@ -538,7 +538,7 @@ class PorfolioInvestment:
 
 
 
-    def currentTesouro(self):
+    def currentTesouroDireto(self):
             """
             Creates a dataframe with all open operations of Tesouro Direto.            
             """
@@ -594,4 +594,11 @@ class PorfolioInvestment:
                 
             return wallet
 
+
+
+#Example:      
+#portfolio = PorfolioInvestment(file)
+#carteiraGD = portfolio.currentPortfolioGoogleDrive()
+
+#print( portfolio.currentTesouroDireto() )
 
