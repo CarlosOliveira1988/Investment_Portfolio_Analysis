@@ -1,0 +1,25 @@
+{
+  // Formatters
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    }
+  },
+  "python.formatting.provider": "black",
+
+  // Linters
+  "python.linting.enabled": true,
+  "python.linting.lintOnSave": true,
+  "python.linting.banditEnabled": true,
+  "python.linting.mypyEnabled": true,
+  "python.linting.prospectorEnabled": true,
+  "python.linting.pycodestyleEnabled": true,
+  "python.linting.pydocstyleEnabled": true,
+  "python.linting.pylintEnabled": true,
+
+  // Testing
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.nosetestsEnabled": false
+}
