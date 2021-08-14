@@ -1,6 +1,7 @@
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtGui import QTextCursor
+from PyQt5.QtWidgets import QMessageBox
 from datetime import datetime
 from matplotlib import pyplot as plt
 
@@ -206,10 +207,23 @@ class ParameterWidget(WidgetInterface):
         inital_period, final_period = self.getSelectedPeriod()
         return final_period >= inital_period
     
-    def getInitialValue(self):
+    def __getInitialValueText(self):
         initial_value = self.InitialValue.LineEdit.text()
-        initial_value = initial_value.replace(',', '.')
-        return float(initial_value)
+        return initial_value.replace(',', '.')
+
+    def getInitialValue(self):
+        text_value = self.__getInitialValueText()
+        try:
+            return float(text_value)
+        except Exception as error:
+            raise Exception(error)
+    
+    def isValidInitialValue(self):
+        try:
+            value = self.getInitialValue()
+            return (type(value) == float)
+        except Exception as error:
+            raise Exception(error)
 
     def getAdditionalInterestRate(self):
         return self.InterestRate.getAdditionalInterestRate()
@@ -336,10 +350,31 @@ class IndexerPanelWidget(WidgetInterface):
         self.ResultsWidget.addResult('')
         self.ResultsWidget.addResult('-----------------------------------------------')
 
+    def __isValidParameters(self):
+        valid_flag = True
+
+        # Initial and Final periods
+        if self.ParameterWidget.isValidSelectedPeriod():
+            pass
+        else:
+            valid_flag = False
+            msg = 'O período selecionado é inválido. Por favor, selecione um \'Período Final\' maior ou igual ao \'Período Inicial\'.'
+            QMessageBox.warning(self, 'Indicadores Econômicos', msg, QMessageBox.Ok)
+        
+        # Initial Value
+        try:
+            if self.ParameterWidget.isValidInitialValue():
+                pass
+        except Exception as error:
+            valid_flag = False
+            raise Exception(error)
+        
+        return valid_flag
+
     def __onCalculateClick(self):
         successful_flag = False
         self.__getUserWidgetValues()
-        if self.ParameterWidget.isValidSelectedPeriod():
+        if self.__isValidParameters():
             if self.ParameterWidget.isAdditionalRateNone():
                 InterestOnCurveObject = InterestOnCurve(self.initial_value, self.monthly_interest_rate_list)
             elif self.ParameterWidget.isAdditionalRatePrefixed():
@@ -349,8 +384,6 @@ class IndexerPanelWidget(WidgetInterface):
             self.__calculate(InterestOnCurveObject)
             self.__showResults()
             successful_flag = True
-        else:
-            print('O período selecionado é inválido. Por favor, selecione um \'Período Final\' maior ou igual ao \'Período Inicial\'.\n')
         return successful_flag
 
     def __showPlot(self, subplot_row, subplot_col, subplot_axs, x_list, y_list, x_label, y_label, plot_label, plot_window_title):
@@ -477,11 +510,11 @@ class EconomicIndexerWidget(WidgetInterface):
         # Tab panel widget
         self.TabPanel = StandardTab(CentralWidget, width=EconomicIndexerWidget.TAB_WIDTH, height=EconomicIndexerWidget.TAB_HEIGHT)
         self.incrementInternalWidth(self.TabPanel.width() + EconomicIndexerWidget.EMPTY_SPACE)
-        self.incrementInternalHeight(self.TabPanel.height())
+        self.incrementInternalHeight(self.TabPanel.height() + EconomicIndexerWidget.EMPTY_SPACE)
 
         # Results widget
         self.Results = ResultsWidget(CentralWidget, coordinate_X=self.getInternalWidth(), coordinate_Y=EconomicIndexerWidget.EMPTY_SPACE)
-        self.incrementInternalWidth(self.Results.width())
+        self.incrementInternalWidth(self.Results.width() + EconomicIndexerWidget.EMPTY_SPACE)
 
         # Tab panel widget
         self.__addIndexerPanels()
