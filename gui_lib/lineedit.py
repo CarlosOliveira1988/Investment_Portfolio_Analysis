@@ -18,7 +18,7 @@ class StandardLineEdit(QtWidgets.QLineEdit):
     - height: the height of the LineEdit
     """
 
-    # Contants related to the push button
+    # Contants related to the LineEdit
     DEFAULT_WIDTH = 200
     DEFAULT_HEIGHT = 20
 
