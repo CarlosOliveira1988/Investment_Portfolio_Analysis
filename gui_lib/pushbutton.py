@@ -1,10 +1,9 @@
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
 
 
 class StandardPushButton(QtWidgets.QPushButton):
-    
-    """ 
+
+    """
     This class is used to create a Standard PushButton inheriting the "QtWidgets.QPushButton" class.
 
     Arguments:
@@ -21,8 +20,16 @@ class StandardPushButton(QtWidgets.QPushButton):
     DEFAULT_WIDTH = 200
     DEFAULT_HEIGHT = 20
 
-    def __init__(self, CentralWidget, title, coordinate_X=0, coordinate_Y=0, 
-    width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, onClickMethod=None):
+    def __init__(
+        self,
+        CentralWidget,
+        title,
+        coordinate_X=0,
+        coordinate_Y=0,
+        width=DEFAULT_WIDTH,
+        height=DEFAULT_HEIGHT,
+        onClickMethod=None,
+    ):
         super().__init__(CentralWidget)
         self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, height))
         self.setText(title)

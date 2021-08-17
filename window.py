@@ -22,6 +22,7 @@ class Window(QtWidgets.QMainWindow):
     """
     Private methods
     """
+
     def __setupWindow(self, window_title):
         self.CentralWidget = QtWidgets.QWidget()
         self.setCentralWidget(self.CentralWidget)
@@ -34,8 +35,9 @@ class Window(QtWidgets.QMainWindow):
     """
     Public methods
     """
+
     def getCentralWidget(self):
-        """ 
+        """
         Returns the central widget of the window.
 
         All GUI components (buttons, checkboxes, tables, etc.) must have this widget as argument.

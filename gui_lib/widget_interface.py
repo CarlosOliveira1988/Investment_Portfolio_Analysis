@@ -2,7 +2,6 @@ from PyQt5 import QtWidgets
 
 
 class WidgetInterface(QtWidgets.QWidget):
-
     def __init__(self, CentralWidget):
         super().__init__(CentralWidget)
         self.__width = 0
