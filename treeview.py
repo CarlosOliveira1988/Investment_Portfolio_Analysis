@@ -1,14 +1,12 @@
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtGui import QStandardItem
+from PyQt5.QtGui import QStandardItem, QStandardItemModel
 
 from window import Window
 
 
 class Treeview(QtWidgets.QTreeView):
-    """ 
+    """
     This class provides methods and attributes to create a treeview table.
 
     Arguments:
@@ -24,9 +22,15 @@ class Treeview(QtWidgets.QTreeView):
     DEFAULT_WIDTH = 1100
     DEFAULT_HEIGHT = 660
 
-    def __init__(self, CentralWidget, columns_title_list, 
-    coordinate_X=Window.DEFAULT_BORDER_SIZE, coordinate_Y=Window.DEFAULT_BORDER_SIZE, 
-    width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
+    def __init__(
+        self,
+        CentralWidget,
+        columns_title_list,
+        coordinate_X=Window.DEFAULT_BORDER_SIZE,
+        coordinate_Y=Window.DEFAULT_BORDER_SIZE,
+        width=DEFAULT_WIDTH,
+        height=DEFAULT_HEIGHT,
+    ):
         super().__init__(CentralWidget)
         self.ColumnsTitleList = columns_title_list
         self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, height))
@@ -36,8 +40,9 @@ class Treeview(QtWidgets.QTreeView):
     """
     Private methods
     """
+
     def __splitBigTitle(self, title):
-        return title.replace(' ', '\n')
+        return title.replace(" ", "\n")
 
     def __createTreeViewModel(self, columns_title_list):
         self.TreeViewModel = QStandardItemModel(0, len(columns_title_list), self)
@@ -56,6 +61,7 @@ class Treeview(QtWidgets.QTreeView):
     """
     Public methods
     """
+
     def insertParentLineItem(self, parent_line_title):
         """
         Inserts a parent line item that represents the top-level of the tree-line
@@ -98,11 +104,11 @@ class Treeview(QtWidgets.QTreeView):
     def insertParentLine(self, parent_line_item):
         """
         Inserts a Parent Line Data.
-        
+
         Usually, 'parent_line_item' may be used as 'items_list'.
         """
         self.TreeViewModel.appendRow(parent_line_item)
-    
+
     def expandParentLines(self):
         """
         Expand all items.
@@ -121,8 +127,8 @@ class Treeview(QtWidgets.QTreeView):
         """
         for column_index in range(len(self.ColumnsTitleList)):
             self.resizeColumnToContents(column_index)
-    
+
     def resizeColumnsToTreeViewWidth(self):
-        column_width = round((self.width() - 25)/ self.TreeViewModel.columnCount())
+        column_width = round((self.width() - 25) / self.TreeViewModel.columnCount())
         for column_index in range(self.TreeViewModel.columnCount()):
             self.setColumnWidth(column_index, column_width)

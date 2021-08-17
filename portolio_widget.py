@@ -1,10 +1,10 @@
-from window import Window
-from treeview import Treeview
 from gui_lib.pushbutton import StandardPushButton
+from treeview import Treeview
+from window import Window
 
 
 class ExpandCollapsePushButton:
-    """ 
+    """
     This class is used to create a special push button for expanding and collapsing lines in a table.
 
     Arguments:
@@ -14,15 +14,18 @@ class ExpandCollapsePushButton:
     """
 
     # Contants related to the special push button
-    EXPAND_TEXT = 'Expand all lines'
-    COLLAPSE_TEXT = 'Collapse all lines'
+    EXPAND_TEXT = "Expand all lines"
+    COLLAPSE_TEXT = "Collapse all lines"
 
     def __init__(self, CentralWidget, onExpandMethod=None, onCollapseMethod=None):
         # Push button
-        self.__PushButton = StandardPushButton(CentralWidget, ExpandCollapsePushButton.EXPAND_TEXT, 
-        coordinate_X=(Treeview.DEFAULT_WIDTH + 2*Window.DEFAULT_BORDER_SIZE), 
-        coordinate_Y=(Window.DEFAULT_BORDER_SIZE), 
-        onClickMethod=self.__expandCollapseAll)
+        self.__PushButton = StandardPushButton(
+            CentralWidget,
+            ExpandCollapsePushButton.EXPAND_TEXT,
+            coordinate_X=(Treeview.DEFAULT_WIDTH + 2 * Window.DEFAULT_BORDER_SIZE),
+            coordinate_Y=(Window.DEFAULT_BORDER_SIZE),
+            onClickMethod=self.__expandCollapseAll,
+        )
 
         # Connect events
         self.__expandEvent = onExpandMethod
@@ -34,6 +37,7 @@ class ExpandCollapsePushButton:
     """
     Private methods
     """
+
     def __expandCollapseAll(self):
         if self.__IsExpandedFlag:
             self.collapseAll()
@@ -43,6 +47,7 @@ class ExpandCollapsePushButton:
     """
     Public methods
     """
+
     def expandAll(self):
         self.__IsExpandedFlag = True
         self.__PushButton.setText(ExpandCollapsePushButton.COLLAPSE_TEXT)
@@ -55,7 +60,7 @@ class ExpandCollapsePushButton:
 
 
 class PortfolioViewerWidget:
-    """ 
+    """
     This class is used to create a special widget for portfolio visualization.
 
     Basically, it has a 'table' and a 'expand/collapse lines push button'.
@@ -64,14 +69,18 @@ class PortfolioViewerWidget:
     - CentralWidget: the widget where the push button will be placed
     - columns_title_list: a list of columns titles
     """
+
     def __init__(self, CentralWidget, columns_title_list):
         self.__PortolioTreeview = Treeview(CentralWidget, columns_title_list)
-        self.__ExpandCollapsePushButton = ExpandCollapsePushButton(CentralWidget, self.__expandAllLines, self.__collapseAllLines)
+        self.__ExpandCollapsePushButton = ExpandCollapsePushButton(
+            CentralWidget, self.__expandAllLines, self.__collapseAllLines
+        )
         self.__resizeColumns()
 
     """
     Private methods
     """
+
     def __resizeColumns(self):
         self.__ExpandCollapsePushButton.expandAll()
         self.__PortolioTreeview.resizeColumnsToContents()
@@ -79,12 +88,13 @@ class PortfolioViewerWidget:
 
     def __expandAllLines(self):
         self.__PortolioTreeview.expandParentLines()
-    
+
     def __collapseAllLines(self):
         self.__PortolioTreeview.collapseParentLines()
 
     """
     Public methods
     """
+
     def getTreeview(self):
         return self.__PortolioTreeview

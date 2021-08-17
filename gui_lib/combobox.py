@@ -1,6 +1,6 @@
 from datetime import datetime
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
+
+from PyQt5 import QtCore, QtWidgets
 
 from gui_lib.label import StandardLabel
 from gui_lib.widget_interface import WidgetInterface
@@ -8,7 +8,7 @@ from gui_lib.widget_interface import WidgetInterface
 
 class StandardComboBox(QtWidgets.QComboBox):
 
-    """ 
+    """
     This class is used to create a Standard ComboBox inheriting the "QtWidgets.QComboBox" class.
 
     Arguments:
@@ -24,8 +24,15 @@ class StandardComboBox(QtWidgets.QComboBox):
     DEFAULT_WIDTH = 200
     DEFAULT_HEIGHT = 20
 
-    def __init__(self, CentralWidget, coordinate_X=0, coordinate_Y=0, 
-    width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, onSelectionMethod=None):
+    def __init__(
+        self,
+        CentralWidget,
+        coordinate_X=0,
+        coordinate_Y=0,
+        width=DEFAULT_WIDTH,
+        height=DEFAULT_HEIGHT,
+        onSelectionMethod=None,
+    ):
         super().__init__(CentralWidget)
         self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, height))
         if onSelectionMethod:
@@ -34,7 +41,7 @@ class StandardComboBox(QtWidgets.QComboBox):
 
 class DateComboBox(WidgetInterface):
 
-    """ 
+    """
     This class is used to create a special ComboBox for Date Selection.
 
     Basically, it is a join of:
@@ -48,25 +55,40 @@ class DateComboBox(WidgetInterface):
     - coordinate_Y: the window Y coordinate where the components will be placed
     - width: the width value used to create all related components
     """
-    
-    def __init__(self, CentralWidget, title, coordinate_X=0, coordinate_Y=0, width=StandardComboBox.DEFAULT_WIDTH):
+
+    def __init__(
+        self,
+        CentralWidget,
+        title,
+        coordinate_X=0,
+        coordinate_Y=0,
+        width=StandardComboBox.DEFAULT_WIDTH,
+    ):
         # Internal central widget
         super().__init__(CentralWidget)
 
         # Date's Label
-        self.Label = StandardLabel(self, title, coordinate_Y=self.getInternalHeight(), width=width)
+        self.Label = StandardLabel(
+            self, title, coordinate_Y=self.getInternalHeight(), width=width
+        )
         self.incrementInternalHeight(self.Label.height())
 
         # Month's ComboBox
-        self.ComboBoxMonth = StandardComboBox(self, coordinate_Y=self.getInternalHeight(), width=width)
+        self.ComboBoxMonth = StandardComboBox(
+            self, coordinate_Y=self.getInternalHeight(), width=width
+        )
         self.incrementInternalHeight(self.ComboBoxMonth.height())
-        
+
         # Year's ComboBox
-        self.ComboBoxYear = StandardComboBox(self, coordinate_Y=self.getInternalHeight(), width=width)
+        self.ComboBoxYear = StandardComboBox(
+            self, coordinate_Y=self.getInternalHeight(), width=width
+        )
         self.incrementInternalHeight(self.ComboBoxYear.height())
 
         # Widget dimensions
-        self.setGeometry(QtCore.QRect(coordinate_X, coordinate_Y, width, self.getInternalHeight()))
+        self.setGeometry(
+            QtCore.QRect(coordinate_X, coordinate_Y, width, self.getInternalHeight())
+        )
 
     def addMonthsItems(self, months_list):
         """
@@ -90,7 +112,10 @@ class DateComboBox(WidgetInterface):
         if as_string:
             return self.ComboBoxYear.currentText(), self.ComboBoxMonth.currentText()
         else:
-            return int(self.ComboBoxYear.currentText()), self.ComboBoxMonth.currentIndex()+1
+            return (
+                int(self.ComboBoxYear.currentText()),
+                self.ComboBoxMonth.currentIndex() + 1,
+            )
 
     def getSelectedPeriodAsDate(self, day=1):
         """
@@ -98,5 +123,5 @@ class DateComboBox(WidgetInterface):
         """
         year, month = self.getSelectedPeriod(as_string=False)
         date_tuple = str(year), str(month), str(day)
-        date_string = '/'.join(date_tuple)
-        return datetime.strptime(date_string, '%Y/%m/%d')
+        date_string = "/".join(date_tuple)
+        return datetime.strptime(date_string, "%Y/%m/%d")

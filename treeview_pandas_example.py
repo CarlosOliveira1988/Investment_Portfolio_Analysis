@@ -1,21 +1,25 @@
 # Define the constants
-FILE_NAME = '\PORTFOLIO_TEMPLATE.xlsx'
-FILE_SHEET = r'Extrato'
+FILE_NAME = "\PORTFOLIO_TEMPLATE.xlsx"
+FILE_SHEET = r"Extrato"
 
 # Creates the application
 import sys
+
 from PyQt5 import QtWidgets
-from window import Window
-from treeview_pandas import TreeviewPandas
+
 from extrato import readOperations
+from treeview_pandas import TreeviewPandas
+from window import Window
+
 app = QtWidgets.QApplication(sys.argv)
 
 # Get the path of the main folder 'Investment_Portfolio_Analysis'
 def getMainPath():
     return sys.path[0]
 
+
 # Creates the data viewer window
-window = Window('Testing Pandas Data Viewer')
+window = Window("Testing Pandas Data Viewer")
 
 # Creates the pandas dataframe
 source_file_directory = getMainPath()
