@@ -8,8 +8,8 @@ import sys
 from PyQt5 import QtWidgets
 
 from extrato import readOperations
-from treeview_pandas import TreeviewPandas
-from window import Window
+from gui_lib.treeview.treeview_pandas import TreeviewPandas
+from gui_lib.window import Window
 
 app = QtWidgets.QApplication(sys.argv)
 

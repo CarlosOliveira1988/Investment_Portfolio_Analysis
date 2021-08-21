@@ -1,25 +1,23 @@
 from datetime import datetime
 
-from gui_lib.combobox import DateComboBox, StandardComboBox
-from gui_lib.lineedit import ParameterLineEdit
+from gui_lib.combobox import StandardComboBox
 from gui_lib.pushbutton import StandardPushButton
 from gui_lib.tab import StandardTab
 from gui_lib.textedit import StandardTextEdit
-from gui_lib.widget_interface import WidgetInterface
+from gui_lib.treeview.treeview_format import TreeviewValueFormat
+from gui_lib.treeview.treeview_pandas import TreeviewPandas
+from gui_lib.window import Window
 from matplotlib import pyplot as plt
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import QTextCursor
 from PyQt5.QtWidgets import QMessageBox
-from treeview_format import TreeviewValueFormat
-from treeview_pandas import TreeviewPandas
-from window import Window
+from widget_lib.date_combobox import DateComboBox
+from widget_lib.parameter_lineedit import ParameterLineEdit
+from widget_lib.widget_interface import WidgetInterface
 
 from economic_indexers import EconomicIndexer
-from interest_calculation import (
-    InterestOnCurve,
-    InterestOnCurvePrefixed,
-    InterestOnCurveProportional,
-)
+from interest_calculation import (InterestOnCurve, InterestOnCurvePrefixed,
+                                  InterestOnCurveProportional)
 
 
 class InterestRateSelection(WidgetInterface):

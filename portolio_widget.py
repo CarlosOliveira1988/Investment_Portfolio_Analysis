@@ -1,6 +1,6 @@
 from gui_lib.pushbutton import StandardPushButton
-from treeview import Treeview
-from window import Window
+from gui_lib.treeview.treeview import Treeview
+from gui_lib.window import Window
 
 
 class ExpandCollapsePushButton:

@@ -1,25 +1,27 @@
-from treeview import Treeview
-from window import Window
+"""This file has a set of classes related to "QtWidgets.QTreeView"."""
+
+from gui_lib.treeview.treeview import Treeview
 
 
 class TreeviewPandas(Treeview):
-    """
-    This class provides methods and attributes to show Pandas DataFrames in a table.
-
-    Arguments:
-    - CentralWidget: the widget where the table will be placed
-    - PandasDataFrame: the pandas dataframe
-    """
+    """Class used to create a special Treeview with "QtWidgets.QTreeView"."""
 
     def __init__(
         self,
         CentralWidget,
         PandasDataFrame,
-        coordinate_X=Window.DEFAULT_BORDER_SIZE,
-        coordinate_Y=Window.DEFAULT_BORDER_SIZE,
+        coordinate_X=Treeview.EMPTY_SPACE,
+        coordinate_Y=Treeview.EMPTY_SPACE,
         width=Treeview.DEFAULT_WIDTH,
         height=Treeview.DEFAULT_HEIGHT,
     ):
+        """
+        Create a Treeview table object from "QtWidgets.QTreeView".
+
+        Arguments:
+        - CentralWidget: the widget where the table will be placed
+        - PandasDataFrame: the pandas dataframe
+        """
         self.PandasDataFrame = PandasDataFrame
         super().__init__(
             CentralWidget,
@@ -31,6 +33,7 @@ class TreeviewPandas(Treeview):
         )
 
     def showPandas(self, resize_per_contents=True):
+        """Insert a Pandas Dataframe inside the Treeview."""
         for line_data_row in self.PandasDataFrame.itertuples(index=False):
             line_data_row_list = list(line_data_row)
             items_list = self.convertValuesListToItemsList(line_data_row_list)

@@ -25,11 +25,9 @@ class StackedIndexerFormater:
     """
 
     def __assignColumnVariables(self):
-        from treeview_format import (
-            DateColumnType,
-            PercentageColumnType,
-            RequiredStringColumnType,
-        )
+        from gui_lib.treeview.treeview_format import (DateColumnType,
+                                                      PercentageColumnType,
+                                                      RequiredStringColumnType)
 
         self.Year = RequiredStringColumnType(self.__StackedConstants.getYearTitle())
         self.Month = RequiredStringColumnType(self.__StackedConstants.getMonthTitle())
@@ -108,7 +106,8 @@ class OriginalIndexerFormater:
     """
 
     def __assignColumnVariables(self):
-        from treeview_format import PercentageColumnType, RequiredStringColumnType
+        from gui_lib.treeview.treeview_format import (PercentageColumnType,
+                                                      RequiredStringColumnType)
 
         months_list = self.__OriginalConstants.getMonthsList()
         self.Year = RequiredStringColumnType(self.__OriginalConstants.getYearTitle())
