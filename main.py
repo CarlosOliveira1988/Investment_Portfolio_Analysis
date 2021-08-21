@@ -1,6 +1,6 @@
+from gui_lib.window import Window
 from portfolio_viewer_manager import PortfolioViewerManager
 from portolio_widget import PortfolioViewerWidget
-from window import Window
 
 
 class MainWindow(Window):

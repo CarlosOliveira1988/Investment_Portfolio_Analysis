@@ -6,8 +6,8 @@ import sys
 
 from PyQt5 import QtWidgets
 
-from treeview import Treeview
-from window import Window
+from gui_lib.treeview.treeview import Treeview
+from gui_lib.window import Window
 
 # Creates the application
 app = QtWidgets.QApplication(sys.argv)

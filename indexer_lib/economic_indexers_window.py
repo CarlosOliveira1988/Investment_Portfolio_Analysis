@@ -8,7 +8,7 @@ main_path = main_path.replace("\\indexer_lib", "")
 sys.path.append(main_path)
 
 # Customized modules imports
-from window import Window
+from gui_lib.window import Window
 
 from economic_indexers_widget import EconomicIndexerWidget
 

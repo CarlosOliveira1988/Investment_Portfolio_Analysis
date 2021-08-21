@@ -1,4 +1,4 @@
-from treeview_format import (
+from gui_lib.treeview.treeview_format import (
     CurencyColumnType,
     DateColumnType,
     FloatColumnType,
