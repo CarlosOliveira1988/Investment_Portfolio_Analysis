@@ -1,61 +1,34 @@
+"""This is the main file of the project."""
+
 from gui_lib.window import Window
-from portfolio_viewer_manager import PortfolioViewerManager
-from portolio_widget import PortfolioViewerWidget
+from portfolio_widget import PortfolioViewerWidget
 
 
 class MainWindow(Window):
-    """
-    This is the main class of the project, where all GUI components are placed.
-    """
+    """Class used to create the Main Window of the project."""
 
-    def __init__(self, portolio_dataframe):
-        super().__init__("Investment Portfolio Analysis")
-        self.PortfolioViewerManager = PortfolioViewerManager(portolio_dataframe)
+    def __init__(self, portfolio_dataframe):
+        """Create the MainWindow object."""
+        super().__init__("Análise de Portfólio")
         self.PortfolioViewerWidget = PortfolioViewerWidget(
-            self.getCentralWidget(), self.PortfolioViewerManager.getColumnsTitleList()
+            self.getCentralWidget(),
+            portfolio_dataframe,
         )
-        self.__initTreeviewData()
 
-    def __initTreeviewData(self):
-        self.Treeview = self.PortfolioViewerWidget.getTreeview()
-        self.__insertTreeviewParentLines()
-        self.__insertTreeviewChildrenLines()
-        self.Treeview.expandParentLines()
-        self.Treeview.resizeColumnsToContents()
-        self.Treeview.collapseParentLines()
-
-    def __insertTreeviewParentLines(self):
-        self.TreeviewParentLinesDictionary = {}
-        non_duplicated_market_list = (
-            self.PortfolioViewerManager.getColumnNonDuplicatedValuesList("Mercado")
+        # Window dimensions
+        self.setFixedSize(
+            self.PortfolioViewerWidget.getInternalWidth() + 25,
+            self.PortfolioViewerWidget.getInternalHeight() + 25,
         )
-        for market in non_duplicated_market_list:
-            parent_line = self.Treeview.insertParentLineItem(market)
-            self.TreeviewParentLinesDictionary[market] = parent_line
-
-    def __insertTreeviewChildrenLines(self):
-        for (
-            selected_market,
-            market_parent_line,
-        ) in self.TreeviewParentLinesDictionary.items():
-            df_per_market = self.PortfolioViewerManager.getCustomTable(
-                market=selected_market
-            )
-            for line_data_row in df_per_market.itertuples(index=False):
-                line_data_row_list = list(line_data_row)
-                line_data_row_list[0] = " "
-                self.Treeview.insertChildrenLineData(
-                    market_parent_line, line_data_row_list
-                )
 
 
 if __name__ == "__main__":
 
     # Define the constants
-    FILE_NAME = "\PORTFOLIO_TEMPLATE.xlsx"
+    FILE_NAME = "\\PORTFOLIO_TEMPLATE.xlsx"
     FILE_SHEET = r"Extrato"
 
-    # Creates the application
+    # Create the application
     import sys
 
     from PyQt5 import QtWidgets
@@ -64,17 +37,13 @@ if __name__ == "__main__":
 
     app = QtWidgets.QApplication(sys.argv)
 
-    # Get the path of the main folder 'Investment_Portfolio_Analysis'
-    def getMainPath():
-        return sys.path[0]
-
-    # Creates the dataframe
-    source_file_directory = getMainPath()
+    # Create the dataframe
+    source_file_directory = sys.path[0]
     portolio_dataframe = readOperations(source_file_directory + FILE_NAME)
 
-    # Creates and shows the "MainWindow" object
+    # Create and shows the "MainWindow" object
     main = MainWindow(portolio_dataframe)
-    main.showMaximized()
+    main.show()
 
-    # Ends the application when everything is closed
+    # End the application when everything is closed
     sys.exit(app.exec_())
