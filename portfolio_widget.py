@@ -228,6 +228,9 @@ class PortfolioViewerWidget(WidgetInterface):
         # TreasuriesWidget tab
         tab_central_widget = self.TabPanel.addNewTab("Tesouro Direto")
 
+        # CustodyWidget tab
+        tab_central_widget = self.TabPanel.addNewTab("Custódia")
+
         # Tab panel widget dimensions
         self.TabPanel.resize(
             self.getInternalWidth() + empty_space,
