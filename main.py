@@ -1,7 +1,7 @@
 """This is the main file of the project."""
 
 from gui_lib.window import Window
-from portfolio_widget import PortfolioViewerWidget
+from portfolio_lib.portfolio_widget import PortfolioViewerWidget
 
 
 class MainWindow(Window):
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     import sys
 
-    SOURCE_FILE_DIRECTORY = sys.path[0]
+    SOURCE_FILE_DIRECTORY = sys.path[0] + "\\portfolio_lib"
     FILE_NAME = r"\PORTFOLIO_TEMPLATE.xlsx"
 
     # SOURCE_FILE_DIRECTORY = r"D:\Dudu\Finanças\Investimentos\Mercado Financeiro"

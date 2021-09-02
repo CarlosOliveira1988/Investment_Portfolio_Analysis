@@ -1,4 +1,4 @@
-from portfolio_formater import PortfolioFormater
+from portfolio_lib.portfolio_formater import PortfolioFormater
 
 
 class PortfolioViewerManager:

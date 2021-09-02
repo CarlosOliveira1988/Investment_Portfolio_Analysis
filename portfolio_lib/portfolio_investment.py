@@ -9,11 +9,6 @@ from bs4 import BeautifulSoup
 from numpy import AxisError
 from pandas.core.indexes.datetimes import date_range
 
-SOURCE_FILE_DIRECTORY = sys.path[0]
-FILE_NAME = r"\PORTFOLIO_TEMPLATE.xlsx"
-
-file = SOURCE_FILE_DIRECTORY + FILE_NAME
-
 
 class PorfolioInvestment:
 
@@ -638,8 +633,15 @@ class PorfolioInvestment:
         return wallet
 
 
-# Example:
-portfolio = PorfolioInvestment(file)
-carteiraGD = portfolio.currentPortfolioGoogleDrive()
-carteira = portfolio.currentPortfolio()
-tesouro = portfolio.currentTesouroDireto()
+if __name__ == "__main__":
+
+    SOURCE_FILE_DIRECTORY = sys.path[0]
+    FILE_NAME = r"\PORTFOLIO_TEMPLATE.xlsx"
+
+    file = SOURCE_FILE_DIRECTORY + FILE_NAME
+
+    # Example:
+    portfolio = PorfolioInvestment(file)
+    carteiraGD = portfolio.currentPortfolioGoogleDrive()
+    carteira = portfolio.currentPortfolio()
+    tesouro = portfolio.currentTesouroDireto()

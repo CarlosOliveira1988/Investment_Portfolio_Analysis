@@ -1,16 +1,16 @@
 """This file has a set of classes to display data from Portfolio."""
 
-from PyQt5 import QtCore
-
 from gui_lib.pushbutton import StandardPushButton
 from gui_lib.tab import StandardTab
 from gui_lib.treeview.treeview import Treeview
 from gui_lib.treeview.treeview_pandas import TreeviewPandas
 from gui_lib.window import Window
-from portfolio_formater import TreasuriesFormater, VariableIncomesFormater
-from portfolio_investment import PorfolioInvestment
-from portfolio_viewer_manager import PortfolioViewerManager
+from PyQt5 import QtCore
 from widget_lib.widget_interface import WidgetInterface
+
+from portfolio_lib.portfolio_formater import TreasuriesFormater, VariableIncomesFormater
+from portfolio_lib.portfolio_investment import PorfolioInvestment
+from portfolio_lib.portfolio_viewer_manager import PortfolioViewerManager
 
 
 class ExpandCollapsePushButton(StandardPushButton):
