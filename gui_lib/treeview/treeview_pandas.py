@@ -38,5 +38,5 @@ class TreeviewPandas(Treeview):
             line_data_row_list = list(line_data_row)
             items_list = self.convertValuesListToItemsList(line_data_row_list)
             self.insertParentLine(items_list)
-            if resize_per_contents:
-                self.resizeColumnsToContents()
+        if resize_per_contents:
+            self.resizeColumnsToContents()

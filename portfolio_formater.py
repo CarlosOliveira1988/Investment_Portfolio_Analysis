@@ -102,3 +102,167 @@ class PortfolioFormater:
 
     def getFormatedPortolioDataFrame(self):
         return self.FormatedPortolioDataFrame
+
+
+class VariableIncomesFormater:
+    """
+    This class is useful to format Portfolio DataFrames by setting:
+    - the columns order
+    - the columns types
+    - the number of columns
+
+    Arguments:
+    - portfolio_data_frame: the portfolio pandas dataframe
+    """
+
+    def __init__(self, portfolio_data_frame):
+        self.FormatedPortolioDataFrame = portfolio_data_frame
+        self.__assignColumnVariables()
+        self.__appendColumnsVariableList()
+        self.__setColumnOrder()
+        self.__fillNaValues()
+        self.__format()
+
+    """
+    Private methods
+    """
+
+    def __assignColumnVariables(self):
+        self.Market = RequiredStringColumnType("Mercado")
+        self.Ticker = RequiredStringColumnType("Ticker")
+        self.Sector = RequiredStringColumnType("Setor")
+        self.Quantity = FloatColumnType("Quantidade")
+        self.MeanPrice = CurencyColumnType("Preço médio")
+        self.Quotation = CurencyColumnType("Cotação")
+        self.PaidPrice = CurencyColumnType("Preço pago")
+        self.MarketPrice = CurencyColumnType("Preço mercado")
+        self.Dividend = CurencyColumnType("Proventos")
+        self.NetValue = CurencyColumnType("Resultado liquido")
+        self.WalletPercentage = PercentageColumnType("Porcentagem carteira")
+        self.ColumnsVariableList = []
+
+    def __appendColumnsVariableList(self):
+        self.ColumnsVariableList.append("Market")
+        self.ColumnsVariableList.append("Ticker")
+        self.ColumnsVariableList.append("Sector")
+        self.ColumnsVariableList.append("Quantity")
+        self.ColumnsVariableList.append("MeanPrice")
+        self.ColumnsVariableList.append("Quotation")
+        self.ColumnsVariableList.append("PaidPrice")
+        self.ColumnsVariableList.append("MarketPrice")
+        self.ColumnsVariableList.append("Dividend")
+        self.ColumnsVariableList.append("NetValue")
+        self.ColumnsVariableList.append("WalletPercentage")
+
+    def __fillNaValues(self):
+        for column_variable_string in self.ColumnsVariableList:
+            column_type = VariableIncomesFormater.__getattribute__(
+                self, column_variable_string
+            )
+            column_type.fillNaDataFrameColumnValues(self.FormatedPortolioDataFrame)
+
+    def __setColumnOrder(self):
+        columns_title_list = []
+        for column_variable_string in self.ColumnsVariableList:
+            column_type = VariableIncomesFormater.__getattribute__(
+                self, column_variable_string
+            )
+            columns_title_list.append(column_type.getTitle())
+        self.FormatedPortolioDataFrame = self.FormatedPortolioDataFrame[
+            columns_title_list
+        ]
+
+    def __format(self):
+        for column_variable_string in self.ColumnsVariableList:
+            column_type = VariableIncomesFormater.__getattribute__(
+                self, column_variable_string
+            )
+            column_type.formatDataFrameColumnValues(self.FormatedPortolioDataFrame)
+
+    """
+    Public methods
+    """
+
+    def getColumnsTitleList(self):
+        return list(self.FormatedPortolioDataFrame)
+
+    def getFormatedPortolioDataFrame(self):
+        return self.FormatedPortolioDataFrame
+
+
+class TreasuriesFormater:
+    """
+    This class is useful to format Portfolio DataFrames by setting:
+    - the columns order
+    - the columns types
+    - the number of columns
+
+    Arguments:
+    - portfolio_data_frame: the portfolio pandas dataframe
+    """
+
+    def __init__(self, portfolio_data_frame):
+        self.FormatedPortolioDataFrame = portfolio_data_frame
+        self.__assignColumnVariables()
+        self.__appendColumnsVariableList()
+        self.__setColumnOrder()
+        self.__fillNaValues()
+        self.__format()
+
+    """
+    Private methods
+    """
+
+    def __assignColumnVariables(self):
+        self.Market = RequiredStringColumnType("Mercado")
+        self.Ticker = RequiredStringColumnType("Ticker")
+        self.Indexer = RequiredStringColumnType("Indexador")
+        self.Quantity = FloatColumnType("Quantidade")
+        self.Quotation = CurencyColumnType("Cotação")
+        self.MarketPrice = CurencyColumnType("Preço mercado")
+        self.WalletPercentage = PercentageColumnType("Porcentagem carteira")
+        self.ColumnsVariableList = []
+
+    def __appendColumnsVariableList(self):
+        self.ColumnsVariableList.append("Market")
+        self.ColumnsVariableList.append("Ticker")
+        self.ColumnsVariableList.append("Indexer")
+        self.ColumnsVariableList.append("Quantity")
+        self.ColumnsVariableList.append("Quotation")
+        self.ColumnsVariableList.append("MarketPrice")
+        self.ColumnsVariableList.append("WalletPercentage")
+
+    def __fillNaValues(self):
+        for column_variable_string in self.ColumnsVariableList:
+            column_type = TreasuriesFormater.__getattribute__(
+                self, column_variable_string
+            )
+            column_type.fillNaDataFrameColumnValues(self.FormatedPortolioDataFrame)
+
+    def __setColumnOrder(self):
+        columns_title_list = []
+        for column_variable_string in self.ColumnsVariableList:
+            column_type = TreasuriesFormater.__getattribute__(
+                self, column_variable_string
+            )
+            columns_title_list.append(column_type.getTitle())
+        self.FormatedPortolioDataFrame = self.FormatedPortolioDataFrame[
+            columns_title_list
+        ]
+
+    def __format(self):
+        for column_variable_string in self.ColumnsVariableList:
+            column_type = TreasuriesFormater.__getattribute__(
+                self, column_variable_string
+            )
+            column_type.formatDataFrameColumnValues(self.FormatedPortolioDataFrame)
+
+    """
+    Public methods
+    """
+
+    def getColumnsTitleList(self):
+        return list(self.FormatedPortolioDataFrame)
+
+    def getFormatedPortolioDataFrame(self):
+        return self.FormatedPortolioDataFrame

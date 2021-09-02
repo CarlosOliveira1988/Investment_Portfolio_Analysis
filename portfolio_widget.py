@@ -5,7 +5,10 @@ from PyQt5 import QtCore
 from gui_lib.pushbutton import StandardPushButton
 from gui_lib.tab import StandardTab
 from gui_lib.treeview.treeview import Treeview
+from gui_lib.treeview.treeview_pandas import TreeviewPandas
 from gui_lib.window import Window
+from portfolio_formater import TreasuriesFormater, VariableIncomesFormater
+from portfolio_investment import PorfolioInvestment
 from portfolio_viewer_manager import PortfolioViewerManager
 from widget_lib.widget_interface import WidgetInterface
 
@@ -190,15 +193,18 @@ class PortfolioViewerWidget(WidgetInterface):
 
     EMPTY_SPACE = Window.DEFAULT_BORDER_SIZE
 
-    def __init__(self, CentralWidget, portfolio_dataframe):
+    def __init__(self, CentralWidget, File):
         """Create the PortfolioViewerWidget object.
 
         Arguments:
         - CentralWidget: the widget where the components will be placed
-        - PortfolioDataFrame: the portfolio pandas dataframe
+        - File: the Portfolio file
         """
         # Internal central widget
         super().__init__(CentralWidget)
+
+        # PorfolioInvestment
+        self.porfolio_investment = PorfolioInvestment(File)
 
         # Tab panel widget
         self.TabPanel = StandardTab(self)
@@ -207,7 +213,7 @@ class PortfolioViewerWidget(WidgetInterface):
         tab_central_widget = self.TabPanel.addNewTab("Extrato")
         self.PortfolioSummaryWidget = PortfolioSummaryWidget(
             tab_central_widget,
-            portfolio_dataframe,
+            self.porfolio_investment.getExtrato(),
             coordinate_X=PortfolioViewerWidget.EMPTY_SPACE,
             coordinate_Y=PortfolioViewerWidget.EMPTY_SPACE,
         )
@@ -221,15 +227,67 @@ class PortfolioViewerWidget(WidgetInterface):
 
         # VariableIncomesWidget tab
         tab_central_widget = self.TabPanel.addNewTab("Renda Variável")
+        formatter = VariableIncomesFormater(self.porfolio_investment.currentPortfolio())
+        formatted_dataframe = formatter.getFormatedPortolioDataFrame()
+        treeview = TreeviewPandas(
+            tab_central_widget,
+            formatted_dataframe,
+            width=1320,
+            height=640,
+        )
+        treeview.showPandas(resize_per_contents=False)
+        treeview.resizeColumnsToTreeViewWidth()
 
         # FixedIncomesWidget tab
         tab_central_widget = self.TabPanel.addNewTab("Renda Fixa")
+        dataframe = self.porfolio_investment.customTable(
+            ticker="all",
+            market="Renda Fixa",
+            dueDate="NA",
+            profitability="NA",
+            index="all",
+            operation="all",
+        )
+        viewer_manager = PortfolioViewerManager(dataframe)
+        treeview = TreeviewPandas(
+            tab_central_widget,
+            viewer_manager.getFormattedDataframe(),
+            width=1320,
+            height=640,
+        )
+        treeview.showPandas()
 
         # TreasuriesWidget tab
         tab_central_widget = self.TabPanel.addNewTab("Tesouro Direto")
+        formatter = TreasuriesFormater(self.porfolio_investment.currentTesouroDireto())
+        formatted_dataframe = formatter.getFormatedPortolioDataFrame()
+        treeview = TreeviewPandas(
+            tab_central_widget,
+            formatted_dataframe,
+            width=1320,
+            height=640,
+        )
+        treeview.showPandas(resize_per_contents=False)
+        treeview.resizeColumnsToTreeViewWidth()
 
         # CustodyWidget tab
         tab_central_widget = self.TabPanel.addNewTab("Custódia")
+        dataframe = self.porfolio_investment.customTable(
+            ticker="all",
+            market="Custodia",
+            dueDate="NA",
+            profitability="NA",
+            index="all",
+            operation="all",
+        )
+        viewer_manager = PortfolioViewerManager(dataframe)
+        treeview = TreeviewPandas(
+            tab_central_widget,
+            viewer_manager.getFormattedDataframe(),
+            width=1320,
+            height=640,
+        )
+        treeview.showPandas()
 
         # Tab panel widget dimensions
         self.TabPanel.resize(

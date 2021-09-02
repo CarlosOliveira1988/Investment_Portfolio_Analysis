@@ -7,12 +7,13 @@ from portfolio_widget import PortfolioViewerWidget
 class MainWindow(Window):
     """Class used to create the Main Window of the project."""
 
-    def __init__(self, portfolio_dataframe):
+    def __init__(self, file):
         """Create the MainWindow object."""
         super().__init__("Análise de Portfólio")
+
         self.PortfolioViewerWidget = PortfolioViewerWidget(
             self.getCentralWidget(),
-            portfolio_dataframe,
+            file,
         )
 
         # Window dimensions
@@ -24,25 +25,32 @@ class MainWindow(Window):
 
 if __name__ == "__main__":
 
-    # Define the constants
-    FILE_NAME = "\\PORTFOLIO_TEMPLATE.xlsx"
-    FILE_SHEET = r"Extrato"
+    import sys
+
+    SOURCE_FILE_DIRECTORY = sys.path[0]
+    FILE_NAME = r"\PORTFOLIO_TEMPLATE.xlsx"
+
+    # SOURCE_FILE_DIRECTORY = r"D:\Dudu\Finanças\Investimentos\Mercado Financeiro"
+    # FILE_NAME = r"\Poupanca_one_tab.xlsx"
+
+    # SOURCE_FILE_DIRECTORY = r"C:\Users\Fred\Documents\GitHub\Investment_Portfolio_Analysis"
+    # FILE_NAME = r"\PORTFOLIO_TEMPLATE.xlsx"
+    # FILE_NAME = r"\Extrato_Fred.xlsx"
+
+    FILE = SOURCE_FILE_DIRECTORY + FILE_NAME
 
     # Create the application
     import sys
 
     from PyQt5 import QtWidgets
 
-    from extrato import readOperations
-
     app = QtWidgets.QApplication(sys.argv)
 
-    # Create the dataframe
+    # File directory
     source_file_directory = sys.path[0]
-    portolio_dataframe = readOperations(source_file_directory + FILE_NAME)
 
     # Create and shows the "MainWindow" object
-    main = MainWindow(portolio_dataframe)
+    main = MainWindow(FILE)
     main.show()
 
     # End the application when everything is closed

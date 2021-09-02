@@ -66,3 +66,6 @@ class PortfolioViewerManager:
                 self.FormatedPortolioDataFrame["Operação"] == operation
             ]
         return table
+
+    def getFormattedDataframe(self):
+        return self.FormatedPortolioDataFrame
