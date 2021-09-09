@@ -8,12 +8,13 @@ class TreeviewPandas(Treeview):
 
     def __init__(
         self,
-        CentralWidget,
-        PandasDataFrame,
+        CentralWidget=None,
+        PandasDataFrame=None,
         coordinate_X=Treeview.EMPTY_SPACE,
         coordinate_Y=Treeview.EMPTY_SPACE,
         width=Treeview.DEFAULT_WIDTH,
         height=Treeview.DEFAULT_HEIGHT,
+        autosize=False,
     ):
         """
         Create a Treeview table object from "QtWidgets.QTreeView".
@@ -23,14 +24,21 @@ class TreeviewPandas(Treeview):
         - PandasDataFrame: the pandas dataframe
         """
         self.PandasDataFrame = PandasDataFrame
-        super().__init__(
-            CentralWidget,
-            list(self.PandasDataFrame),
-            coordinate_X,
-            coordinate_Y,
-            width,
-            height,
-        )
+        if autosize:
+            super().__init__(
+                columns_title_list=list(self.PandasDataFrame),
+                autosize=True,
+            )
+        else:
+            super().__init__(
+                CentralWidget,
+                list(self.PandasDataFrame),
+                coordinate_X,
+                coordinate_Y,
+                width,
+                height,
+                autosize=False,
+            )
 
     def showPandas(self, resize_per_contents=True):
         """Insert a Pandas Dataframe inside the Treeview."""

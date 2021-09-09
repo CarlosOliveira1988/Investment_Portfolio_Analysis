@@ -1,26 +1,25 @@
 """This is the main file of the project."""
 
-from gui_lib.window import Window
+from PyQt5 import QtWidgets
+
 from portfolio_lib.portfolio_widget import PortfolioViewerWidget
 
 
-class MainWindow(Window):
+class MainWindow(QtWidgets.QWidget):
     """Class used to create the Main Window of the project."""
 
     def __init__(self, file):
         """Create the MainWindow object."""
-        super().__init__("Análise de Portfólio")
+        super().__init__()
+        self.setWindowTitle("Análise de Portfólio")
 
-        self.PortfolioViewerWidget = PortfolioViewerWidget(
-            self.getCentralWidget(),
-            file,
-        )
+        # Grid layout manager
+        grid = QtWidgets.QGridLayout()
+        self.setLayout(grid)
 
-        # Window dimensions
-        self.setFixedSize(
-            self.PortfolioViewerWidget.getInternalWidth() + 25,
-            self.PortfolioViewerWidget.getInternalHeight() + 25,
-        )
+        # Portfolio widget
+        self.PortfolioViewerWidget = PortfolioViewerWidget(file)
+        grid.addWidget(self.PortfolioViewerWidget)
 
 
 if __name__ == "__main__":
@@ -51,7 +50,7 @@ if __name__ == "__main__":
 
     # Create and shows the "MainWindow" object
     main = MainWindow(FILE)
-    main.show()
+    main.showMaximized()
 
     # End the application when everything is closed
     sys.exit(app.exec_())

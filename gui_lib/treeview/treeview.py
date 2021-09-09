@@ -15,12 +15,13 @@ class Treeview(QtWidgets.QTreeView):
 
     def __init__(
         self,
-        CentralWidget,
-        columns_title_list,
+        CentralWidget=None,
+        columns_title_list=[],
         coordinate_X=EMPTY_SPACE,
         coordinate_Y=EMPTY_SPACE,
         width=DEFAULT_WIDTH,
         height=DEFAULT_HEIGHT,
+        autosize=False,
     ):
         """
         Create a Treeview table object from "QtWidgets.QTreeView".
@@ -33,16 +34,28 @@ class Treeview(QtWidgets.QTreeView):
         - width: the width of the table
         - height: the height of the table
         """
-        super().__init__(CentralWidget)
+
+        # If specified by 'autosize' flag, then the main class controls the
+        # parent widget by 'addWidget()' method using GridLayouts
+        if autosize:
+            super().__init__()
+        else:
+            super().__init__(CentralWidget)
+
         self.ColumnsTitleList = columns_title_list
-        self.setGeometry(
-            QtCore.QRect(
-                coordinate_X,
-                coordinate_Y,
-                width,
-                height,
+
+        # Set fixed size if not using the 'autosize' feature
+        if autosize:
+            pass
+        else:
+            self.setGeometry(
+                QtCore.QRect(
+                    coordinate_X,
+                    coordinate_Y,
+                    width,
+                    height,
+                )
             )
-        )
         self.__createTreeViewModel(columns_title_list)
         self.setModel(self.TreeViewModel)
 
@@ -137,5 +150,5 @@ class Treeview(QtWidgets.QTreeView):
         """Adjust the columns size according the treeview width."""
         column_count = self.TreeViewModel.columnCount()
         column_width = round((self.width() - 25) / column_count)
-        for column_index in range(self.TreeViewModel.columnCount()):
+        for column_index in range(column_count):
             self.setColumnWidth(column_index, column_width)

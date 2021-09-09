@@ -20,16 +20,11 @@ class Window(QtWidgets.QMainWindow):
         """
         super().__init__()
         self.__setupWindow(window_title)
-        self.__setDefaultWindowSize()
 
     def __setupWindow(self, window_title):
         self.CentralWidget = QtWidgets.QWidget()
         self.setCentralWidget(self.CentralWidget)
         self.setWindowTitle(window_title)
-
-    def __setDefaultWindowSize(self):
-        self.CentralWidget.resize(Window.DEFAULT_WIDTH, Window.DEFAULT_HEIGHT)
-        self.resize(Window.DEFAULT_WIDTH, Window.DEFAULT_HEIGHT)
 
     def getCentralWidget(self):
         """
