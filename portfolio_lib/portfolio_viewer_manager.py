@@ -1,4 +1,4 @@
-from portfolio_formater import PortfolioFormater
+from portfolio_lib.portfolio_formater import PortfolioFormater
 
 
 class PortfolioViewerManager:
@@ -66,3 +66,6 @@ class PortfolioViewerManager:
                 self.FormatedPortolioDataFrame["Operação"] == operation
             ]
         return table
+
+    def getFormattedDataframe(self):
+        return self.FormatedPortolioDataFrame

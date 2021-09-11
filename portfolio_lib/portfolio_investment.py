@@ -1,3 +1,4 @@
+import sys
 from datetime import date, datetime, timedelta
 
 import pandas as pd
@@ -8,11 +9,6 @@ from bs4 import BeautifulSoup
 from numpy import AxisError
 from pandas.core.indexes.datetimes import date_range
 
-SOURCE_FILE_DIRECTORY = r"C:\Users\Fred\Documents\GitHub\Investment_Portfolio_Analysis"
-FILE_NAME = "\Extrato_Fred.xlsx"
-
-file = SOURCE_FILE_DIRECTORY + FILE_NAME
-
 
 class PorfolioInvestment:
 
@@ -22,8 +18,9 @@ class PorfolioInvestment:
     """
 
     def __init__(self, fileOperations):
+        self.fileOperations = fileOperations
         self.operations = pd.read_excel(
-            file
+            fileOperations
         )  # Dataframe with all the operations from the Excel file.
         self.operationsYear = (
             self.numberOperationsYear()
@@ -31,6 +28,10 @@ class PorfolioInvestment:
         self.current = (
             self.currentPortfolio()
         )  # Dataframe of the current portfolio. Suitable to be plot.
+
+    def getExtrato(self):
+        self.operations = pd.read_excel(self.fileOperations)
+        return self.operations
 
     def overallTaxAndIncomes(self):
         """
@@ -614,7 +615,7 @@ class PorfolioInvestment:
                 wallet.at[index, "Quantidade"] = float(numberStocks)
                 wallet.at[
                     index, "Cotação"
-                ] = portfolio.currentMarketPriceTesouroWebScrappingStatusInvest(
+                ] = self.currentMarketPriceTesouroWebScrappingStatusInvest(
                     row["Ticker"]
                 )
 
@@ -632,8 +633,15 @@ class PorfolioInvestment:
         return wallet
 
 
-# Example:
-# portfolio = PorfolioInvestment(file)
-# carteiraGD = portfolio.currentPortfolioGoogleDrive()
+if __name__ == "__main__":
 
-# print( portfolio.currentTesouroDireto() )
+    SOURCE_FILE_DIRECTORY = sys.path[0]
+    FILE_NAME = r"\PORTFOLIO_TEMPLATE.xlsx"
+
+    file = SOURCE_FILE_DIRECTORY + FILE_NAME
+
+    # Example:
+    portfolio = PorfolioInvestment(file)
+    carteiraGD = portfolio.currentPortfolioGoogleDrive()
+    carteira = portfolio.currentPortfolio()
+    tesouro = portfolio.currentTesouroDireto()

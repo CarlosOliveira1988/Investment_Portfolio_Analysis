@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 
 
-class Treeview(QtWidgets.QTreeView):
+class TreeviewInterface(QtWidgets.QTreeView):
     """Class used to create a Treeview table with "QtWidgets.QTreeView"."""
 
     # Contants related to the window
@@ -15,12 +15,8 @@ class Treeview(QtWidgets.QTreeView):
 
     def __init__(
         self,
-        CentralWidget,
-        columns_title_list,
-        coordinate_X=EMPTY_SPACE,
-        coordinate_Y=EMPTY_SPACE,
-        width=DEFAULT_WIDTH,
-        height=DEFAULT_HEIGHT,
+        CentralWidget=None,
+        columns_title_list=[],
     ):
         """
         Create a Treeview table object from "QtWidgets.QTreeView".
@@ -28,21 +24,12 @@ class Treeview(QtWidgets.QTreeView):
         Arguments:
         - CentralWidget: the widget where the table will be placed
         - columns_title_list: a list of columns titles
-        - coordinate_X: the window X coordinate where the table will be placed
-        - coordinate_Y: the window Y coordinate where the table will be placed
-        - width: the width of the table
-        - height: the height of the table
         """
-        super().__init__(CentralWidget)
+        if CentralWidget:
+            super().__init__(CentralWidget)
+        else:
+            super().__init__()
         self.ColumnsTitleList = columns_title_list
-        self.setGeometry(
-            QtCore.QRect(
-                coordinate_X,
-                coordinate_Y,
-                width,
-                height,
-            )
-        )
         self.__createTreeViewModel(columns_title_list)
         self.setModel(self.TreeViewModel)
 
@@ -137,5 +124,61 @@ class Treeview(QtWidgets.QTreeView):
         """Adjust the columns size according the treeview width."""
         column_count = self.TreeViewModel.columnCount()
         column_width = round((self.width() - 25) / column_count)
-        for column_index in range(self.TreeViewModel.columnCount()):
+        for column_index in range(column_count):
             self.setColumnWidth(column_index, column_width)
+
+
+class Treeview(TreeviewInterface):
+    """Class used to create a Treeview table with "QtWidgets.QTreeView"."""
+
+    def __init__(
+        self,
+        CentralWidget,
+        columns_title_list,
+        coordinate_X=TreeviewInterface.EMPTY_SPACE,
+        coordinate_Y=TreeviewInterface.EMPTY_SPACE,
+        width=TreeviewInterface.DEFAULT_WIDTH,
+        height=TreeviewInterface.DEFAULT_HEIGHT,
+    ):
+        """Create a Treeview table object from "QtWidgets.QTreeView".
+
+        Note: Fixed size and fixed coordinates.
+
+        Arguments:
+        - CentralWidget: the widget where the table will be placed
+        - columns_title_list: a list of columns titles
+        - coordinate_X: the window X coordinate where the table will be placed
+        - coordinate_Y: the window Y coordinate where the table will be placed
+        - width: the width of the table
+        - height: the height of the table
+        """
+        super().__init__(
+            CentralWidget=CentralWidget,
+            columns_title_list=columns_title_list,
+        )
+        self.setGeometry(
+            QtCore.QRect(
+                coordinate_X,
+                coordinate_Y,
+                width,
+                height,
+            )
+        )
+
+
+class ResizableTreeview(TreeviewInterface):
+    """Class used to create a Treeview table with "QtWidgets.QTreeView"."""
+
+    def __init__(self, columns_title_list):
+        """
+        Create a Treeview table object from "QtWidgets.QTreeView".
+
+        Note: Dynamic size and dynamic coordinates for GridLayout.
+
+        Arguments:
+        - columns_title_list: a list of columns titles
+        """
+        super().__init__(
+            CentralWidget=None,
+            columns_title_list=columns_title_list,
+        )

@@ -12,8 +12,8 @@ class StandardPushButton(QtWidgets.QPushButton):
 
     def __init__(
         self,
-        CentralWidget,
-        title,
+        CentralWidget=None,
+        title="",
         coordinate_X=0,
         coordinate_Y=0,
         width=DEFAULT_WIDTH,
@@ -22,6 +22,8 @@ class StandardPushButton(QtWidgets.QPushButton):
     ):
         """
         Create an StandardPushButton object from "QtWidgets.QPushButton".
+
+        Note: Fixed size and fixed coordinates.
 
         Arguments:
         - CentralWidget: the widget where the PushButton will be placed
@@ -41,6 +43,9 @@ class StandardPushButton(QtWidgets.QPushButton):
                 height,
             )
         )
+        self.__setup(title, onClickMethod)
+
+    def __setup(self, title, onClickMethod):
         self.setText(title)
         if onClickMethod:
             self.clicked.connect(onClickMethod)
