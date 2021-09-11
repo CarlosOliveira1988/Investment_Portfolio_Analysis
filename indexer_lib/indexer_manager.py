@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pandas as pd
 
-from indexer_formater import OriginalIndexerFormater, StackedIndexerFormater
-from interest_calculation import InterestCalculation
+from indexer_lib.indexer_formater import OriginalIndexerFormater, StackedIndexerFormater
+from indexer_lib.interest_calculation import InterestCalculation
 
 
 class OriginalFormatConstants:

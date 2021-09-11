@@ -10,7 +10,7 @@ class StackedIndexerFormater:
     """
 
     def __init__(self, data_frame):
-        from indexer_manager import StackedFormatConstants
+        from indexer_lib.indexer_manager import StackedFormatConstants
 
         self.__FormatedDataFrame = data_frame
         self.__StackedConstants = StackedFormatConstants()
@@ -25,9 +25,11 @@ class StackedIndexerFormater:
     """
 
     def __assignColumnVariables(self):
-        from gui_lib.treeview.treeview_format import (DateColumnType,
-                                                      PercentageColumnType,
-                                                      RequiredStringColumnType)
+        from gui_lib.treeview.treeview_format import (
+            DateColumnType,
+            PercentageColumnType,
+            RequiredStringColumnType,
+        )
 
         self.Year = RequiredStringColumnType(self.__StackedConstants.getYearTitle())
         self.Month = RequiredStringColumnType(self.__StackedConstants.getMonthTitle())
@@ -91,7 +93,7 @@ class OriginalIndexerFormater:
     """
 
     def __init__(self, data_frame):
-        from indexer_manager import OriginalFormatConstants
+        from indexer_lib.indexer_manager import OriginalFormatConstants
 
         self.__FormatedDataFrame = data_frame
         self.__OriginalConstants = OriginalFormatConstants()
@@ -106,8 +108,10 @@ class OriginalIndexerFormater:
     """
 
     def __assignColumnVariables(self):
-        from gui_lib.treeview.treeview_format import (PercentageColumnType,
-                                                      RequiredStringColumnType)
+        from gui_lib.treeview.treeview_format import (
+            PercentageColumnType,
+            RequiredStringColumnType,
+        )
 
         months_list = self.__OriginalConstants.getMonthsList()
         self.Year = RequiredStringColumnType(self.__OriginalConstants.getYearTitle())

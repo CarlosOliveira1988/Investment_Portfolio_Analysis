@@ -106,7 +106,6 @@ class PortfolioSummaryWidget(QtWidgets.QWidget):
             )
         )
         self.__resizeColumns()
-
         grid = QtWidgets.QGridLayout()
         grid.setContentsMargins(spacing, spacing, spacing, spacing)
         grid.setSpacing(spacing)
@@ -157,6 +156,15 @@ class PortfolioSummaryWidget(QtWidgets.QWidget):
                 self.__PortfolioTreeview.insertChildrenLineData(
                     market_parent_line, line_data_row_list
                 )
+
+    def clearData(self):
+        """Clear the treeview data lines."""
+        self.__PortfolioTreeview.clearData()
+
+    def updateData(self, dataframe):
+        """Update the treeview data lines."""
+        self.__PortfolioViewerManager = PortfolioViewerManager(dataframe)
+        self.__initTreeviewData()
 
 
 class PortfolioViewerWidget(QtWidgets.QTabWidget):
@@ -223,3 +231,28 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
             self.variable_treeview.resizeColumnsToTreeViewWidth()
         elif index == self.treasuries_tab_index:
             self.treasuries_treeview.resizeColumnsToTreeViewWidth()
+
+    def clearData(self):
+        """Clear the treeview data lines."""
+        self.PortfolioSummaryWidget.clearData()
+        self.variable_treeview.clearData()
+        self.treasuries_treeview.clearData()
+
+    def updateData(self, file_name):
+        """Update the treeview data lines."""
+        self.porfolio_investment = PorfolioInvestment(file_name)
+
+        self.extrato = self.porfolio_investment.getExtrato()
+        self.PortfolioSummaryWidget.updateData(self.extrato)
+
+        self.variable_income = self.porfolio_investment.currentPortfolio()
+        formatter = VariableIncomesFormater(self.variable_income)
+        formatted_dataframe = formatter.getFormatedPortolioDataFrame()
+        self.variable_treeview.setDataframe(formatted_dataframe)
+        self.variable_treeview.showPandas(resize_per_contents=False)
+
+        self.treasuries = self.porfolio_investment.currentTesouroDireto()
+        formatter = TreasuriesFormater(self.treasuries)
+        formatted_dataframe = formatter.getFormatedPortolioDataFrame()
+        self.treasuries_treeview.setDataframe(formatted_dataframe)
+        self.treasuries_treeview.showPandas(resize_per_contents=False)
