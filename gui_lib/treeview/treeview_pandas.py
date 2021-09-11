@@ -46,6 +46,10 @@ class TreeviewPandas(Treeview):
         if resize_per_contents:
             self.resizeColumnsToContents()
 
+    def setDataframe(self, dataframe):
+        """Set the dataframe."""
+        self.PandasDataFrame = dataframe.copy()
+
 
 class ResizableTreeviewPandas(ResizableTreeview):
     """Class used to create a special Treeview with "QtWidgets.QTreeView"."""
@@ -70,3 +74,7 @@ class ResizableTreeviewPandas(ResizableTreeview):
             self.insertParentLine(items_list)
         if resize_per_contents:
             self.resizeColumnsToContents()
+
+    def setDataframe(self, dataframe):
+        """Set the dataframe."""
+        self.PandasDataFrame = dataframe.copy()

@@ -1,4 +1,4 @@
-from indexer_manager import IndexerManager
+from indexer_lib.indexer_manager import IndexerManager
 
 
 class IPCA(IndexerManager):

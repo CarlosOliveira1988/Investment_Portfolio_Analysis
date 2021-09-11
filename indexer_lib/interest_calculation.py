@@ -1,26 +1,29 @@
+"""This file has a set of methods useful to calculate interest."""
+
 import math
 
 
 class InterestCalculation:
-    """
-    This class is useful to calculate 'Interest Value' and 'Interest Rate'.
+    """This class is useful to calculate 'Interest Value' and 'Interest Rate'.
 
-    The 'Interest Value' (a float number) is the total amount of value, usually expressed in 'R$'.
-    Example: 1000.0 (R$)
+    The 'Interest Value' (a float number) is the total amount of value,
+    usually expressed in 'R$'. Example: 1000.0 (R$)
 
-    The 'Interest Rate' (a float number) is the portion/fraction of interest, usually expressed in '%'.
-    Example: 6.02 (%)
+    The 'Interest Rate' (a float number) is the portion/fraction of interest,
+    usually expressed in '%'. Example: 6.02 (%)
 
-    The 'Interest Rate' in this class is expressed in a 'raw' way, where '0.0602' means '6.02%'.
+    The 'Interest Rate' in this class is expressed in a 'raw' way, where
+    '0.0602' means '6.02%'.
     """
 
     def __init__(self):
+        """Constructor of this class. No argument is needed."""
         pass
 
     def calculateInterestValueByValues(self, initial_value, final_value):
-        """
-        Calculates the total interest value based on 'initial' and 'final' values.
-        Basically, returns the difference between the 'final' and 'initial' values.
+        """Calculate the total interest value based on initial/final values.
+
+        Basically, returns the difference between the initial/final values.
 
         Arguments:
         - initial_value(float)
@@ -29,10 +32,9 @@ class InterestCalculation:
         return final_value - initial_value
 
     def calculateInterestValue(self, interest_rate_list, initial_value=1.00):
-        """
-        Calculates the total interest value based on an 'interest rate list' and an 'initial value'.
+        """Calculate the total interest value based.
 
-        'NaN' values are replaced by the '0.0' constant.
+        Note: 'NaN' values are replaced by the '0.0' constant.
 
         Arguments:
         - interest_rate_list(float): a list of interest rates
@@ -47,10 +49,12 @@ class InterestCalculation:
             total_value = adjusted_interest_rate * total_value
         return self.calculateInterestValueByValues(initial_value, total_value)
 
-    def getCumulativeInterestValueList(self, interest_rate_list, initial_value=1.00):
-        """
-        Given an 'interest_rate_list' and an 'initial_value', returns an 'interest_values_list'
-        with the same length.
+    def getCumulativeInterestValueList(
+        self,
+        interest_rate_list,
+        initial_value=1.00,
+    ):
+        """Return an'interest_values_list'.
 
         Example:
         - interest_rate_list = [0.01, 0.02, 0.03, 0.04, 0.05]
@@ -67,10 +71,13 @@ class InterestCalculation:
             total_value += cumulative_interest_value
         return cumulative_interest_value_list
 
-    def getCumulativeInterestRateList(self, interest_value_list, initial_value=1.00):
+    def getCumulativeInterestRateList(
+        self,
+        interest_value_list,
+        initial_value=1.00,
+    ):
         """
-        Given an 'interest_value_list' and an 'initial_value', returns an 'interest_rate_list'
-        with the same length.
+        Return an 'interest_rate_list'.
 
         Example:
         - interest_value_list = [100.0, 110.0, 121.0]
@@ -88,8 +95,7 @@ class InterestCalculation:
         return mean_interest_rate_list
 
     def calculateInterestRateByValues(self, initial_value, final_value):
-        """
-        Calculates the total interest rate based on 'initial' and 'final' values.
+        """Calculate the total interest rate.
 
         Arguments:
         - initial_value(float)
@@ -102,23 +108,27 @@ class InterestCalculation:
         return total_interest_rate
 
     def calculateInterestRate(self, interest_rate_list, initial_value=1.00):
-        """
-        Calculates the total interest rate based on an 'interest rate list' and an 'initial value'.
+        """Calculate the total interest rate.
 
         Arguments:
         - interest_rate_list(float): a list of interest rates
         - initial_value(float): the initial value
         """
-        interest_value = self.calculateInterestValue(interest_rate_list, initial_value)
+        interest_value = self.calculateInterestValue(
+            interest_rate_list,
+            initial_value,
+        )
         total_interest_rate = self.calculateInterestRateByValues(
             initial_value, (initial_value + interest_value)
         )
         return total_interest_rate
 
-    def calculateMeanInterestRatePerPeriod(self, interest_rate, number_of_periods):
-        """
-        Given an 'interest_rate' and a 'number_of_periods', returns the 'mean_interest_rate' related
-        to the period.
+    def calculateMeanInterestRatePerPeriod(
+        self,
+        interest_rate,
+        number_of_periods,
+    ):
+        """Return the 'mean_interest_rate' related to the period.
 
         Example:
         - interest_rate = 0.0616778118644995687897076174316
@@ -358,9 +368,9 @@ class Benchmark:
     """
 
     def __init__(self):
-        from dataframe_filter import DataframeFilter
-        from economic_indexers import CDI, IPCA
-        from indexer_manager import StackedFormatConstants
+        from indexer_lib.dataframe_filter import DataframeFilter
+        from indexer_lib.economic_indexers import CDI, IPCA
+        from indexer_lib.indexer_manager import StackedFormatConstants
 
         self.InterestCalculation = InterestCalculation()
         self.StackedFormatConstants = StackedFormatConstants()

@@ -1,18 +1,11 @@
-"""This file has a class to show Economic Indexers."""
+# """This file has a class to show Economic Indexers."""
 
-import sys
+# import sys
 
+from gui_lib.window import Window
 from PyQt5 import QtCore, QtWidgets
 
-# Add mainfolder path to sys.path to allow importing the customized mudules
-main_path = sys.path[0]
-main_path = main_path.replace("\\indexer_lib", "")
-sys.path.append(main_path)
-
-# Customized modules imports
-from gui_lib.window import Window
-
-from economic_indexers_widget import EconomicIndexerWidget
+from indexer_lib.economic_indexers_widget import EconomicIndexerWidget
 
 
 class EconomicIndexerWindow(Window):
@@ -46,15 +39,3 @@ class EconomicIndexerWindow(Window):
         # Show the window
         if auto_show:
             self.show()
-
-
-if __name__ == "__main__":
-
-    # Create the application
-    app = QtWidgets.QApplication(sys.argv)
-
-    # Creates the data viewer window
-    window = EconomicIndexerWindow()
-
-    # Ends the application when everything is closed
-    sys.exit(app.exec_())

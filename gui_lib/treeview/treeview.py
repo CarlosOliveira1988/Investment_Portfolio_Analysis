@@ -127,6 +127,10 @@ class TreeviewInterface(QtWidgets.QTreeView):
         for column_index in range(column_count):
             self.setColumnWidth(column_index, column_width)
 
+    def clearData(self):
+        """Clear the treeview data lines."""
+        self.TreeViewModel.removeRows(0, self.TreeViewModel.rowCount())
+
 
 class Treeview(TreeviewInterface):
     """Class used to create a Treeview table with "QtWidgets.QTreeView"."""

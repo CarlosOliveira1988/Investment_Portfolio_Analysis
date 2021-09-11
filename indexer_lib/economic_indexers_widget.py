@@ -15,9 +15,12 @@ from widget_lib.date_combobox import DateComboBox
 from widget_lib.parameter_lineedit import ParameterLineEdit
 from widget_lib.widget_interface import WidgetInterface
 
-from economic_indexers import EconomicIndexer
-from interest_calculation import (InterestOnCurve, InterestOnCurvePrefixed,
-                                  InterestOnCurveProportional)
+from indexer_lib.economic_indexers import EconomicIndexer
+from indexer_lib.interest_calculation import (
+    InterestOnCurve,
+    InterestOnCurvePrefixed,
+    InterestOnCurveProportional,
+)
 
 
 class InterestRateSelection(WidgetInterface):
@@ -408,9 +411,9 @@ class IndexerPanelWidget(WidgetInterface):
         self.incrementInternalWidth(self.TreeviewPandas.width())
 
         # Auxiliary variables
-        from dataframe_filter import DataframeFilter
-        from indexer_manager import StackedFormatConstants
-        from interest_calculation import Benchmark
+        from indexer_lib.dataframe_filter import DataframeFilter
+        from indexer_lib.indexer_manager import StackedFormatConstants
+        from indexer_lib.interest_calculation import Benchmark
 
         self.ResultsWidget = ResultsWidget
         self.Benchmark = Benchmark()
