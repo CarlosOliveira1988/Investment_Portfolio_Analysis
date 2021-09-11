@@ -19,10 +19,11 @@ class StandardPushButton(QtWidgets.QPushButton):
         width=DEFAULT_WIDTH,
         height=DEFAULT_HEIGHT,
         onClickMethod=None,
-        autosize=False,
     ):
         """
         Create an StandardPushButton object from "QtWidgets.QPushButton".
+
+        Note: Fixed size and fixed coordinates.
 
         Arguments:
         - CentralWidget: the widget where the PushButton will be placed
@@ -33,27 +34,18 @@ class StandardPushButton(QtWidgets.QPushButton):
         - height: the height of the PushButton
         - onClickMethod: the callback method of the "onClick" PushButton event
         """
-
-        # If specified by 'autosize' flag, then the main class controls the
-        # parent widget by 'addWidget()' method using GridLayouts
-        if autosize:
-            super().__init__()
-        else:
-            super().__init__(CentralWidget)
-
-        # Set fixed size if not using the 'autosize' feature
-        if autosize:
-            pass
-        else:
-            self.setGeometry(
-                QtCore.QRect(
-                    coordinate_X,
-                    coordinate_Y,
-                    width,
-                    height,
-                )
+        super().__init__(CentralWidget)
+        self.setGeometry(
+            QtCore.QRect(
+                coordinate_X,
+                coordinate_Y,
+                width,
+                height,
             )
+        )
+        self.__setup(title, onClickMethod)
 
+    def __setup(self, title, onClickMethod):
         self.setText(title)
         if onClickMethod:
             self.clicked.connect(onClickMethod)

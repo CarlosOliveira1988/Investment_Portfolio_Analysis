@@ -1,8 +1,10 @@
+"""This file has a class to show Economic Indexers."""
+
 import sys
 
 from PyQt5 import QtCore, QtWidgets
 
-# Add mainfolder path to sys.path, in order to allow importing the customized mudules
+# Add mainfolder path to sys.path to allow importing the customized mudules
 main_path = sys.path[0]
 main_path = main_path.replace("\\indexer_lib", "")
 sys.path.append(main_path)
@@ -14,7 +16,14 @@ from economic_indexers_widget import EconomicIndexerWidget
 
 
 class EconomicIndexerWindow(Window):
+    """Window Class used to how Economic Indexers."""
+
     def __init__(self, auto_show=True):
+        """Create the EconomicIndexerWindow object.
+
+        Arguments:
+        - auto_show (True/False): flag to show window while creating the object
+        """
         super().__init__("Indicadores Econômicos")
 
         # Indexer Widget

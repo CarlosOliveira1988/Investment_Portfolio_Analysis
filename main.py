@@ -8,7 +8,7 @@ from portfolio_lib.portfolio_widget import PortfolioViewerWidget
 class MainWindow(QtWidgets.QWidget):
     """Class used to create the Main Window of the project."""
 
-    def __init__(self, file):
+    def __init__(self, file, auto_show=True):
         """Create the MainWindow object."""
         super().__init__()
         self.setWindowTitle("Análise de Portfólio")
@@ -20,6 +20,10 @@ class MainWindow(QtWidgets.QWidget):
         # Portfolio widget
         self.PortfolioViewerWidget = PortfolioViewerWidget(file)
         grid.addWidget(self.PortfolioViewerWidget)
+
+        # Show the window
+        if auto_show:
+            self.showMaximized()
 
 
 if __name__ == "__main__":
@@ -50,7 +54,6 @@ if __name__ == "__main__":
 
     # Create and shows the "MainWindow" object
     main = MainWindow(FILE)
-    main.showMaximized()
 
     # End the application when everything is closed
     sys.exit(app.exec_())

@@ -1,8 +1,8 @@
 """This file has a set of classes to display data from Portfolio."""
 
 from gui_lib.pushbutton import StandardPushButton
-from gui_lib.treeview.treeview import Treeview
-from gui_lib.treeview.treeview_pandas import TreeviewPandas
+from gui_lib.treeview.treeview import ResizableTreeview
+from gui_lib.treeview.treeview_pandas import ResizableTreeviewPandas
 from gui_lib.window import Window
 from PyQt5 import QtCore, QtWidgets
 
@@ -20,37 +20,20 @@ class ExpandCollapsePushButton(StandardPushButton):
 
     def __init__(
         self,
-        CentralWidget=None,
-        coordinate_X=0,
-        coordinate_Y=0,
         onExpandMethod=None,
         onCollapseMethod=None,
-        autosize=False,
     ):
         """Create the ExpandCollapsePushButton object.
 
         Arguments:
-        - CentralWidget: the widget where the push button will be placed
-        - coordinate_X: the X coordinate inside the widget
-        - coordinate_Y: the Y coordinate inside the widget
         - onExpandMethod: the callback method called to "expand" the lines
         - onCollapseMethod: the callback method called to "collapse" the lines
         """
         # Push button
-        if autosize:
-            super().__init__(
-                title=ExpandCollapsePushButton.EXPAND_TEXT,
-                onClickMethod=self.__expandCollapseAll,
-            )
-        else:
-            super().__init__(
-                CentralWidget,
-                ExpandCollapsePushButton.EXPAND_TEXT,
-                coordinate_X=(coordinate_X),
-                coordinate_Y=(coordinate_Y),
-                onClickMethod=self.__expandCollapseAll,
-            )
-
+        super().__init__(
+            title=ExpandCollapsePushButton.EXPAND_TEXT,
+            onClickMethod=self.__expandCollapseAll,
+        )
         # Connect events
         self.__expandEvent = onExpandMethod
         self.__collapseEvent = onCollapseMethod
@@ -86,27 +69,17 @@ class PortfolioSummaryWidget(QtWidgets.QWidget):
 
     EMPTY_SPACE = Window.DEFAULT_BORDER_SIZE
 
-    def __init__(
-        self,
-        CentralWidget=None,
-        PortfolioDataFrame=None,
-        autosize=False,
-    ):
+    def __init__(self, PortfolioDataFrame):
         """Create the PortfolioSummaryWidget object.
 
         Basically, it has a 'table' and a 'expand/collapse lines push button'.
 
         Arguments:
-        - CentralWidget: the widget where the components will be placed
         - PortfolioDataFrame: the portfolio pandas dataframe
-        - coordinate_X: the X coordinate inside the widget
-        - coordinate_Y: the Y coordinate inside the widget
         """
-        # Internal central widget
-        if autosize:
-            super().__init__()
-        else:
-            super().__init__(CentralWidget)
+        # Inheritance
+        super().__init__()
+        spacing = PortfolioSummaryWidget.EMPTY_SPACE
 
         # PortolioTreeviewManager
         self.__PortfolioViewerManager = PortfolioViewerManager(
@@ -114,9 +87,8 @@ class PortfolioSummaryWidget(QtWidgets.QWidget):
         )
 
         # PortolioTreeview
-        self.__PortfolioTreeview = Treeview(
-            columns_title_list=self.__PortfolioViewerManager.getColumnsTitleList(),
-            autosize=True,
+        self.__PortfolioTreeview = ResizableTreeview(
+            self.__PortfolioViewerManager.getColumnsTitleList(),
         )
         self.__initTreeviewData()
 
@@ -124,18 +96,23 @@ class PortfolioSummaryWidget(QtWidgets.QWidget):
         self.__ExpandCollapsePushButton = ExpandCollapsePushButton(
             onExpandMethod=self.__expandAllLines,
             onCollapseMethod=self.__collapseAllLines,
-            autosize=True,
         )
-        self.__ExpandCollapsePushButton.setFixedSize((QtCore.QSize(200, 20)))
+        self.__ExpandCollapsePushButton.setFixedSize(
+            (
+                QtCore.QSize(
+                    StandardPushButton.DEFAULT_WIDTH,
+                    StandardPushButton.DEFAULT_HEIGHT,
+                )
+            )
+        )
         self.__resizeColumns()
 
-        # tab01 = QtWidgets.QWidget()
-        grid_tab01 = QtWidgets.QGridLayout()
-        grid_tab01.setContentsMargins(20, 20, 20, 20)
-        grid_tab01.setSpacing(20)
-        grid_tab01.addWidget(self.__PortfolioTreeview, 1, 0, 10, 1)
-        grid_tab01.addWidget(self.__ExpandCollapsePushButton, 1, 1)
-        self.setLayout(grid_tab01)
+        grid = QtWidgets.QGridLayout()
+        grid.setContentsMargins(spacing, spacing, spacing, spacing)
+        grid.setSpacing(spacing)
+        grid.addWidget(self.__PortfolioTreeview, 1, 0, 10, 1)
+        grid.addWidget(self.__ExpandCollapsePushButton, 1, 1)
+        self.setLayout(grid)
 
     def __resizeColumns(self):
         self.__ExpandCollapsePushButton.expandAll()
@@ -202,25 +179,19 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         self.treasuries = self.porfolio_investment.currentTesouroDireto()
 
         # Portfolio Summary tab
-        self.PortfolioSummaryWidget = PortfolioSummaryWidget(
-            PortfolioDataFrame=self.extrato,
-            autosize=True,
-        )
+        self.PortfolioSummaryWidget = PortfolioSummaryWidget(self.extrato)
         self.tab01 = QtWidgets.QWidget()
         self.grid_tab01 = QtWidgets.QGridLayout()
         self.grid_tab01.setContentsMargins(0, 0, 0, 0)
         self.grid_tab01.setSpacing(0)
         self.grid_tab01.addWidget(self.PortfolioSummaryWidget)
         self.tab01.setLayout(self.grid_tab01)
-        self.addTab(self.tab01, "Extrato")
+        self.summary_tab_index = self.addTab(self.tab01, "Extrato")
 
         # Variable Incomes tab
         formatter = VariableIncomesFormater(self.variable_income)
         formatted_dataframe = formatter.getFormatedPortolioDataFrame()
-        self.variable_treeview = TreeviewPandas(
-            PandasDataFrame=formatted_dataframe,
-            autosize=True,
-        )
+        self.variable_treeview = ResizableTreeviewPandas(formatted_dataframe)
         self.variable_treeview.showPandas(resize_per_contents=False)
         self.tab02 = QtWidgets.QWidget()
         self.grid_tab02 = QtWidgets.QGridLayout()
@@ -228,15 +199,12 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         self.grid_tab02.setSpacing(spacing)
         self.grid_tab02.addWidget(self.variable_treeview)
         self.tab02.setLayout(self.grid_tab02)
-        self.addTab(self.tab02, "Renda Variável")
+        self.variable_tab_index = self.addTab(self.tab02, "Renda Variável")
 
         # Treasuries tab
         formatter = TreasuriesFormater(self.treasuries)
         formatted_dataframe = formatter.getFormatedPortolioDataFrame()
-        self.treasuries_treeview = TreeviewPandas(
-            PandasDataFrame=formatted_dataframe,
-            autosize=True,
-        )
+        self.treasuries_treeview = ResizableTreeviewPandas(formatted_dataframe)
         self.treasuries_treeview.showPandas(resize_per_contents=False)
         self.tab03 = QtWidgets.QWidget()
         self.grid_tab03 = QtWidgets.QGridLayout()
@@ -244,11 +212,14 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         self.grid_tab03.setSpacing(spacing)
         self.grid_tab03.addWidget(self.treasuries_treeview)
         self.tab03.setLayout(self.grid_tab03)
-        self.addTab(self.tab03, "Tesouro Direto")
+        self.treasuries_tab_index = self.addTab(self.tab03, "Tesouro Direto")
 
         # Connect tab event
         self.currentChanged.connect(self.onChange)
 
     def onChange(self, index):
-        self.variable_treeview.resizeColumnsToTreeViewWidth()
-        self.treasuries_treeview.resizeColumnsToTreeViewWidth()
+        """Onchange tab method to render table columns."""
+        if index == self.variable_tab_index:
+            self.variable_treeview.resizeColumnsToTreeViewWidth()
+        elif index == self.treasuries_tab_index:
+            self.treasuries_treeview.resizeColumnsToTreeViewWidth()
