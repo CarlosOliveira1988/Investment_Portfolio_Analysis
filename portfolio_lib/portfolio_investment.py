@@ -358,19 +358,19 @@ class PorfolioInvestment:
         for index, row in wallet.iterrows():
             if row["Mercado"] == "Ações":
                 wallet.at[index, "Porcentagem carteira"] = (
-                    100 * row["Preço mercado"] / marketValueStock
+                    row["Preço mercado"] / marketValueStock
                 )
             elif row["Mercado"] == "ETF":
                 wallet.at[index, "Porcentagem carteira"] = (
-                    100 * row["Preço mercado"] / marketValueETF
+                    row["Preço mercado"] / marketValueETF
                 )
             elif row["Mercado"] == "FII":
                 wallet.at[index, "Porcentagem carteira"] = (
-                    100 * row["Preço mercado"] / marketValueFII
+                    row["Preço mercado"] / marketValueFII
                 )
             elif row["Mercado"] == "BDR":
                 wallet.at[index, "Porcentagem carteira"] = (
-                    100 * row["Preço mercado"] / marketValueBDR
+                    row["Preço mercado"] / marketValueBDR
                 )
 
         return wallet
@@ -627,7 +627,7 @@ class PorfolioInvestment:
         # Calculates the percentage of stocks and FIIs in the wallet
         for index, row in wallet.iterrows():
             wallet.at[index, "Porcentagem carteira"] = (
-                100 * row["Preço mercado"] / totalTesouroDireto
+                row["Preço mercado"] / totalTesouroDireto
             )
 
         return wallet
