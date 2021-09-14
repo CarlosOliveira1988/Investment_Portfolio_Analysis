@@ -1,3 +1,4 @@
+import re
 import sys
 from datetime import date, datetime, timedelta
 
@@ -496,68 +497,77 @@ class PorfolioInvestment:
         Returns the last price of the stock from website Status Invest.
 
         LFT = Letras Financeira do Tesouro = Tesouro Selic
-        LTN = Letras do Tesouro Nacional = Tesouro Prefixado
-        NTN-B Principal = Notas do Tesouro Nacional = Tesouro IPCA (sem cupons)
-        NTN-B = Notas do Tesouro Nacional = Tesouro IPCA (cupom semestral)
-
-
-
+        LTN = Letras do Tesouro Nacional = Tesouro Prefixado (sem cupons)
+        NTN-F = Notas do Tesouro Nacional Tipo F = Tesouro Prefixado (com cupons semestrais)
+        NTN-B Principal = Notas do Tesouro Nacional Tipo B Principal = Tesouro IPCA (sem cupons)
+        NTN-B = Notas do Tesouro Nacional Tipo B = Tesouro IPCA (com cupons semestrais)
         """
-        # #Prepares the correct URL
-        # if market == "Ações":
-        #     url = "https://statusinvest.com.br/acoes/"
-        # elif market == "FII":
-        #     url = "https://statusinvest.com.br/fundos-imobiliarios/"
-        # elif market == "ETF":
-        #     url = "https://statusinvest.com.br/etfs/"
+
+        rgx_selic = re.compile(
+            r"(SELIC) (\d\d\d\d)|(LFT) (\d\d\d\d\d\d)",
+        )
+        rgx_pre = re.compile(
+            r"(Prefixado) (\d\d\d\d)|(LTN) (\d\d\d\d\d\d)",
+        )
+        rgx_pre_juros = re.compile(
+            r"(Prefixado com Juros Semestrais) (\d\d\d\d)|(NTN-F) (\d\d\d\d\d\d)",
+        )
+        rgx_ipca = re.compile(
+            r"(IPCA\+) (\d\d\d\d)|(NTN-B Principal) (\d\d\d\d\d\d)",
+        )
+        rgx_ipca_juros = re.compile(
+            r"(IPCA\+ com Juros Semestrais) (\d\d\d\d)|(NTN-B) (\d\d\d\d\d\d)",
+        )
+
+        pattern_dict = {
+            "SELIC": [
+                rgx_selic,
+                "https://statusinvest.com.br/tesouro/tesouro-selic-",
+            ],
+            "Prefixado": [
+                rgx_pre,
+                "https://statusinvest.com.br/tesouro/tesouro-prefixado-",
+            ],
+            "Prefixado com Juros Semestrais": [
+                rgx_pre_juros,
+                "https://statusinvest.com.br/tesouro/tesouro-prefixado-com-juros-semestrais-",
+            ],
+            "IPCA+": [
+                rgx_ipca,
+                "https://statusinvest.com.br/tesouro/tesouro-ipca-",
+            ],
+            "IPCA+ com Juros Semestrais": [
+                rgx_ipca_juros,
+                "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-",
+            ],
+        }
+
+        def getYearPattern(rgx, text):
+            matching = rgx.search(text)
+            if matching:
+                if matching.group(2):
+                    return matching.group(2)
+                elif matching.group(4):
+                    slc = matching.group(4)[4:]
+                    return "20" + slc
+                else:
+                    return None
+            else:
+                return None
+
+        def getURL(text):
+            url = False
+            for value_list in pattern_dict.values():
+                rgx = value_list[0]
+                link = value_list[1]
+                year = getYearPattern(rgx, text)
+                if year:
+                    url = link + year
+                    break
+            return url
 
         value = 0
-        url = False
-
-        # Check if it is a Tesouro Selic
-        if ticker == "Tesouro SELIC 2023" or ticker == "LFT 010323":
-            url = "https://statusinvest.com.br/tesouro/tesouro-selic-2023"
-        elif ticker == "Tesouro SELIC 2024" or ticker == "LFT 010324":
-            url = "https://statusinvest.com.br/tesouro/tesouro-selic-2024"
-        elif ticker == "Tesouro SELIC 2025" or ticker == "LFT 010325":
-            url = "https://statusinvest.com.br/tesouro/tesouro-selic-2025"
-        elif ticker == "Tesouro SELIC 2027" or ticker == "LFT 010327":
-            url = "https://statusinvest.com.br/tesouro/tesouro-selic-2027"
-        # Check if it is a Tesouro IPCA+
-        elif ticker == "Tesouro IPCA+ 2024" or ticker == "NTN-B Principal 150824":
-            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-2024"
-        elif ticker == "Tesouro IPCA+ 2026" or ticker == "NTN-B Principal 150826":
-            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-2026"
-        elif ticker == "Tesouro IPCA+ 2035" or ticker == "NTN-B Principal 150545":
-            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-2035"
-        elif ticker == "Tesouro IPCA+ 2045" or ticker == "NTN-B Principal 150545":
-            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-2045"
-        # Check if it is a Tesouro IPCA+ com Juros semestrais
-        elif (
-            ticker == "Tesouro IPCA+ semestral 2024"
-            or ticker == "NTN-B Principal com Juros Semestrais 150824"
-        ):
-            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-2024"
-        elif (
-            ticker == "Tesouro IPCA+ semestral 2026"
-            or ticker == "NTN-B Principal com Juros Semestrais 150826"
-        ):
-            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-2026"
-        elif (
-            ticker == "Tesouro IPCA+ semestral 2030"
-            or ticker == "NTN-B Principal com Juros Semestrais 150830"
-        ):
-            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-2030"
-        elif (
-            ticker == "Tesouro IPCA+ semestral 2035"
-            or ticker == "NTN-B Principal com Juros Semestrais 150535"
-        ):
-            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-2035"
-        elif (
-            ticker == "Tesouro IPCA+ semestral 2040"
-            or ticker == "NTN-B Principal com Juros Semestrais 150840"
-        ):
-            url = "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-2040"
+        url = getURL(ticker)
 
         if url != False:
             # Get information from URL
