@@ -18,10 +18,54 @@ class PorfolioInvestment:
 
     """
 
-    def __init__(self, fileOperations):
+    def __init__(self):
+        self.fileOperations = None
+        self.operations = None
+        self.operationsYear = None
+        self.current = None
+        self.expected_title_list = [
+            "Mercado",
+            "Ticker",
+            "Operação",
+            "Data",
+            "Rentabilidade Contratada",
+            "Indexador",
+            "Vencimento",
+            "Quantidade",
+            "Preço Unitário",
+            "Preço Total",
+            "Taxas",
+            "IR",
+            "Dividendos",
+            "JCP",
+            "Custo Total",
+            "Notas",
+        ]
+
+    def getExpectedColumnsTitleList(self):
+        return self.expected_title_list
+
+    def setFile(self, fileOperations):
         self.fileOperations = fileOperations
+
+    def isValidFile(self):
+        valid_flag = True
+        dataframe = pd.read_excel(self.fileOperations)
+        # If some expected column is not present in the excel file
+        # or the title line is empty in the excel file,
+        # then the file is not valid
+        if list(dataframe):
+            for expected_title in self.expected_title_list:
+                if expected_title not in dataframe:
+                    valid_flag = False
+                    break
+        else:
+            valid_flag = False
+        return valid_flag
+
+    def run(self):
         self.operations = pd.read_excel(
-            fileOperations
+            self.fileOperations
         )  # Dataframe with all the operations from the Excel file.
         self.operationsYear = (
             self.numberOperationsYear()
@@ -659,12 +703,20 @@ class PorfolioInvestment:
 if __name__ == "__main__":
 
     SOURCE_FILE_DIRECTORY = sys.path[0]
-    FILE_NAME = r"\PORTFOLIO_TEMPLATE.xlsx"
+    FILE_NAME = r"\PORTFOLIO_TEMPLATE2.xlsx"
 
     file = SOURCE_FILE_DIRECTORY + FILE_NAME
 
     # Example:
-    portfolio = PorfolioInvestment(file)
-    carteiraGD = portfolio.currentPortfolioGoogleDrive()
-    carteira = portfolio.currentPortfolio()
-    tesouro = portfolio.currentTesouroDireto()
+    portfolio = PorfolioInvestment()
+    portfolio.setFile(file)
+    if portfolio.isValidFile():
+        portfolio.run()
+        carteiraGD = portfolio.currentPortfolioGoogleDrive()
+        carteira = portfolio.currentPortfolio()
+        tesouro = portfolio.currentTesouroDireto()
+    else:
+        print("\nThe selected Portfolio file is not in the expected format.")
+        print("\nPlease, check the following expected column names:")
+        for title in portfolio.getExpectedColumnsTitleList():
+            print(" - ", title)

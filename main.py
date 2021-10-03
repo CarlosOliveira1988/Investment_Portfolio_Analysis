@@ -95,7 +95,10 @@ class MainWindow(QtWidgets.QWidget):
 
     def _openFile(self):
         file_name_tuple = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Open the XLSX Portfolio file", sys.path[0], "xlsx(*.xlsx)"
+            self,
+            "Selecione o arquivo XLSX relacionado ao portfolio",
+            sys.path[0],
+            "xlsx(*.xlsx)",
         )
         file_name = file_name_tuple[0]
         if ".xlsx" in file_name:
