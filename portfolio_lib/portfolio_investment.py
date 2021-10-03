@@ -67,19 +67,20 @@ class PorfolioInvestment:
         decLast = "-12-31"  # Auxiliary variable to create the last date of the year
 
         # Collects the number of operations per year
-        for i in range(firstYear.year, lastYear.year + 1):
-            start = str(i) + janFirst
-            end = str(i) + decLast
-            # Get filtered table according to the year
-            filtered = dataframe[
-                (dataframe["Data"] >= start) & (dataframe["Data"] <= end)
-            ]
-            filteredBuy = filtered[(filtered["Operação"] == "Compra")]
-            filteredSell = filtered[(filtered["Operação"] == "Venda")]
-            # Add the values in the lists
-            listYear.append(i)
-            listBuy.append(len(filteredBuy.index))
-            listSell.append(len(filteredSell.index))
+        if len(dataframe):
+            for i in range(firstYear.year, lastYear.year + 1):
+                start = str(i) + janFirst
+                end = str(i) + decLast
+                # Get filtered table according to the year
+                filtered = dataframe[
+                    (dataframe["Data"] >= start) & (dataframe["Data"] <= end)
+                ]
+                filteredBuy = filtered[(filtered["Operação"] == "Compra")]
+                filteredSell = filtered[(filtered["Operação"] == "Venda")]
+                # Add the values in the lists
+                listYear.append(i)
+                listBuy.append(len(filteredBuy.index))
+                listSell.append(len(filteredSell.index))
 
         return listYear, listBuy, listSell
 
@@ -228,6 +229,18 @@ class PorfolioInvestment:
         """
         dataframe = yf.download(list, period="1d")
         data = dataframe["Adj Close"].tail(1)
+
+        # The 'tail' method returns a 'pandas.series' when exists only 1 ticker in the variable 'list'.
+        #
+        # In order to solve the '1 ticker' case and return always a 'pandas.dataframe' with the ticker name,
+        # we need to convert the 'pandas.series' to a 'pandas.dataframe' and adjust its column name.
+        try:
+            data = data.to_frame()
+            if len(data) == 1:
+                data = data.rename(columns={"Adj Close": list[0]})
+        except AttributeError:
+            data = data
+
         return data
 
     # def currentMarketPriceByTickerWebScrappingStatusInvest(self, ticker, market):
@@ -323,11 +336,11 @@ class PorfolioInvestment:
         for i in range(len(listTicker)):
             listTicker[i] = listTicker[i] + ".SA"
         # Gets the current values of all tickers in the wallet
-        currentPricesTickers = self.currentMarketPriceByTickerList(listTicker)
-
-        for index, row in wallet.iterrows():
-            ticker = row["Ticker"] + ".SA"
-            wallet.at[index, "Cotação"] = float(currentPricesTickers[ticker])
+        if listTicker:
+            currentPricesTickers = self.currentMarketPriceByTickerList(listTicker)
+            for index, row in wallet.iterrows():
+                ticker = row["Ticker"] + ".SA"
+                wallet.at[index, "Cotação"] = float(currentPricesTickers[ticker])
 
         # Calculates the price according with the average price
         wallet["Preço pago"] = wallet["Quantidade"] * wallet["Preço médio"]
