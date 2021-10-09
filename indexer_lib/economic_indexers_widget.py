@@ -68,7 +68,17 @@ class InterestRateSelection(WidgetInterface):
         self.ParameterLineEdit = ParameterLineEdit(
             self, title, coordinate_Y=self.getInternalHeight(), width=width
         )
-        self.ParameterLineEdit.LineEdit.setValidator(QtGui.QDoubleValidator())
+        self.ParameterLineEditValidator = QtGui.QDoubleValidator(
+            bottom=0.00,
+            top=100.00,
+            decimals=2,
+        )
+        self.ParameterLineEditValidator.setNotation(
+            QtGui.QDoubleValidator.StandardNotation,
+        )
+        self.ParameterLineEdit.LineEdit.setValidator(
+            self.ParameterLineEditValidator,
+        )
         self.incrementInternalHeight(self.ParameterLineEdit.height())
 
         # ComboBox
@@ -140,8 +150,10 @@ class InterestRateSelection(WidgetInterface):
     def getAdditionalInterestRate(self):
         interest_rate_value = self.ParameterLineEdit.LineEdit.text()
         interest_rate_value = interest_rate_value.replace(",", ".")
-        interest_rate_value = float(interest_rate_value)
-        return interest_rate_value / 100
+        try:
+            return float(interest_rate_value) / 100
+        except ValueError:
+            return ""
 
     def getAdditionalInterestRateTypeString(self):
         selected_text = self.StandardComboBox.currentText()
@@ -206,7 +218,17 @@ class ParameterWidget(WidgetInterface):
             coordinate_Y=self.getInternalHeight(),
             width=ParameterWidget.WIDTH,
         )
-        self.InitialValue.LineEdit.setValidator(QtGui.QDoubleValidator())
+        self.InitialValueValidator = QtGui.QDoubleValidator(
+            bottom=0.01,
+            top=100000000.00,
+            decimals=2,
+        )
+        self.InitialValueValidator.setNotation(
+            QtGui.QDoubleValidator.StandardNotation,
+        )
+        self.InitialValue.LineEdit.setValidator(
+            self.InitialValueValidator,
+        )
         self.incrementInternalHeight(
             self.InitialValue.height() + ParameterWidget.EMPTY_SPACE
         )
@@ -322,18 +344,19 @@ class ParameterWidget(WidgetInterface):
         text_value = self.__getInitialValueText()
         try:
             return float(text_value)
-        except Exception as error:
-            raise Exception(error)
+        except ValueError:
+            return None
 
     def isValidInitialValue(self):
-        try:
-            value = self.getInitialValue()
-            return type(value) == float
-        except Exception as error:
-            raise Exception(error)
+        value = self.getInitialValue()
+        return type(value) == float or type(value) == int
 
     def getAdditionalInterestRate(self):
         return self.InterestRate.getAdditionalInterestRate()
+
+    def isValidAdditionalInterestRate(self):
+        value = self.getAdditionalInterestRate()
+        return type(value) == float or type(value) == int
 
     def getAdditionalInterestRateTypeString(self):
         return self.InterestRate.getAdditionalInterestRateTypeString()
@@ -551,23 +574,33 @@ class IndexerPanelWidget(WidgetInterface):
         self.ResultsWidget.addResult("-----------------------------------------------")
 
     def __isValidParameters(self):
+        # Only one failure messagebox will be displayed per attempt
+
         valid_flag = True
+
+        # Initial Value
+        if self.ParameterWidget.isValidInitialValue() and valid_flag == True:
+            pass
+        elif valid_flag:
+            valid_flag = False
+            msg = "O valor do campo 'Valor Inicial' é inválido."
+            QMessageBox.warning(self, "Indicadores Econômicos", msg, QMessageBox.Ok)
 
         # Initial and Final periods
         if self.ParameterWidget.isValidSelectedPeriod():
             pass
-        else:
+        elif valid_flag:
             valid_flag = False
-            msg = "O período selecionado é inválido. Por favor, selecione um 'Período Final' maior ou igual ao 'Período Inicial'."
+            msg = "O período selecionado é inválido. Selecione um 'Período Final' maior ou igual ao 'Período Inicial'."
             QMessageBox.warning(self, "Indicadores Econômicos", msg, QMessageBox.Ok)
 
-        # Initial Value
-        try:
-            if self.ParameterWidget.isValidInitialValue():
-                pass
-        except Exception as error:
+        # Additional Interest Rate
+        if self.ParameterWidget.isValidAdditionalInterestRate() and valid_flag == True:
+            pass
+        elif valid_flag:
             valid_flag = False
-            raise Exception(error)
+            msg = "O valor do campo 'Taxa Adicional' é inválido."
+            QMessageBox.warning(self, "Indicadores Econômicos", msg, QMessageBox.Ok)
 
         return valid_flag
 

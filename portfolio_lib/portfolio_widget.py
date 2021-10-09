@@ -5,6 +5,8 @@ from gui_lib.treeview.treeview import ResizableTreeview
 from gui_lib.treeview.treeview_pandas import ResizableTreeviewPandas
 from gui_lib.window import Window
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
+from xlrd import XLRDError
 
 from portfolio_lib.portfolio_formater import TreasuriesFormater, VariableIncomesFormater
 from portfolio_lib.portfolio_investment import PorfolioInvestment
@@ -181,10 +183,26 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         spacing = Window.DEFAULT_BORDER_SIZE
 
         # PorfolioInvestment
-        self.porfolio_investment = PorfolioInvestment(File)
-        self.extrato = self.porfolio_investment.getExtrato()
-        self.variable_income = self.porfolio_investment.currentPortfolio()
-        self.treasuries = self.porfolio_investment.currentTesouroDireto()
+        self.porfolio_investment = PorfolioInvestment()
+        self.porfolio_investment.setFile(File)
+
+        try:
+            if self.porfolio_investment.isValidFile():
+                self.porfolio_investment.run()
+                self.extrato = self.porfolio_investment.getExtrato()
+                self.variable_income = self.porfolio_investment.currentPortfolio()
+                self.treasuries = self.porfolio_investment.currentTesouroDireto()
+            else:
+                self.extrato = None
+                self.variable_income = None
+                self.treasuries = None
+                self.__showColumnsErrorMessage()
+
+        except XLRDError:
+            self.extrato = None
+            self.variable_income = None
+            self.treasuries = None
+            self.__showXLRDErrorMessage()
 
         # Portfolio Summary tab
         self.PortfolioSummaryWidget = PortfolioSummaryWidget(self.extrato)
@@ -225,6 +243,18 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         # Connect tab event
         self.currentChanged.connect(self.onChange)
 
+    def __showColumnsErrorMessage(self):
+        msg = "O arquivo selecionado é inválido.\n\n"
+        msg += "Por favor, verifique se as seguintes colunas existem no arquivo:\n"
+        for title in self.porfolio_investment.getExpectedColumnsTitleList():
+            msg += "\n - " + title
+        QMessageBox.warning(self, "Análise de Portfólio", msg, QMessageBox.Ok)
+
+    def __showXLRDErrorMessage(self):
+        msg = "O arquivo selecionado é inválido.\n\n"
+        msg += "Por favor, verifique se o arquivo contém apenas 1 aba."
+        QMessageBox.warning(self, "Análise de Portfólio", msg, QMessageBox.Ok)
+
     def onChange(self, index):
         """Onchange tab method to render table columns."""
         if index == self.variable_tab_index:
@@ -240,19 +270,33 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
 
     def updateData(self, file_name):
         """Update the treeview data lines."""
-        self.porfolio_investment = PorfolioInvestment(file_name)
+        self.porfolio_investment = PorfolioInvestment()
+        self.porfolio_investment.setFile(file_name)
 
-        self.extrato = self.porfolio_investment.getExtrato()
-        self.PortfolioSummaryWidget.updateData(self.extrato)
+        try:
+            if self.porfolio_investment.isValidFile():
+                self.porfolio_investment.run()
 
-        self.variable_income = self.porfolio_investment.currentPortfolio()
-        formatter = VariableIncomesFormater(self.variable_income)
-        formatted_dataframe = formatter.getFormatedPortolioDataFrame()
-        self.variable_treeview.setDataframe(formatted_dataframe)
-        self.variable_treeview.showPandas(resize_per_contents=False)
+                self.extrato = self.porfolio_investment.getExtrato()
+                self.PortfolioSummaryWidget.updateData(self.extrato)
 
-        self.treasuries = self.porfolio_investment.currentTesouroDireto()
-        formatter = TreasuriesFormater(self.treasuries)
-        formatted_dataframe = formatter.getFormatedPortolioDataFrame()
-        self.treasuries_treeview.setDataframe(formatted_dataframe)
-        self.treasuries_treeview.showPandas(resize_per_contents=False)
+                self.variable_income = self.porfolio_investment.currentPortfolio()
+                formatter = VariableIncomesFormater(self.variable_income)
+                formatted_dataframe = formatter.getFormatedPortolioDataFrame()
+                self.variable_treeview.setDataframe(formatted_dataframe)
+                self.variable_treeview.showPandas(resize_per_contents=False)
+
+                self.treasuries = self.porfolio_investment.currentTesouroDireto()
+                formatter = TreasuriesFormater(self.treasuries)
+                formatted_dataframe = formatter.getFormatedPortolioDataFrame()
+                self.treasuries_treeview.setDataframe(formatted_dataframe)
+                self.treasuries_treeview.showPandas(resize_per_contents=False)
+
+            else:
+                self.__showColumnsErrorMessage()
+
+        except XLRDError:
+            self.extrato = None
+            self.variable_income = None
+            self.treasuries = None
+            self.__showXLRDErrorMessage()
