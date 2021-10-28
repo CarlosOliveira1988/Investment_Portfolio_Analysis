@@ -1,9 +1,12 @@
 """This is the main file of the project."""
 
+import webbrowser
+
 from PyQt5 import QtWidgets
 
 from indexer_lib.economic_indexers_window import EconomicIndexerWindow
 from portfolio_lib.portfolio_widget import PortfolioViewerWidget
+from valuation_lib.valuation_window import ValuationWindow
 
 
 class MainWindow(QtWidgets.QWidget):
@@ -37,7 +40,7 @@ class MainWindow(QtWidgets.QWidget):
 
     def _createActions(self):
         self.openAction = QtWidgets.QAction(
-            "&Abrir",
+            "&Abrir Extrato",
             self,
         )
         self.openAction.triggered.connect(self._openFile)
@@ -60,6 +63,30 @@ class MainWindow(QtWidgets.QWidget):
         )
         self.indexersAction.triggered.connect(self._indexersApp)
 
+        self.valuationAction = QtWidgets.QAction(
+            "&Indicadores Fundamentalistas",
+            self,
+        )
+        self.valuationAction.triggered.connect(self._valuationApp)
+
+        self.focusReportAction = QtWidgets.QAction(
+            "&Relatório Focus",
+            self,
+        )
+        self.focusReportAction.triggered.connect(self._focusReportLink)
+
+        self.fixedIncomeAction = QtWidgets.QAction(
+            "&Simulador de Renda Fixa",
+            self,
+        )
+        self.fixedIncomeAction.triggered.connect(self._fixedIncomeLink)
+
+        self.profitabilityAction = QtWidgets.QAction(
+            "&Simulador de Rentabilidade",
+            self,
+        )
+        self.profitabilityAction.triggered.connect(self._profitabilityLink)
+
     def _createMenuBar(self):
         # Menu bar
         self.menuBar = QtWidgets.QMenuBar()
@@ -74,7 +101,15 @@ class MainWindow(QtWidgets.QWidget):
         # Tools menu
         self.toolsMenu = QtWidgets.QMenu("&Ferramentas", self.menuBar)
         self.toolsMenu.addAction(self.indexersAction)
+        self.toolsMenu.addAction(self.valuationAction)
         self.menuBar.addMenu(self.toolsMenu)
+
+        # Links menu
+        self.linksMenu = QtWidgets.QMenu("&Links", self.menuBar)
+        self.linksMenu.addAction(self.focusReportAction)
+        self.linksMenu.addAction(self.fixedIncomeAction)
+        self.linksMenu.addAction(self.profitabilityAction)
+        self.menuBar.addMenu(self.linksMenu)
 
         # Help menu
         self.helpMenu = QtWidgets.QMenu("&Ajuda", self.menuBar)
@@ -108,6 +143,18 @@ class MainWindow(QtWidgets.QWidget):
 
     def _indexersApp(self):
         self.EconomicIndexerWindow = EconomicIndexerWindow()
+
+    def _valuationApp(self):
+        self.ValuationWindow = ValuationWindow()
+
+    def _focusReportLink(self):
+        webbrowser.open(r"https://www.bcb.gov.br/publicacoes/focus")
+
+    def _fixedIncomeLink(self):
+        webbrowser.open(r"https://rendafixa.herokuapp.com")
+
+    def _profitabilityLink(self):
+        webbrowser.open(r"http://rendafixa.herokuapp.com/rentabilidade")
 
 
 if __name__ == "__main__":
