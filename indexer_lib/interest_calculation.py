@@ -17,8 +17,35 @@ class InterestCalculation:
     """
 
     def __init__(self):
-        """Constructor of this class. No argument is needed."""
+        """Create the InterestCalculation object."""
         pass
+
+    def _checkValueType(self, value, var_name):
+        if not isinstance(value, int) and not isinstance(value, float):
+            raise TypeError(
+                "The " + var_name + " argument should be int/float type.",
+            )
+
+    def _checkIntType(self, value, var_name):
+        if not isinstance(value, int):
+            raise TypeError(
+                "The " + var_name + " argument should be int type.",
+            )
+
+    def _checkValueTypeList(self, value_list, var_name):
+        try:
+            for value in value_list:
+                self._checkValueType(value, var_name)
+        except TypeError:
+            raise TypeError(
+                "The " + var_name + " argument should have int/float types.",
+            )
+
+    def _checkEmptyValueList(self, value_list, var_name):
+        if len(value_list) == 0:
+            raise ValueError(
+                "The " + var_name + " is empty.",
+            )
 
     def calculateInterestValueByValues(self, initial_value, final_value):
         """Calculate the total interest value based on initial/final values.
@@ -29,6 +56,8 @@ class InterestCalculation:
         - initial_value(float)
         - final_value(float)
         """
+        self._checkValueType(initial_value, "initial_value")
+        self._checkValueType(final_value, "final_value")
         return final_value - initial_value
 
     def calculateInterestValue(self, interest_rate_list, initial_value=1.00):
@@ -40,6 +69,9 @@ class InterestCalculation:
         - interest_rate_list(float): a list of interest rates
         - initial_value(float): the initial value
         """
+        self._checkEmptyValueList(interest_rate_list, "interest_rate_list")
+        self._checkValueTypeList(interest_rate_list, "interest_rate_list")
+        self._checkValueType(initial_value, "initial_value")
         total_value = initial_value
         for interest_rate in interest_rate_list:
             interest_rate = float(interest_rate)
@@ -54,13 +86,18 @@ class InterestCalculation:
         interest_rate_list,
         initial_value=1.00,
     ):
-        """Return an'interest_values_list'.
+        """Return an 'interest_values_list'.
+
+        This method is useful to calculate interest values per month.
 
         Example:
-        - interest_rate_list = [0.01, 0.02, 0.03, 0.04, 0.05]
+        - interest_rate_list = [0.01, 0.01, 0.01]
         - initial_value = 1000
-        - output = [10.0, 20.0, 30.0, 40.0, 50.0]
+        - output = [10.0, 10.1, 10.201]
         """
+        self._checkEmptyValueList(interest_rate_list, "interest_rate_list")
+        self._checkValueTypeList(interest_rate_list, "interest_rate_list")
+        self._checkValueType(initial_value, "initial_value")
         cumulative_interest_value_list = []
         total_value = initial_value
         for interest_rate in interest_rate_list:
@@ -84,14 +121,18 @@ class InterestCalculation:
         - initial_value = 1000
         - output = [0.1, 0.1, 0.1]
         """
+        self._checkEmptyValueList(interest_value_list, "interest_value_list")
+        self._checkValueTypeList(interest_value_list, "interest_value_list")
+        self._checkValueType(initial_value, "initial_value")
         mean_interest_rate_list = []
         interest_value_per_period = initial_value
         for interest_value in interest_value_list:
+            amount_value = interest_value_per_period + interest_value
             mean_interest_rate = self.calculateInterestRateByValues(
-                interest_value_per_period, (interest_value_per_period + interest_value)
+                interest_value_per_period, amount_value
             )
             mean_interest_rate_list.append(mean_interest_rate)
-            interest_value_per_period = interest_value_per_period + interest_value
+            interest_value_per_period = amount_value
         return mean_interest_rate_list
 
     def calculateInterestRateByValues(self, initial_value, final_value):
@@ -101,6 +142,8 @@ class InterestCalculation:
         - initial_value(float)
         - final_value(float)
         """
+        self._checkValueType(initial_value, "initial_value")
+        self._checkValueType(final_value, "final_value")
         total_interest_rate = (
             self.calculateInterestValueByValues(initial_value, final_value)
             / initial_value
@@ -114,6 +157,9 @@ class InterestCalculation:
         - interest_rate_list(float): a list of interest rates
         - initial_value(float): the initial value
         """
+        self._checkEmptyValueList(interest_rate_list, "interest_rate_list")
+        self._checkValueTypeList(interest_rate_list, "interest_rate_list")
+        self._checkValueType(initial_value, "initial_value")
         interest_value = self.calculateInterestValue(
             interest_rate_list,
             initial_value,
@@ -135,19 +181,28 @@ class InterestCalculation:
         - number_of_periods = 12
         - output = 0.005
         """
-        mean_interest_rate_per_period = (1 + interest_rate) ** (1 / number_of_periods)
+        self._checkValueType(interest_rate, "interest_rate")
+        self._checkIntType(number_of_periods, "number_of_periods")
+        rate = 1 + interest_rate
+        time = 1 / number_of_periods
+        mean_interest_rate_per_period = rate ** time
         mean_interest_rate_per_period -= 1
         return mean_interest_rate_per_period
 
-    def getPrefixedInterestRateList(self, prefixed_interest_rate, number_of_periods):
-        """
-        Returns n 'interest_rate_list' given a 'prefixed_interest_rate' and a 'number_of_periods'.
+    def getPrefixedInterestRateList(
+        self,
+        prefixed_interest_rate,
+        number_of_periods,
+    ):
+        """Return an 'interest_rate_list'.
 
         Example:
         - prefixed_interest_rate = 0.01
-        - number_of_periods = 12
-        - output = [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+        - number_of_periods = 10
+        - output = [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
         """
+        self._checkValueType(prefixed_interest_rate, "prefixed_interest_rate")
+        self._checkIntType(number_of_periods, "number_of_periods")
         return [prefixed_interest_rate] * number_of_periods
 
 
