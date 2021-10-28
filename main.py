@@ -4,6 +4,7 @@ from PyQt5 import QtWidgets
 
 from indexer_lib.economic_indexers_window import EconomicIndexerWindow
 from portfolio_lib.portfolio_widget import PortfolioViewerWidget
+from valuation_lib.valuation_window import ValuationWindow
 
 
 class MainWindow(QtWidgets.QWidget):
@@ -37,7 +38,7 @@ class MainWindow(QtWidgets.QWidget):
 
     def _createActions(self):
         self.openAction = QtWidgets.QAction(
-            "&Abrir",
+            "&Abrir Extrato",
             self,
         )
         self.openAction.triggered.connect(self._openFile)
@@ -60,6 +61,12 @@ class MainWindow(QtWidgets.QWidget):
         )
         self.indexersAction.triggered.connect(self._indexersApp)
 
+        self.valuationAction = QtWidgets.QAction(
+            "&Indicadores Fundamentalistas",
+            self,
+        )
+        self.valuationAction.triggered.connect(self._valuationApp)
+
     def _createMenuBar(self):
         # Menu bar
         self.menuBar = QtWidgets.QMenuBar()
@@ -74,6 +81,7 @@ class MainWindow(QtWidgets.QWidget):
         # Tools menu
         self.toolsMenu = QtWidgets.QMenu("&Ferramentas", self.menuBar)
         self.toolsMenu.addAction(self.indexersAction)
+        self.toolsMenu.addAction(self.valuationAction)
         self.menuBar.addMenu(self.toolsMenu)
 
         # Help menu
@@ -108,6 +116,9 @@ class MainWindow(QtWidgets.QWidget):
 
     def _indexersApp(self):
         self.EconomicIndexerWindow = EconomicIndexerWindow()
+
+    def _valuationApp(self):
+        self.ValuationWindow = ValuationWindow()
 
 
 if __name__ == "__main__":
