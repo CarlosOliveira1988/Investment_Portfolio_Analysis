@@ -1,9 +1,11 @@
 """This file has a set of classes to display data from Portfolio."""
 
+import pandas as pd
 from gui_lib.pushbutton import StandardPushButton
 from gui_lib.treeview.treeview import ResizableTreeview
 from gui_lib.treeview.treeview_pandas import ResizableTreeviewPandas
 from gui_lib.window import Window
+from indexer_lib.dataframe_filter import DataframeFilter
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from xlrd import XLRDError
@@ -169,6 +171,114 @@ class PortfolioSummaryWidget(QtWidgets.QWidget):
         self.__initTreeviewData()
 
 
+class MarketInformation:
+    def __init__(self, extrato_df):
+        # Dataframe 'Extrato'
+        self.extrato_df = extrato_df
+
+        # Useful lists
+        self.market_list = self._getMarketList()
+        self.market_df_list = self._getMarketDfList()
+        fee, incomeTax, dividend, jcp = self._getMarketValuesList()
+
+        # Dataframe 'Market'
+        self.market_df = pd.DataFrame()
+        self.market_df["Mercado"] = self.market_list
+        self.market_df["Taxas"] = fee
+        self.market_df["IR"] = incomeTax
+        self.market_df["Dividendos"] = dividend
+        self.market_df["JCP"] = jcp
+
+    def _getMarketList(self):
+        df_filter = DataframeFilter()
+        market_list = df_filter.getListFromDataframeColumn(
+            self.extrato_df,
+            "Mercado",
+        )
+        market_list = list(set(market_list))
+        try:
+            market_list.remove("Custodia")
+        except ValueError:
+            pass
+        return market_list
+
+    def _getMarketDfList(self):
+        market_df_list = []
+        for market in self.market_list:
+            df_filter = DataframeFilter()
+            filtered_df = df_filter.filterDataframePerColumn(
+                self.extrato_df, "Mercado", market
+            )
+            market_df_list.append(filtered_df)
+        return market_df_list
+
+    def _getCalculatedValues(self, filtered_df):
+        fee = filtered_df["Taxas"].sum()
+        incomeTax = filtered_df["IR"].sum()
+        dividend = filtered_df["Dividendos"].sum()
+        jcp = filtered_df["JCP"].sum()
+        return fee, incomeTax, dividend, jcp
+
+    def _getMarketValuesList(self):
+        fee_list = []
+        incomeTax_list = []
+        dividend_list = []
+        jcp_list = []
+        for df in self.market_df_list:
+            fee, incomeTax, dividend, jcp = self._getCalculatedValues(df)
+            fee_list.append(fee)
+            incomeTax_list.append(incomeTax)
+            dividend_list.append(dividend)
+            jcp_list.append(jcp)
+        return fee_list, incomeTax_list, dividend_list, jcp_list
+
+    def getDataframe(self):
+        return self.market_df
+
+
+class CustodyInformation:
+    def __init__(self, extrato_df):
+        # Dataframe 'Extrato'
+        self.extrato_df = extrato_df
+
+        # Filtered dataframe 'Extrato'
+        self.df_filter = DataframeFilter()
+        self.filtered_df = self.df_filter.filterDataframePerColumn(
+            self.extrato_df, "Mercado", "Custodia"
+        )
+
+        # Calculate useful values
+        self.fee = self.filtered_df["Taxas"].sum()
+        self.incomeTax = self.filtered_df["IR"].sum()
+        self.dividend = self.filtered_df["Dividendos"].sum()
+        self.jcp = self.filtered_df["JCP"].sum()
+
+        # Calculate deposit value
+        self.deposit_df = self.df_filter.filterDataframePerColumn(
+            self.filtered_df, "Operação", "Transferência"
+        )
+        self.deposit = self.deposit_df["Preço Total"].sum()
+
+        # Calculate rescue value
+        self.rescue_df = self.df_filter.filterDataframePerColumn(
+            self.filtered_df, "Operação", "Resgate"
+        )
+        self.rescue = self.rescue_df["Preço Total"].sum()
+
+        # Dataframe 'Custody'
+        self.custody_df = pd.DataFrame()
+        self.custody_df["Mercado"] = ["Custodia"]
+        self.custody_df["Taxas"] = [self.fee]
+        self.custody_df["IR"] = [self.incomeTax]
+        self.custody_df["Dividendos"] = [self.dividend]
+        self.custody_df["JCP"] = [self.jcp]
+        self.custody_df["Transferência"] = [self.deposit]
+        self.custody_df["Resgate"] = [self.rescue]
+
+    def getDataframe(self):
+        return self.custody_df
+
+
 class PortfolioViewerWidget(QtWidgets.QTabWidget):
     """Widget used to show data related to Portfolio."""
 
@@ -240,6 +350,27 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         self.tab03.setLayout(self.grid_tab03)
         self.treasuries_tab_index = self.addTab(self.tab03, "Tesouro Direto")
 
+        # Short Summary tab
+        extrato_df = self.extrato.copy()
+        self.market_info = MarketInformation(extrato_df)
+        self.market_summary_treeview = ResizableTreeviewPandas(
+            self.market_info.getDataframe()
+        )
+        self.market_summary_treeview.showPandas(resize_per_contents=False)
+        self.custody_info = CustodyInformation(extrato_df)
+        self.custody_summary_treeview = ResizableTreeviewPandas(
+            self.custody_info.getDataframe()
+        )
+        self.custody_summary_treeview.showPandas(resize_per_contents=False)
+        self.tab04 = QtWidgets.QWidget()
+        self.grid_tab04 = QtWidgets.QGridLayout()
+        self.grid_tab04.setContentsMargins(spacing, spacing, spacing, spacing)
+        self.grid_tab04.setSpacing(spacing)
+        self.grid_tab04.addWidget(self.market_summary_treeview)
+        self.grid_tab04.addWidget(self.custody_summary_treeview)
+        self.tab04.setLayout(self.grid_tab04)
+        self.short_summary_tab_index = self.addTab(self.tab04, "Resumo Extrato")
+
         # Connect tab event
         self.currentChanged.connect(self.onChange)
 
@@ -261,12 +392,17 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
             self.variable_treeview.resizeColumnsToTreeViewWidth()
         elif index == self.treasuries_tab_index:
             self.treasuries_treeview.resizeColumnsToTreeViewWidth()
+        elif index == self.short_summary_tab_index:
+            self.custody_summary_treeview.resizeColumnsToTreeViewWidth()
+            self.market_summary_treeview.resizeColumnsToTreeViewWidth()
 
     def clearData(self):
         """Clear the treeview data lines."""
         self.PortfolioSummaryWidget.clearData()
         self.variable_treeview.clearData()
         self.treasuries_treeview.clearData()
+        self.custody_summary_treeview.clearData()
+        self.market_summary_treeview.clearData()
 
     def updateData(self, file_name):
         """Update the treeview data lines."""
@@ -291,6 +427,16 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
                 formatted_dataframe = formatter.getFormatedPortolioDataFrame()
                 self.treasuries_treeview.setDataframe(formatted_dataframe)
                 self.treasuries_treeview.showPandas(resize_per_contents=False)
+
+                self.market_info = MarketInformation(self.extrato.copy())
+                formatted_dataframe = self.market_info.getDataframe()
+                self.market_summary_treeview.setDataframe(formatted_dataframe)
+                self.market_summary_treeview.showPandas(resize_per_contents=False)
+
+                self.custody_info = CustodyInformation(self.extrato.copy())
+                formatted_dataframe = self.custody_info.getDataframe()
+                self.custody_summary_treeview.setDataframe(formatted_dataframe)
+                self.custody_summary_treeview.showPandas(resize_per_contents=False)
 
             else:
                 self.__showColumnsErrorMessage()
