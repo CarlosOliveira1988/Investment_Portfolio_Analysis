@@ -171,23 +171,206 @@ class PortfolioSummaryWidget(QtWidgets.QWidget):
         self.__initTreeviewData()
 
 
-class MarketInformation:
+class OperationsHistory:
+    """Class to show history data related to the ticker operations."""
+
     def __init__(self, extrato_df):
+        """Create the operations history object."""
+        # Dataframe 'Extrato'
+        self.extrato_df = extrato_df
+        self.df_filter = DataframeFilter()
+
+    def _sortDataframePerData(self, filtered_df):
+        filtered_df = filtered_df.sort_values(by=["Data"])
+        return filtered_df
+
+    def _getFilteredDataframePerTicker(self, ticker):
+        filtered_df = self.df_filter.filterDataframePerColumn(
+            self.extrato_df, "Ticker", ticker
+        )
+        filtered_df = self._sortDataframePerData(filtered_df)
+        return filtered_df
+
+    def _getFilteredDataframePerMarket(self, market):
+        filtered_df = self.df_filter.filterDataframePerColumn(
+            self.extrato_df, "Mercado", market
+        )
+        filtered_df = self._sortDataframePerData(filtered_df)
+        return filtered_df
+
+    def _getClosedOperationsDataframe(self, filtered_df, ticker):
+
+        operation_ID = 1
+
+        quantity_buy = 0
+        quantity_sell = 0
+        price_buy = 0
+        price_sell = 0
+        initial_date = None
+        final_date = None
+        taxes = 0
+        IR = 0
+
+        operation_list = []
+        ticker_list = []
+        initial_date_list = []
+        final_date_list = []
+        quantity_buy_list = []
+        mean_price_buy_list = []
+        total_price_buy_list = []
+        quantity_sell_list = []
+        mean_price_sell_list = []
+        total_price_sell_list = []
+        taxes_list = []
+        IR_list = []
+        gross_result_list = []
+        net_result_list = []
+
+        def appendResults():
+            operation_list.append(operation_ID)
+            ticker_list.append(ticker)
+            initial_date_list.append(initial_date)
+            final_date_list.append(final_date)
+            quantity_buy_list.append(quantity_buy)
+            mean_price_buy = price_buy / quantity_buy
+            mean_price_buy_list.append(mean_price_buy)
+            total_price_buy = quantity_buy * mean_price_buy
+            total_price_buy_list.append(total_price_buy)
+            quantity_sell_list.append(quantity_sell)
+            mean_price_sell = price_sell / quantity_sell
+            mean_price_sell_list.append(mean_price_sell)
+            total_price_sell = quantity_sell * mean_price_sell
+            total_price_sell_list.append(total_price_sell)
+            taxes_list.append(taxes)
+            IR_list.append(IR)
+            gross_result = total_price_sell - total_price_buy
+            gross_result_list.append(gross_result)
+            net_result_list.append(gross_result - (taxes + IR))
+
+        for index, data_row in filtered_df.iterrows():
+
+            # Set the initial date
+            if (data_row["Operação"] == "Compra") or (data_row["Operação"] == "Venda"):
+
+                # First part of the operation
+                if initial_date is None:
+                    if data_row["Operação"] == "Compra":
+                        quantity_buy += data_row["Quantidade"]
+                        price_buy += data_row["Preço Total"]
+                    elif data_row["Operação"] == "Venda":
+                        quantity_sell += data_row["Quantidade"]
+                        price_sell += data_row["Preço Total"]
+                    taxes += data_row["Taxas"]
+                    IR += data_row["IR"]
+                    initial_date = data_row["Data"]
+
+                # Second part of the operation
+                else:
+                    if data_row["Operação"] == "Compra":
+                        quantity_buy += data_row["Quantidade"]
+                        price_buy += data_row["Preço Total"]
+                    elif data_row["Operação"] == "Venda":
+                        quantity_sell += data_row["Quantidade"]
+                        price_sell += data_row["Preço Total"]
+                    taxes += data_row["Taxas"]
+                    IR += data_row["IR"]
+                    if quantity_buy == quantity_sell:
+                        final_date = data_row["Data"]
+
+                # Register the data in the lists
+                if (initial_date is not None) and (final_date is not None):
+                    appendResults()
+                    quantity_buy = 0
+                    quantity_sell = 0
+                    price_buy = 0
+                    price_sell = 0
+                    initial_date = None
+                    final_date = None
+                    taxes = 0
+                    IR = 0
+                    operation_ID += 1
+
+        operations_df = pd.DataFrame()
+        operations_df["Operação"] = operation_list
+        operations_df["Ticker"] = ticker_list
+        operations_df["Data Inicial"] = initial_date_list
+        operations_df["Data Final"] = final_date_list
+        operations_df["Quantidade Compra"] = quantity_buy_list
+        operations_df["Preço-médio Compra"] = mean_price_buy_list
+        operations_df["Preço-total Compra"] = total_price_buy_list
+        operations_df["Quantidade Venda"] = quantity_sell_list
+        operations_df["Preço-médio Venda"] = mean_price_sell_list
+        operations_df["Preço-total Venda"] = total_price_sell_list
+        operations_df["Taxas"] = taxes_list
+        operations_df["IR"] = IR_list
+        operations_df["Resultado Bruto"] = gross_result_list
+        operations_df["Resultado Líquido"] = net_result_list
+        return operations_df
+
+    def getClosedOperationsPerTicker(self, ticker):
+        """Return a dataframe of closed operations related to the ticker."""
+        filtered_df = self._getFilteredDataframePerTicker(ticker)
+        filtered_df = self._getClosedOperationsDataframe(filtered_df, ticker)
+        return filtered_df
+
+    def getClosedOperationsPerMarket(self, market):
+        """Return a dataframe of closed operations related to the market."""
+        # Filter per market
+        filtered_df = self._getFilteredDataframePerMarket(market)
+
+        # Remove duplicates
+        ticker_list = self.df_filter.getListFromDataframeColumn(filtered_df, "Ticker")
+        ticker_list = list(set(ticker_list))
+
+        # Run per each ticker to create an operations dataframe
+        operations_mkt_df = pd.DataFrame({})
+        for ticker in ticker_list:
+            ticker_df = self._getFilteredDataframePerTicker(ticker)
+            ticker_df = self._getClosedOperationsDataframe(ticker_df, ticker)
+            operations_mkt_df = pd.concat(
+                [operations_mkt_df, ticker_df], ignore_index=True, sort=False
+            )
+        return operations_mkt_df
+
+
+class MarketInformation:
+    """Class to show data related to 'market' column."""
+
+    def __init__(self, extrato_df):
+        """Create the market information object."""
         # Dataframe 'Extrato'
         self.extrato_df = extrato_df
 
         # Useful lists
-        self.market_list = self._getMarketList()
-        self.market_df_list = self._getMarketDfList()
+        self.mkt_list = self._getMarketList()
+        self.mkt_df_list = self._getMarketDfList()
         fee, incomeTax, dividend, jcp = self._getMarketValuesList()
+        gross_result_list = self._getGrossResultList()
 
         # Dataframe 'Market'
-        self.market_df = pd.DataFrame()
-        self.market_df["Mercado"] = self.market_list
-        self.market_df["Taxas"] = fee
-        self.market_df["IR"] = incomeTax
-        self.market_df["Dividendos"] = dividend
-        self.market_df["JCP"] = jcp
+        self.mkt_df = pd.DataFrame()
+        self.mkt_df["Mercado"] = self.mkt_list
+        self.mkt_df["Taxas"] = fee
+        self.mkt_df["IR"] = incomeTax
+        self.mkt_df["Dividendos"] = dividend
+        self.mkt_df["JCP"] = jcp
+        self.mkt_df["Bruto Realizado"] = gross_result_list
+        earns = (
+            self.mkt_df["Dividendos"]
+            + self.mkt_df["JCP"]
+            + self.mkt_df["Bruto Realizado"]
+        )
+        costs = self.mkt_df["Taxas"] + self.mkt_df["IR"]
+        self.mkt_df["Líquido Realizado"] = earns - costs
+
+    def _getGrossResultList(self):
+        gross_result_list = []
+        op_history = OperationsHistory(self.extrato_df)
+        for market in self.mkt_list:
+            df_closed_history = op_history.getClosedOperationsPerMarket(market)
+            gross_result = df_closed_history["Resultado Bruto"].sum()
+            gross_result_list.append(gross_result)
+        return gross_result_list
 
     def _getMarketList(self):
         df_filter = DataframeFilter()
@@ -204,7 +387,7 @@ class MarketInformation:
 
     def _getMarketDfList(self):
         market_df_list = []
-        for market in self.market_list:
+        for market in self.mkt_list:
             df_filter = DataframeFilter()
             filtered_df = df_filter.filterDataframePerColumn(
                 self.extrato_df, "Mercado", market
@@ -224,7 +407,7 @@ class MarketInformation:
         incomeTax_list = []
         dividend_list = []
         jcp_list = []
-        for df in self.market_df_list:
+        for df in self.mkt_df_list:
             fee, incomeTax, dividend, jcp = self._getCalculatedValues(df)
             fee_list.append(fee)
             incomeTax_list.append(incomeTax)
@@ -233,11 +416,24 @@ class MarketInformation:
         return fee_list, incomeTax_list, dividend_list, jcp_list
 
     def getDataframe(self):
-        return self.market_df
+        """Return a dataframe with useful data.
+
+        The following columns are present:
+        - Mercado
+        - Taxas
+        - IR
+        - Dividendos
+        - JCP
+        - Lucro/Prejuízo realizado
+        """
+        return self.mkt_df
 
 
 class CustodyInformation:
+    """Class to show data related to 'custody'."""
+
     def __init__(self, extrato_df):
+        """Create the custody information object."""
         # Dataframe 'Extrato'
         self.extrato_df = extrato_df
 
@@ -266,17 +462,28 @@ class CustodyInformation:
         self.rescue = self.rescue_df["Preço Total"].sum()
 
         # Dataframe 'Custody'
-        self.custody_df = pd.DataFrame()
-        self.custody_df["Mercado"] = ["Custodia"]
-        self.custody_df["Taxas"] = [self.fee]
-        self.custody_df["IR"] = [self.incomeTax]
-        self.custody_df["Dividendos"] = [self.dividend]
-        self.custody_df["JCP"] = [self.jcp]
-        self.custody_df["Transferência"] = [self.deposit]
-        self.custody_df["Resgate"] = [self.rescue]
+        self.cust_df = pd.DataFrame()
+        self.cust_df["Mercado"] = ["Custodia"]
+        self.cust_df["Taxas"] = [self.fee]
+        self.cust_df["IR"] = [self.incomeTax]
+        self.cust_df["Dividendos"] = [self.dividend]
+        self.cust_df["JCP"] = [self.jcp]
+        self.cust_df["Transferência"] = [self.deposit]
+        self.cust_df["Resgate"] = [self.rescue]
 
     def getDataframe(self):
-        return self.custody_df
+        """Return a dataframe with useful data.
+
+        The following columns are present:
+        - Mercado
+        - Taxas
+        - IR
+        - Dividendos
+        - JCP
+        - Transferência
+        - Resgate
+        """
+        return self.cust_df
 
 
 class PortfolioViewerWidget(QtWidgets.QTabWidget):
@@ -293,15 +500,15 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         spacing = Window.DEFAULT_BORDER_SIZE
 
         # PorfolioInvestment
-        self.porfolio_investment = PorfolioInvestment()
-        self.porfolio_investment.setFile(File)
+        self.investment = PorfolioInvestment()
+        self.investment.setFile(File)
 
         try:
-            if self.porfolio_investment.isValidFile():
-                self.porfolio_investment.run()
-                self.extrato = self.porfolio_investment.getExtrato()
-                self.variable_income = self.porfolio_investment.currentPortfolio()
-                self.treasuries = self.porfolio_investment.currentTesouroDireto()
+            if self.investment.isValidFile():
+                self.investment.run()
+                self.extrato = self.investment.getExtrato()
+                self.variable_income = self.investment.currentPortfolio()
+                self.treasuries = self.investment.currentTesouroDireto()
             else:
                 self.extrato = None
                 self.variable_income = None
@@ -352,32 +559,35 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
 
         # Short Summary tab
         extrato_df = self.extrato.copy()
-        self.market_info = MarketInformation(extrato_df)
-        self.market_summary_treeview = ResizableTreeviewPandas(
-            self.market_info.getDataframe()
+        self.mkt_info = MarketInformation(extrato_df)
+        self.mkt_summary_tree = ResizableTreeviewPandas(
+            self.mkt_info.getDataframe(),
         )
-        self.market_summary_treeview.showPandas(resize_per_contents=False)
-        self.custody_info = CustodyInformation(extrato_df)
-        self.custody_summary_treeview = ResizableTreeviewPandas(
-            self.custody_info.getDataframe()
+        self.mkt_summary_tree.showPandas(resize_per_contents=False)
+        self.cust_info = CustodyInformation(extrato_df)
+        self.cust_summary_tree = ResizableTreeviewPandas(
+            self.cust_info.getDataframe(),
         )
-        self.custody_summary_treeview.showPandas(resize_per_contents=False)
+        self.cust_summary_tree.showPandas(resize_per_contents=False)
         self.tab04 = QtWidgets.QWidget()
         self.grid_tab04 = QtWidgets.QGridLayout()
         self.grid_tab04.setContentsMargins(spacing, spacing, spacing, spacing)
         self.grid_tab04.setSpacing(spacing)
-        self.grid_tab04.addWidget(self.market_summary_treeview)
-        self.grid_tab04.addWidget(self.custody_summary_treeview)
+        self.grid_tab04.addWidget(self.mkt_summary_tree)
+        self.grid_tab04.addWidget(self.cust_summary_tree)
         self.tab04.setLayout(self.grid_tab04)
-        self.short_summary_tab_index = self.addTab(self.tab04, "Resumo Extrato")
+        self.short_summary_tab_index = self.addTab(
+            self.tab04,
+            "Resumo Extrato",
+        )
 
         # Connect tab event
         self.currentChanged.connect(self.onChange)
 
     def __showColumnsErrorMessage(self):
         msg = "O arquivo selecionado é inválido.\n\n"
-        msg += "Por favor, verifique se as seguintes colunas existem no arquivo:\n"
-        for title in self.porfolio_investment.getExpectedColumnsTitleList():
+        msg += "Por favor, verifique se as colunas existem no arquivo:\n"
+        for title in self.investment.getExpectedColumnsTitleList():
             msg += "\n - " + title
         QMessageBox.warning(self, "Análise de Portfólio", msg, QMessageBox.Ok)
 
@@ -393,50 +603,50 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         elif index == self.treasuries_tab_index:
             self.treasuries_treeview.resizeColumnsToTreeViewWidth()
         elif index == self.short_summary_tab_index:
-            self.custody_summary_treeview.resizeColumnsToTreeViewWidth()
-            self.market_summary_treeview.resizeColumnsToTreeViewWidth()
+            self.cust_summary_tree.resizeColumnsToTreeViewWidth()
+            self.mkt_summary_tree.resizeColumnsToTreeViewWidth()
 
     def clearData(self):
         """Clear the treeview data lines."""
         self.PortfolioSummaryWidget.clearData()
         self.variable_treeview.clearData()
         self.treasuries_treeview.clearData()
-        self.custody_summary_treeview.clearData()
-        self.market_summary_treeview.clearData()
+        self.cust_summary_tree.clearData()
+        self.mkt_summary_tree.clearData()
 
     def updateData(self, file_name):
         """Update the treeview data lines."""
-        self.porfolio_investment = PorfolioInvestment()
-        self.porfolio_investment.setFile(file_name)
+        self.investment = PorfolioInvestment()
+        self.investment.setFile(file_name)
 
         try:
-            if self.porfolio_investment.isValidFile():
-                self.porfolio_investment.run()
+            if self.investment.isValidFile():
+                self.investment.run()
 
-                self.extrato = self.porfolio_investment.getExtrato()
+                self.extrato = self.investment.getExtrato()
                 self.PortfolioSummaryWidget.updateData(self.extrato)
 
-                self.variable_income = self.porfolio_investment.currentPortfolio()
+                self.variable_income = self.investment.currentPortfolio()
                 formatter = VariableIncomesFormater(self.variable_income)
                 formatted_dataframe = formatter.getFormatedPortolioDataFrame()
                 self.variable_treeview.setDataframe(formatted_dataframe)
                 self.variable_treeview.showPandas(resize_per_contents=False)
 
-                self.treasuries = self.porfolio_investment.currentTesouroDireto()
+                self.treasuries = self.investment.currentTesouroDireto()
                 formatter = TreasuriesFormater(self.treasuries)
                 formatted_dataframe = formatter.getFormatedPortolioDataFrame()
                 self.treasuries_treeview.setDataframe(formatted_dataframe)
                 self.treasuries_treeview.showPandas(resize_per_contents=False)
 
-                self.market_info = MarketInformation(self.extrato.copy())
-                formatted_dataframe = self.market_info.getDataframe()
-                self.market_summary_treeview.setDataframe(formatted_dataframe)
-                self.market_summary_treeview.showPandas(resize_per_contents=False)
+                self.mkt_info = MarketInformation(self.extrato.copy())
+                formatted_dataframe = self.mkt_info.getDataframe()
+                self.mkt_summary_tree.setDataframe(formatted_dataframe)
+                self.mkt_summary_tree.showPandas(resize_per_contents=False)
 
-                self.custody_info = CustodyInformation(self.extrato.copy())
-                formatted_dataframe = self.custody_info.getDataframe()
-                self.custody_summary_treeview.setDataframe(formatted_dataframe)
-                self.custody_summary_treeview.showPandas(resize_per_contents=False)
+                self.cust_info = CustodyInformation(self.extrato.copy())
+                formatted_dataframe = self.cust_info.getDataframe()
+                self.cust_summary_tree.setDataframe(formatted_dataframe)
+                self.cust_summary_tree.showPandas(resize_per_contents=False)
 
             else:
                 self.__showColumnsErrorMessage()
