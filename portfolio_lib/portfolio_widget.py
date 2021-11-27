@@ -6,6 +6,8 @@ from gui_lib.treeview.treeview import ResizableTreeview
 from gui_lib.treeview.treeview_pandas import ResizableTreeviewPandas
 from gui_lib.window import Window
 from indexer_lib.dataframe_filter import DataframeFilter
+
+# from indexer_lib.interest_calculation import Benchmark
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from xlrd import XLRDError
@@ -211,10 +213,13 @@ class OperationsHistory:
         taxes = 0
         IR = 0
 
+        market_list = []
         operation_list = []
         ticker_list = []
         initial_date_list = []
         final_date_list = []
+        days_list = []
+        months_list = []
         quantity_buy_list = []
         mean_price_buy_list = []
         total_price_buy_list = []
@@ -225,12 +230,23 @@ class OperationsHistory:
         IR_list = []
         gross_result_list = []
         net_result_list = []
+        rentability_list = []
+        # CDI_list = []
+        # IPCA_list = []
 
         def appendResults():
+            market_list.append(market)
             operation_list.append(operation_ID)
             ticker_list.append(ticker)
             initial_date_list.append(initial_date)
             final_date_list.append(final_date)
+            range_date = final_date - initial_date
+            range_days = range_date.days
+            range_months = (final_date.year - initial_date.year) * 12 + (
+                final_date.month - initial_date.month
+            )
+            days_list.append(range_days)
+            months_list.append(range_months)
             quantity_buy_list.append(quantity_buy)
             mean_price_buy = price_buy / quantity_buy
             mean_price_buy_list.append(mean_price_buy)
@@ -245,7 +261,31 @@ class OperationsHistory:
             IR_list.append(IR)
             gross_result = total_price_sell - total_price_buy
             gross_result_list.append(gross_result)
-            net_result_list.append(gross_result - (taxes + IR))
+            costs = taxes + IR
+            net_result = gross_result - costs
+            net_result_list.append(net_result)
+            try:
+                rentability = net_result / (total_price_buy + costs)
+            except ZeroDivisionError:
+                # ZeroDivisionError means (total_price_buy + costs)=0.00
+                # Then, let's replace it by 0.01
+                rentability = net_result / 0.01
+            rentability_list.append(rentability)
+
+            # Benchmarks
+            # initial_value = total_price_buy + costs
+            # final_value = total_price_sell
+            # benchmark = Benchmark()
+            # benchmark.setValues(initial_value, final_value)
+            # benchmark.setPeriods(initial_date, final_date)
+            # if range_months < 1:
+            #     benchmark.setTotalMonths(1)
+            # else:
+            #     benchmark.setTotalMonths(range_months)
+            # CDI = benchmark.getCDIEquivalentInterestRate()
+            # CDI_list.append(CDI)
+            # IPCA = benchmark.getIPCAEquivalentInterestRate()
+            # IPCA_list.append(IPCA)
 
         for index, data_row in filtered_df.iterrows():
 
@@ -263,6 +303,7 @@ class OperationsHistory:
                     taxes += data_row["Taxas"]
                     IR += data_row["IR"]
                     initial_date = data_row["Data"]
+                    market = data_row["Mercado"]
 
                 # Second part of the operation
                 else:
@@ -291,10 +332,13 @@ class OperationsHistory:
                     operation_ID += 1
 
         operations_df = pd.DataFrame()
-        operations_df["Operação"] = operation_list
+        operations_df["Mercado"] = market_list
         operations_df["Ticker"] = ticker_list
+        operations_df["Operação"] = operation_list
         operations_df["Data Inicial"] = initial_date_list
         operations_df["Data Final"] = final_date_list
+        operations_df["Duração dias"] = days_list
+        operations_df["Duração meses"] = months_list
         operations_df["Quantidade Compra"] = quantity_buy_list
         operations_df["Preço-médio Compra"] = mean_price_buy_list
         operations_df["Preço-total Compra"] = total_price_buy_list
@@ -303,8 +347,11 @@ class OperationsHistory:
         operations_df["Preço-total Venda"] = total_price_sell_list
         operations_df["Taxas"] = taxes_list
         operations_df["IR"] = IR_list
-        operations_df["Resultado Bruto"] = gross_result_list
-        operations_df["Resultado Líquido"] = net_result_list
+        operations_df["Venda-Compra Realizado"] = gross_result_list
+        operations_df["Líquido Realizado"] = net_result_list
+        operations_df["Rentabilidade Líquida"] = rentability_list
+        # operations_df["% CDI"] = CDI_list
+        # operations_df["% IPCA"] = IPCA_list
         return operations_df
 
     def getClosedOperationsPerTicker(self, ticker):
@@ -328,8 +375,27 @@ class OperationsHistory:
             ticker_df = self._getFilteredDataframePerTicker(ticker)
             ticker_df = self._getClosedOperationsDataframe(ticker_df, ticker)
             operations_mkt_df = pd.concat(
-                [operations_mkt_df, ticker_df], ignore_index=True, sort=False
+                [operations_mkt_df, ticker_df],
+                ignore_index=True,
+                sort=False,
             )
+        return operations_mkt_df
+
+    def getClosedOperationsDataframe(self):
+        """Return a dataframe of closed operations."""
+        operations_mkt_df = pd.DataFrame({})
+        mkt_info = MarketInformation(self.extrato_df)
+        mkt_list = mkt_info._getMarketList()
+        for market in mkt_list:
+            df_closed_history = self.getClosedOperationsPerMarket(market)
+            operations_mkt_df = pd.concat(
+                [operations_mkt_df, df_closed_history],
+                ignore_index=True,
+                sort=False,
+            )
+        operations_mkt_df = operations_mkt_df.sort_values(
+            by=["Mercado", "Ticker", "Operação"]
+        )
         return operations_mkt_df
 
 
@@ -354,21 +420,24 @@ class MarketInformation:
         self.mkt_df["IR"] = incomeTax
         self.mkt_df["Dividendos"] = dividend
         self.mkt_df["JCP"] = jcp
-        self.mkt_df["Bruto Realizado"] = gross_result_list
+        self.mkt_df["Venda-Compra Realizado"] = gross_result_list
         earns = (
             self.mkt_df["Dividendos"]
             + self.mkt_df["JCP"]
-            + self.mkt_df["Bruto Realizado"]
+            + self.mkt_df["Venda-Compra Realizado"]
         )
         costs = self.mkt_df["Taxas"] + self.mkt_df["IR"]
         self.mkt_df["Líquido Realizado"] = earns - costs
+
+        # Sorting dataframe 'Market'
+        self.mkt_df = self.mkt_df.sort_values(by=["Mercado"])
 
     def _getGrossResultList(self):
         gross_result_list = []
         op_history = OperationsHistory(self.extrato_df)
         for market in self.mkt_list:
             df_closed_history = op_history.getClosedOperationsPerMarket(market)
-            gross_result = df_closed_history["Resultado Bruto"].sum()
+            gross_result = df_closed_history["Venda-Compra Realizado"].sum()
             gross_result_list.append(gross_result)
         return gross_result_list
 
@@ -424,7 +493,8 @@ class MarketInformation:
         - IR
         - Dividendos
         - JCP
-        - Lucro/Prejuízo realizado
+        - Bruto realizado
+        - Líquido realizado
         """
         return self.mkt_df
 
@@ -559,21 +629,33 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
 
         # Short Summary tab
         extrato_df = self.extrato.copy()
+
         self.mkt_info = MarketInformation(extrato_df)
         self.mkt_summary_tree = ResizableTreeviewPandas(
             self.mkt_info.getDataframe(),
         )
         self.mkt_summary_tree.showPandas(resize_per_contents=False)
+        self.mkt_summary_tree.setMaximumHeight(9 * spacing)
+
+        self.operations_info = OperationsHistory(extrato_df)
+        self.operations_tree = ResizableTreeviewPandas(
+            self.operations_info.getClosedOperationsDataframe(),
+        )
+        self.operations_tree.showPandas(resize_per_contents=True)
+
         self.cust_info = CustodyInformation(extrato_df)
         self.cust_summary_tree = ResizableTreeviewPandas(
             self.cust_info.getDataframe(),
         )
         self.cust_summary_tree.showPandas(resize_per_contents=False)
+        self.cust_summary_tree.setMaximumHeight(3 * spacing)
+
         self.tab04 = QtWidgets.QWidget()
         self.grid_tab04 = QtWidgets.QGridLayout()
         self.grid_tab04.setContentsMargins(spacing, spacing, spacing, spacing)
         self.grid_tab04.setSpacing(spacing)
         self.grid_tab04.addWidget(self.mkt_summary_tree)
+        self.grid_tab04.addWidget(self.operations_tree)
         self.grid_tab04.addWidget(self.cust_summary_tree)
         self.tab04.setLayout(self.grid_tab04)
         self.short_summary_tab_index = self.addTab(
@@ -629,22 +711,34 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
                 self.variable_income = self.investment.currentPortfolio()
                 formatter = VariableIncomesFormater(self.variable_income)
                 formatted_dataframe = formatter.getFormatedPortolioDataFrame()
+                self.variable_treeview.clearData()
                 self.variable_treeview.setDataframe(formatted_dataframe)
                 self.variable_treeview.showPandas(resize_per_contents=False)
 
                 self.treasuries = self.investment.currentTesouroDireto()
                 formatter = TreasuriesFormater(self.treasuries)
                 formatted_dataframe = formatter.getFormatedPortolioDataFrame()
+                self.treasuries_treeview.clearData()
                 self.treasuries_treeview.setDataframe(formatted_dataframe)
                 self.treasuries_treeview.showPandas(resize_per_contents=False)
 
                 self.mkt_info = MarketInformation(self.extrato.copy())
                 formatted_dataframe = self.mkt_info.getDataframe()
+                self.mkt_summary_tree.clearData()
                 self.mkt_summary_tree.setDataframe(formatted_dataframe)
                 self.mkt_summary_tree.showPandas(resize_per_contents=False)
 
+                self.operations_info = OperationsHistory(self.extrato.copy())
+                formatted_dataframe = (
+                    self.operations_info.getClosedOperationsDataframe()
+                )
+                self.operations_tree.clearData()
+                self.operations_tree.setDataframe(formatted_dataframe)
+                self.operations_tree.showPandas(resize_per_contents=True)
+
                 self.cust_info = CustodyInformation(self.extrato.copy())
                 formatted_dataframe = self.cust_info.getDataframe()
+                self.cust_summary_tree.clearData()
                 self.cust_summary_tree.setDataframe(formatted_dataframe)
                 self.cust_summary_tree.showPandas(resize_per_contents=False)
 
