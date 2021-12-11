@@ -6,8 +6,7 @@ from gui_lib.treeview.treeview import ResizableTreeview
 from gui_lib.treeview.treeview_pandas import ResizableTreeviewPandas
 from gui_lib.window import Window
 from indexer_lib.dataframe_filter import DataframeFilter
-
-# from indexer_lib.interest_calculation import Benchmark
+from indexer_lib.interest_calculation import Benchmark
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from xlrd import XLRDError
@@ -231,8 +230,7 @@ class OperationsHistory:
         gross_result_list = []
         net_result_list = []
         rentability_list = []
-        # CDI_list = []
-        # IPCA_list = []
+        CDI_list = []
 
         def appendResults():
             market_list.append(market)
@@ -242,9 +240,7 @@ class OperationsHistory:
             final_date_list.append(final_date)
             range_date = final_date - initial_date
             range_days = range_date.days
-            range_months = (final_date.year - initial_date.year) * 12 + (
-                final_date.month - initial_date.month
-            )
+            range_months = range_days / 30
             days_list.append(range_days)
             months_list.append(range_months)
             quantity_buy_list.append(quantity_buy)
@@ -272,20 +268,14 @@ class OperationsHistory:
                 rentability = net_result / 0.01
             rentability_list.append(rentability)
 
-            # Benchmarks
-            # initial_value = total_price_buy + costs
-            # final_value = total_price_sell
-            # benchmark = Benchmark()
-            # benchmark.setValues(initial_value, final_value)
-            # benchmark.setPeriods(initial_date, final_date)
-            # if range_months < 1:
-            #     benchmark.setTotalMonths(1)
-            # else:
-            #     benchmark.setTotalMonths(range_months)
-            # CDI = benchmark.getCDIEquivalentInterestRate()
-            # CDI_list.append(CDI)
-            # IPCA = benchmark.getIPCAEquivalentInterestRate()
-            # IPCA_list.append(IPCA)
+            # Benchmark
+            initial_value = total_price_buy + costs
+            final_value = total_price_sell
+            benchmark = Benchmark()
+            benchmark.setValues(initial_value, final_value)
+            benchmark.setPeriods(initial_date, final_date)
+            CDI = benchmark.getDailyCDIEquivalentInterestRate()
+            CDI_list.append(CDI)
 
         for index, data_row in filtered_df.iterrows():
 
@@ -350,8 +340,7 @@ class OperationsHistory:
         operations_df["Venda-Compra Realizado"] = gross_result_list
         operations_df["Líquido Realizado"] = net_result_list
         operations_df["Rentabilidade Líquida"] = rentability_list
-        # operations_df["% CDI"] = CDI_list
-        # operations_df["% IPCA"] = IPCA_list
+        operations_df["%CDI"] = CDI_list
         return operations_df
 
     def getClosedOperationsPerTicker(self, ticker):
