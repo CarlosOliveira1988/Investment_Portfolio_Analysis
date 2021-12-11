@@ -393,9 +393,10 @@ class OperationsHistory:
                 ignore_index=True,
                 sort=False,
             )
-        operations_mkt_df = operations_mkt_df.sort_values(
-            by=["Mercado", "Ticker", "Operação"]
-        )
+        if mkt_list:
+            operations_mkt_df = operations_mkt_df.sort_values(
+                by=["Mercado", "Ticker", "Operação"]
+            )
         return operations_mkt_df
 
 
@@ -693,8 +694,9 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         self.PortfolioSummaryWidget.clearData()
         self.variable_treeview.clearData()
         self.treasuries_treeview.clearData()
-        self.cust_summary_tree.clearData()
         self.mkt_summary_tree.clearData()
+        self.operations_tree.clearData()
+        self.cust_summary_tree.clearData()
 
     def updateData(self, file_name):
         """Update the treeview data lines."""
