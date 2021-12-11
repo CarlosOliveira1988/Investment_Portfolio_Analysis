@@ -458,21 +458,6 @@ class Benchmark:
             monthly_interest_rate_list, self.initial_value
         )
 
-    def __getDailyInterestValueFromIndexer(self, economic_indexer):
-        dataframe = economic_indexer.getDailyStackedDataframe()
-        filtered_dataframe = self.DataframeFilter.filterDataframePerPeriod(
-            dataframe,
-            self.StackedFormatConstants.getDailyDateTitle(),
-            self.initial_period,
-            self.final_period,
-        )
-        daily_interest_rate_list = self.DataframeFilter.getListFromDataframeColumn(
-            filtered_dataframe, self.StackedFormatConstants.getDailyInterestTitle()
-        )
-        return self.InterestCalculation.calculateInterestValue(
-            daily_interest_rate_list, self.initial_value
-        )
-
     """
     Public methods
     """
@@ -508,13 +493,6 @@ class Benchmark:
             self.initial_value, self.final_value
         )
         cdi_interest_value = self.__getInterestValueFromIndexer(self.CDI)
-        return interest_value / cdi_interest_value
-
-    def getDailyCDIEquivalentInterestRate(self):
-        interest_value = self.InterestCalculation.calculateInterestValueByValues(
-            self.initial_value, self.final_value
-        )
-        cdi_interest_value = self.__getDailyInterestValueFromIndexer(self.CDI)
         return interest_value / cdi_interest_value
 
     def getIPCAEquivalentInterestRate(self):

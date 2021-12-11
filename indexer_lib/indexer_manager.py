@@ -1,10 +1,8 @@
-import calendar
 from datetime import datetime
 
 import pandas as pd
 
-from indexer_lib.indexer_formater import (OriginalIndexerFormater,
-                                          StackedIndexerFormater)
+from indexer_lib.indexer_formater import OriginalIndexerFormater, StackedIndexerFormater
 from indexer_lib.interest_calculation import InterestCalculation
 
 
@@ -63,14 +61,6 @@ class StackedFormatConstants:
         STACKED_MONTHLY_INTEREST_COLUMN,
     ]
 
-    # Contants related to the "Daily Stacked" dataframe format (2 columns)
-    DAILY_STACKED_DATE_COLUMN = "Data"
-    DAILY_STACKED_RATE_COLUMN = "Taxa Diária"
-    DAILY_STACKED_FORMAT_COLUMNS = [
-        DAILY_STACKED_DATE_COLUMN,
-        DAILY_STACKED_RATE_COLUMN,
-    ]
-
     def __init__(self):
         pass
 
@@ -88,15 +78,6 @@ class StackedFormatConstants:
 
     def getColumnsTitleList(self):
         return StackedFormatConstants.STACKED_FORMAT_COLUMNS
-
-    def getDailyDateTitle(self):
-        return StackedFormatConstants.DAILY_STACKED_DATE_COLUMN
-
-    def getDailyInterestTitle(self):
-        return StackedFormatConstants.DAILY_STACKED_RATE_COLUMN
-
-    def getDailyColumnsTitleList(self):
-        return StackedFormatConstants.DAILY_STACKED_FORMAT_COLUMNS
 
 
 class IndexerManager:
@@ -128,7 +109,6 @@ class IndexerManager:
         self.__divideInterestValuesPer100()
         self.__setInitialFinalPeriods()
         self.__setValuesToYearlyRateColumn()
-        self.__setDailyStackedDataframe()
 
     """
     Private methods
@@ -291,32 +271,6 @@ class IndexerManager:
             self.__OriginalConstants.getYearlyInterestRateTitle()
         ] = interest_rate_list
 
-    def __setDailyStackedDataframe(self):
-        self.__DailyStackedDataframe = pd.DataFrame()
-        calc = InterestCalculation()
-        monthly_df = self.getDataframe(stacked=True)
-        for index, data_row in monthly_df.iterrows():
-            year = data_row[StackedFormatConstants.STACKED_YEAR_COLUMN]
-            month_string = data_row[StackedFormatConstants.STACKED_MONTH_COLUMN]
-            month = OriginalFormatConstants.MONTHS_LIST.index(month_string) + 1
-            wday, ndays = calendar.monthrange(year, month)
-            day_list = [datetime(year, month, day) for day in range(1, ndays + 1)]
-            monthly_rate = data_row[
-                StackedFormatConstants.STACKED_MONTHLY_INTEREST_COLUMN
-            ]
-            daily_rate = calc.calculateMeanInterestRatePerPeriod(monthly_rate, ndays)
-            daily_rate_list = calc.getPrefixedInterestRateList(daily_rate, ndays)
-            daily_rate_df = pd.DataFrame()
-            daily_rate_df[StackedFormatConstants.DAILY_STACKED_DATE_COLUMN] = day_list
-            daily_rate_df[
-                StackedFormatConstants.DAILY_STACKED_RATE_COLUMN
-            ] = daily_rate_list
-            self.__DailyStackedDataframe = pd.concat(
-                [self.__DailyStackedDataframe, daily_rate_df],
-                ignore_index=True,
-                sort=False,
-            )
-
     """
     Puclic methods
     """
@@ -338,15 +292,6 @@ class IndexerManager:
             return self.__StackedDataframe
         else:
             return self.__OriginalDataframe
-
-    def getDailyStackedDataframe(self):
-        """Return a stacked dataframe with daily interest rates.
-
-        The following columns are present:
-        - "Data"
-        - "Taxa Diária"
-        """
-        return self.__DailyStackedDataframe
 
     def getFormatedDataframe(self, stacked=True):
         """
