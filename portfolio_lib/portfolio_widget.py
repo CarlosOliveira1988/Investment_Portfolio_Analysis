@@ -2,12 +2,11 @@
 
 import pandas as pd
 from gui_lib.pushbutton import StandardPushButton
+from gui_lib.treeview.format_applier import TreeviewFormatApplier
 from gui_lib.treeview.treeview import ResizableTreeview
 from gui_lib.treeview.treeview_pandas import ResizableTreeviewPandas
 from gui_lib.window import Window
 from indexer_lib.dataframe_filter import DataframeFilter
-
-# from indexer_lib.interest_calculation import Benchmark
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from xlrd import XLRDError
@@ -231,12 +230,10 @@ class OperationsHistory:
         gross_result_list = []
         net_result_list = []
         rentability_list = []
-        # CDI_list = []
-        # IPCA_list = []
 
         def appendResults():
             market_list.append(market)
-            operation_list.append(operation_ID)
+            operation_list.append("OP" + str(operation_ID))
             ticker_list.append(ticker)
             initial_date_list.append(initial_date)
             final_date_list.append(final_date)
@@ -271,21 +268,6 @@ class OperationsHistory:
                 # Then, let's replace it by 0.01
                 rentability = net_result / 0.01
             rentability_list.append(rentability)
-
-            # Benchmarks
-            # initial_value = total_price_buy + costs
-            # final_value = total_price_sell
-            # benchmark = Benchmark()
-            # benchmark.setValues(initial_value, final_value)
-            # benchmark.setPeriods(initial_date, final_date)
-            # if range_months < 1:
-            #     benchmark.setTotalMonths(1)
-            # else:
-            #     benchmark.setTotalMonths(range_months)
-            # CDI = benchmark.getCDIEquivalentInterestRate()
-            # CDI_list.append(CDI)
-            # IPCA = benchmark.getIPCAEquivalentInterestRate()
-            # IPCA_list.append(IPCA)
 
         for index, data_row in filtered_df.iterrows():
 
@@ -350,8 +332,6 @@ class OperationsHistory:
         operations_df["Venda-Compra Realizado"] = gross_result_list
         operations_df["Líquido Realizado"] = net_result_list
         operations_df["Rentabilidade Líquida"] = rentability_list
-        # operations_df["% CDI"] = CDI_list
-        # operations_df["% IPCA"] = IPCA_list
         return operations_df
 
     def getClosedOperationsPerTicker(self, ticker):
@@ -399,6 +379,54 @@ class OperationsHistory:
             )
         return operations_mkt_df
 
+    def getFormattedClosedOperationsDataframe(self):
+        """Return a formatted dataframe of closed operations."""
+        operations_mkt_df = self.getClosedOperationsDataframe()
+
+        # Formatter
+        op_formatter = TreeviewFormatApplier()
+        op_formatter.setDataframe(operations_mkt_df)
+        op_formatter.setRequiredString(
+            [
+                "Mercado",
+                "Ticker",
+                "Operação",
+            ]
+        )
+        op_formatter.setCurrencyType(
+            [
+                "Preço-médio Compra",
+                "Preço-total Compra",
+                "Preço-médio Venda",
+                "Preço-total Venda",
+                "Taxas",
+                "IR",
+                "Venda-Compra Realizado",
+                "Líquido Realizado",
+            ]
+        )
+        op_formatter.setDateType(
+            [
+                "Data Inicial",
+                "Data Final",
+            ]
+        )
+        op_formatter.setFloatType(
+            [
+                "Duração dias",
+                "Duração meses",
+                "Quantidade Compra",
+                "Quantidade Venda",
+            ]
+        )
+        op_formatter.setPercentageType(
+            [
+                "Rentabilidade Líquida",
+            ]
+        )
+        op_formatter.runFormatter()
+        return op_formatter.getFormatedDataFrame()
+
 
 class MarketInformation:
     """Class to show data related to 'market' column."""
@@ -432,6 +460,21 @@ class MarketInformation:
 
         # Sorting dataframe 'Market'
         self.mkt_df = self.mkt_df.sort_values(by=["Mercado"])
+
+        # Formatter
+        self.mkt_formatter = TreeviewFormatApplier()
+        self.mkt_formatter.setDataframe(self.mkt_df)
+        self.mkt_formatter.setRequiredString(["Mercado"])
+        self.mkt_formatter.setCurrencyType(
+            [
+                "Taxas",
+                "IR",
+                "Dividendos",
+                "JCP",
+                "Venda-Compra Realizado",
+                "Líquido Realizado",
+            ]
+        )
 
     def _getGrossResultList(self):
         gross_result_list = []
@@ -499,6 +542,11 @@ class MarketInformation:
         """
         return self.mkt_df
 
+    def getFormattedDataframe(self):
+        self.mkt_formatter.setDataframe(self.mkt_df)
+        self.mkt_formatter.runFormatter()
+        return self.mkt_formatter.getFormatedDataFrame()
+
 
 class CustodyInformation:
     """Class to show data related to 'custody'."""
@@ -542,6 +590,21 @@ class CustodyInformation:
         self.cust_df["Transferência"] = [self.deposit]
         self.cust_df["Resgate"] = [self.rescue]
 
+        # Formatter
+        self.cust_formatter = TreeviewFormatApplier()
+        self.cust_formatter.setDataframe(self.cust_df)
+        self.cust_formatter.setRequiredString(["Mercado"])
+        self.cust_formatter.setCurrencyType(
+            [
+                "Taxas",
+                "IR",
+                "Dividendos",
+                "JCP",
+                "Transferência",
+                "Resgate",
+            ]
+        )
+
     def getDataframe(self):
         """Return a dataframe with useful data.
 
@@ -555,6 +618,11 @@ class CustodyInformation:
         - Resgate
         """
         return self.cust_df
+
+    def getFormattedDataframe(self):
+        self.cust_formatter.setDataframe(self.cust_df)
+        self.cust_formatter.runFormatter()
+        return self.cust_formatter.getFormatedDataFrame()
 
 
 class PortfolioViewerWidget(QtWidgets.QTabWidget):
@@ -633,20 +701,20 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
 
         self.mkt_info = MarketInformation(extrato_df)
         self.mkt_summary_tree = ResizableTreeviewPandas(
-            self.mkt_info.getDataframe(),
+            self.mkt_info.getFormattedDataframe(),
         )
         self.mkt_summary_tree.showPandas(resize_per_contents=False)
         self.mkt_summary_tree.setMaximumHeight(9 * spacing)
 
         self.operations_info = OperationsHistory(extrato_df)
         self.operations_tree = ResizableTreeviewPandas(
-            self.operations_info.getClosedOperationsDataframe(),
+            self.operations_info.getFormattedClosedOperationsDataframe(),
         )
         self.operations_tree.showPandas(resize_per_contents=True)
 
         self.cust_info = CustodyInformation(extrato_df)
         self.cust_summary_tree = ResizableTreeviewPandas(
-            self.cust_info.getDataframe(),
+            self.cust_info.getFormattedDataframe(),
         )
         self.cust_summary_tree.showPandas(resize_per_contents=False)
         self.cust_summary_tree.setMaximumHeight(3 * spacing)
@@ -725,21 +793,21 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
                 self.treasuries_treeview.showPandas(resize_per_contents=False)
 
                 self.mkt_info = MarketInformation(self.extrato.copy())
-                formatted_dataframe = self.mkt_info.getDataframe()
+                formatted_dataframe = self.mkt_info.getFormattedDataframe()
                 self.mkt_summary_tree.clearData()
                 self.mkt_summary_tree.setDataframe(formatted_dataframe)
                 self.mkt_summary_tree.showPandas(resize_per_contents=False)
 
                 self.operations_info = OperationsHistory(self.extrato.copy())
                 formatted_dataframe = (
-                    self.operations_info.getClosedOperationsDataframe()
+                    self.operations_info.getFormattedClosedOperationsDataframe()
                 )
                 self.operations_tree.clearData()
                 self.operations_tree.setDataframe(formatted_dataframe)
                 self.operations_tree.showPandas(resize_per_contents=True)
 
                 self.cust_info = CustodyInformation(self.extrato.copy())
-                formatted_dataframe = self.cust_info.getDataframe()
+                formatted_dataframe = self.cust_info.getFormattedDataframe()
                 self.cust_summary_tree.clearData()
                 self.cust_summary_tree.setDataframe(formatted_dataframe)
                 self.cust_summary_tree.showPandas(resize_per_contents=False)
