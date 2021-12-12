@@ -62,7 +62,10 @@ class TreeviewFormatApplier:
 
             # Run per each column of each type
             for column in column_type:
-                column.fillNaDataFrameColumnValues(self.FormatedDataFrame)
+                try:
+                    column.fillNaDataFrameColumnValues(self.FormatedDataFrame)
+                except KeyError:
+                    pass
 
     def __setColumnOrder(self):
         if self.column_order:
@@ -74,7 +77,10 @@ class TreeviewFormatApplier:
 
             # Run per each column of each type
             for column in column_type:
-                column.formatDataFrameColumnValues(self.FormatedDataFrame)
+                try:
+                    column.formatDataFrameColumnValues(self.FormatedDataFrame)
+                except KeyError:
+                    pass
 
     def __getTypeList(self, title_list, column_type):
         type_list = []

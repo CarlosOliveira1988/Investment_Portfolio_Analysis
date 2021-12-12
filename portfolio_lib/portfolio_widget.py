@@ -537,15 +537,79 @@ class MarketInformation:
         - IR
         - Dividendos
         - JCP
-        - Bruto realizado
-        - Líquido realizado
+        - Venda-Compra Realizado
+        - Líquido Realizado
         """
-        return self.mkt_df
+        return self.mkt_df.copy()
 
     def getFormattedDataframe(self):
-        self.mkt_formatter.setDataframe(self.mkt_df)
+        """Return a formatted dataframe with useful data.
+
+        The following columns are present:
+        - Mercado
+        - Taxas
+        - IR
+        - Dividendos
+        - JCP
+        - Venda-Compra Realizado
+        - Líquido Realizado
+        """
+        self.mkt_formatter.setDataframe(self.mkt_df.copy())
         self.mkt_formatter.runFormatter()
-        return self.mkt_formatter.getFormatedDataFrame()
+        return self.mkt_formatter.getFormatedDataFrame().copy()
+
+    def getTotalDataframe(self):
+        """Return a dataframe with the sum of the useful data.
+
+        The following columns are present:
+        - Mercado
+        - Taxas
+        - IR
+        - Dividendos
+        - JCP
+        - Venda-Compra Realizado
+        - Líquido Realizado
+        """
+        total_mkt_df = pd.DataFrame()
+        total_mkt_df["Mercado"] = ["TOTAL"]
+        total_mkt_df["Taxas"] = [self.mkt_df["Taxas"].sum()]
+        total_mkt_df["IR"] = [self.mkt_df["IR"].sum()]
+        total_mkt_df["Dividendos"] = [self.mkt_df["Dividendos"].sum()]
+        total_mkt_df["JCP"] = [self.mkt_df["JCP"].sum()]
+        total_mkt_df["Venda-Compra Realizado"] = [
+            self.mkt_df["Venda-Compra Realizado"].sum()
+        ]
+        total_mkt_df["Líquido Realizado"] = [self.mkt_df["Líquido Realizado"].sum()]
+        return total_mkt_df.copy()
+
+    def getTotalFormattedDataframe(self):
+        """Return a formatted dataframe with the sum of the useful data.
+
+        The following columns are present:
+        - Mercado
+        - Taxas
+        - IR
+        - Dividendos
+        - JCP
+        - Venda-Compra Realizado
+        - Líquido Realizado
+        """
+        # Formatter
+        mkt_formatter = TreeviewFormatApplier()
+        mkt_formatter.setDataframe(self.getTotalDataframe())
+        mkt_formatter.setRequiredString(["Mercado"])
+        mkt_formatter.setCurrencyType(
+            [
+                "Taxas",
+                "IR",
+                "Dividendos",
+                "JCP",
+                "Venda-Compra Realizado",
+                "Líquido Realizado",
+            ]
+        )
+        mkt_formatter.runFormatter()
+        return mkt_formatter.getFormatedDataFrame().copy()
 
 
 class CustodyInformation:
@@ -700,8 +764,15 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         extrato_df = self.extrato.copy()
 
         self.mkt_info = MarketInformation(extrato_df)
+        formatted_dataframe = self.mkt_info.getFormattedDataframe()
+        total_dataframe = self.mkt_info.getTotalFormattedDataframe()
+        formatted_dataframe = pd.concat(
+            [formatted_dataframe, total_dataframe],
+            ignore_index=True,
+            sort=False,
+        )
         self.mkt_summary_tree = ResizableTreeviewPandas(
-            self.mkt_info.getFormattedDataframe(),
+            formatted_dataframe,
         )
         self.mkt_summary_tree.showPandas(resize_per_contents=False)
         self.mkt_summary_tree.setMaximumHeight(9 * spacing)
@@ -794,6 +865,12 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
 
                 self.mkt_info = MarketInformation(self.extrato.copy())
                 formatted_dataframe = self.mkt_info.getFormattedDataframe()
+                total_dataframe = self.mkt_info.getTotalFormattedDataframe()
+                formatted_dataframe = pd.concat(
+                    [formatted_dataframe, total_dataframe],
+                    ignore_index=True,
+                    sort=False,
+                )
                 self.mkt_summary_tree.clearData()
                 self.mkt_summary_tree.setDataframe(formatted_dataframe)
                 self.mkt_summary_tree.showPandas(resize_per_contents=False)
