@@ -1,24 +1,19 @@
+"""This file has a set of methods related to Portfolio/Extrato."""
+
 import re
 import sys
-from datetime import date, datetime, timedelta
 
 import pandas as pd
 import requests
-import xlsxwriter
 import yfinance as yf
 from bs4 import BeautifulSoup
-from numpy import AxisError
-from pandas.core.indexes.datetimes import date_range
 
 
 class PorfolioInvestment:
-
-    """
-    This is a class to manage the all operations of the portfolio.
-
-    """
+    """This is a class to manage all portfolio operations."""
 
     def __init__(self):
+        """Create the PorfolioInvestment object."""
         self.fileOperations = None
         self.operations = None
         self.operationsYear = None
@@ -43,12 +38,15 @@ class PorfolioInvestment:
         ]
 
     def getExpectedColumnsTitleList(self):
+        """Return a list of expected column titles."""
         return self.expected_title_list
 
     def setFile(self, fileOperations):
+        """Set the excel file related to the porfolio."""
         self.fileOperations = fileOperations
 
     def isValidFile(self):
+        """Return if the excel portfolio file is valid or not."""
         valid_flag = True
         dataframe = pd.read_excel(self.fileOperations)
         # If some expected column is not present in the excel file
@@ -64,51 +62,44 @@ class PorfolioInvestment:
         return valid_flag
 
     def run(self):
-        self.operations = pd.read_excel(
-            self.fileOperations
-        )  # Dataframe with all the operations from the Excel file.
-        self.operationsYear = (
-            self.numberOperationsYear()
-        )  # 3 lists Number of operations by year. Suitable to be plot.
-        self.current = (
-            self.currentPortfolio()
-        )  # Dataframe of the current portfolio. Suitable to be plot.
+        """Run the main routines related to the excel porfolio file."""
+        # Dataframe with all the operations from the Excel file.
+        self.operations = self.getExtrato()
+
+        # 3 lists of number of operations by year. Suitable to be plot.
+        self.operationsYear = self.numberOperationsYear()
+
+        # Dataframe of the current portfolio. Suitable to be plot.
+        self.current = self.currentPortfolio()
 
     def getExtrato(self):
-        self.operations = pd.read_excel(self.fileOperations)
-        return self.operations
+        """Return the raw dataframe related to the excel porfolio file."""
+        extrato = pd.read_excel(self.fileOperations)
+        return extrato
 
     def overallTaxAndIncomes(self):
-        """
-        Returns the sum of the fees, income tax, dividend and jcp of all operations.
-
-        The input for the method is the file that holds the operations.
-        """
+        """Return the sum of the fees, income tax, dividend and jcp."""
         fee = self.operations["Taxas"].sum()
         incomeTax = self.operations["IR"].sum()
         dividend = self.operations["Dividendos"].sum()
         jcp = self.operations["JCP"].sum()
-
         return fee, incomeTax, dividend, jcp
 
     def numberOperationsYear(self):
-        """
-        Returns 3 lists containing the number of operations. The lists are linked between themselves according to the year.
-        """
+        """Return 3 lists containing the number of operations.
 
+        The lists are linked between themselves according to the year.
+        """
         dataframe = self.operations
+        firstYear = dataframe["Data"].min()
+        lastYear = dataframe["Data"].max()
 
-        firstYear = dataframe[
-            "Data"
-        ].min()  # Calculates the year of the first operation
-        lastYear = dataframe["Data"].max()  # Calculates the yar of the last operation
-
-        # Creates the empy lists
+        # Creates the empty lists
         listYear = []
         listBuy = []
         listSell = []
-        janFirst = "-01-01"  # Auxiliary variable to create the first date of the year
-        decLast = "-12-31"  # Auxiliary variable to create the last date of the year
+        janFirst = "-01-01"  # Auxiliary variable for the first day of the year
+        decLast = "-12-31"  # Auxiliary variable for he last day of the year
 
         # Collects the number of operations per year
         if len(dataframe):
@@ -129,59 +120,70 @@ class PorfolioInvestment:
         return listYear, listBuy, listSell
 
     def operationsByTicker(self, ticker):
-        """
-        Returns a filtered dataframe according to the ticker.
+        """Return a filtered dataframe according to the ticker.
 
-        The input for the method is the file that holds the operations. The filter is done based on this file.
+        The input for the method is the file that holds the operations.
+        The filter is done based on this file.
         """
         dataframe = self.operations[self.operations["Ticker"] == ticker]
         return dataframe
 
     def unitsTicker(self, ticker):
-        """
-        Returns how many stocks of the given ticker.
-        """
-        dataframe = self.operationsByTicker(ticker)  # Filter the table by ticker
-        buy = dataframe[
-            dataframe["Operação"] == "Compra"
-        ]  # Filter the table by buy operation
-        buy = int(buy["Quantidade"].sum())  # Calculates the number of units bought
-        sell = dataframe[
-            dataframe["Operação"] == "Venda"
-        ]  # Filter the table by sell operation
-        sell = int(sell["Quantidade"].sum())  # Calculates the number of units sold
+        """Return how many stocks of the given ticker."""
+        # Filter the table by ticker
+        dataframe = self.operationsByTicker(ticker)
+
+        # Filter the table by buy operation
+        buy = dataframe[dataframe["Operação"] == "Compra"]
+
+        # Calculate the number of units bought
+        buy = int(buy["Quantidade"].sum())
+
+        # Filter the table by sell operation
+        sell = dataframe[dataframe["Operação"] == "Venda"]
+
+        # Calculate the number of units sold
+        sell = int(sell["Quantidade"].sum())
 
         return buy, sell, buy - sell
 
     def tesouroSelic(self):
-        """
-        Return all operations in Tesouro SELIC
-        """
-        dataframe = self.operations[self.operations["Mercado"] == "Tesouro Direto"]
-        dataframe = dataframe[dataframe["Indexador"] == "SELIC"]
-        # filtered = table[table["Mercado"]=="Tesouro Direto"]
+        """Return all operations related to Tesouro SELIC."""
+        dataframe = self.operations[
+            self.operations["Mercado"] == "Tesouro Direto",
+        ]
+        dataframe = dataframe[
+            dataframe["Indexador"] == "SELIC",
+        ]
         return dataframe
 
-    def customTable(self, ticker, market, dueDate, profitability, index, operation):
-        """
-        Reads the Excel file with all the operations.
+    def customTable(
+        self,
+        ticker,
+        market,
+        dueDate,
+        profitability,
+        index,
+        operation,
+    ):
+        """Read the Excel file with all the operations.
 
-        Returns a filtered dataframe according with the desired parameters.
+        Return a filtered dataframe according with the desired parameters.
         """
-        dataframe = self.operations
+        df = self.operations
         if ticker != "all":
-            dataframe = dataframe[dataframe["Ticker"] == ticker]
+            df = df[df["Ticker"] == ticker]
         if market != "all":
-            dataframe = dataframe[dataframe["Mercado"] == market]
+            df = df[df["Mercado"] == market]
         if dueDate != "NA":
-            dataframe = dataframe[dataframe["Vencimento"] == dueDate]
+            df = df[df["Vencimento"] == dueDate]
         if profitability != "NA":
-            dataframe = dataframe[dataframe["Rentabilidade Contratada"] == dueDate]
+            df = df[df["Rentabilidade Contratada"] == dueDate]
         if index != "all":
-            dataframe = dataframe[dataframe["Indexador"] == index]
+            df = df[df["Indexador"] == index]
         if operation != "all":
-            dataframe = dataframe[dataframe["Operação"] == operation]
-        return dataframe
+            df = df[df["Operação"] == operation]
+        return df
 
     def customTableDate(
         self,
@@ -194,12 +196,11 @@ class PorfolioInvestment:
         startDate,
         endDate,
     ):
-        """
-        Reads the Excel file with all the operations.
+        """Read the Excel file with all the operations.
 
-        Returns a filtered dataframe according with the desired parameters and a certain time range.
+        Return a filtered dataframe according with the desired parameters
+        and a certain time range.
         """
-
         dataframe = self.customTable(
             ticker, market, dueDate, profitability, index, operation
         )
@@ -208,21 +209,18 @@ class PorfolioInvestment:
         return dataframe
 
     def earningsByTicker(self, ticker):
-        """
-        Returns the total earnings of a given ticker.
-        """
+        """Return the total earnings of a given ticker."""
         dataframe = self.operationsByTicker(ticker)
         dataframe = dataframe[dataframe["Operação"] == "Provento"]
-        # Returns the sum of dividens and JCP.
         return float(dataframe["Dividendos"].sum() + dataframe["JCP"].sum())
 
     def avgPriceTicker(self, ticker):
-        """
-        Return the average price of a given ticker
-        """
+        """Return the average price of a given ticker."""
         dataframe = self.operationsByTicker(ticker)
-        # Fills with 0 the data that is not fullfilled in the dataframe.
-        # It is important because non filled cells will return NaN, which will cause calculation issues.
+
+        # Fill with 0 the data that is not fullfilled in the dataframe.
+        # It is important because non filled cells will return NaN,
+        # which will cause calculation issues.
         dataframe = dataframe.fillna(0)
 
         avgPrice = 0
@@ -231,22 +229,28 @@ class PorfolioInvestment:
         qtStockOld = 0.0
         costs = 0
         for index, row in dataframe.iterrows():
-            # If the current operation is a buy event, then updates the average price
+            # If the current operation is a buy event,
+            # then update the average price
             if row["Operação"] == "Compra":
-                # Get the number of stocks of the operation
+                # Get some useful data
                 qtStock = row["Quantidade"]
-                # Sum the costs
+                unitPrice = row["Preço Unitário"]
                 costs = row["Taxas"] + row["IR"]
-                # Calculates the average price of the operation
-                avgPrice = (row["Quantidade"] * row["Preço Unitário"] + costs) / qtStock
-                # Calculates the average price considering also the previous operations
-                avgPrice = ((avgPriceOld * qtStockOld) + avgPrice * qtStock) / (
-                    qtStockOld + qtStock
-                )
-                avgPriceOld = avgPrice
-                qtStockOld += row["Quantidade"]
 
-            # If the current operation is a sell event, then updates the number of stocks
+                # Calculate the average price of the operation
+                avgPrice = (qtStock * unitPrice + costs) / qtStock
+
+                # Calculate the average price considering also
+                # the previous operations
+                oldStockPrice = avgPriceOld * qtStockOld
+                curStockPrice = avgPrice * qtStock
+                qtStockTotal = qtStockOld + qtStock
+                avgPrice = (oldStockPrice + curStockPrice) / qtStockTotal
+                avgPriceOld = avgPrice
+                qtStockOld += qtStock
+
+            # If the current operation is a sell event,
+            # then updates the number of stocks
             elif row["Operação"] == "Venda":
                 qtStock -= row["Quantidade"]
                 qtStockOld -= row["Quantidade"]
@@ -255,78 +259,49 @@ class PorfolioInvestment:
         return avgPrice, qtStockOld
 
     def currentMarketPriceByTicker(self, ticker):
-        """
-        Returns the last price of the stock.
-
-        I had issues when downloading data for Fundos imobiliários. It was necessary to work with period of 30d.
-        I believe that is mandatory period or start/end date. With start/end I also had issues for reading the values.
-        The solution was to consider "30d" as the period. I compared the results from function in Google and they were correct.
-        """
+        """Return the last price of the stock."""
+        # I had issues when downloading data for Fundos imobiliários.
+        # It was necessary to work with period of 30d.
+        # I believe that is mandatory period or start/end date.
+        # With start/end I also had issues for reading the values.
+        # The solution was to consider "30d" as the period.
+        # I compared the results from function in Google and they were correct.
         dataframe = yf.download(ticker, period="30d")
         data = dataframe["Adj Close"].tail(1)
         return float(data)
 
     def currentMarketPriceByTickerList(self, list):
-        """
-        Returns a dataframe with the last price of the stocks in the list.
-
-        """
+        """Return a dataframe with the last price of the stocks in the list."""
         dataframe = yf.download(list, period="1d")
         data = dataframe["Adj Close"].tail(1)
 
-        # The 'tail' method returns a 'pandas.series' when exists only 1 ticker in the variable 'list'.
+        # The 'tail' method returns a 'pandas.series'
+        # when exists only 1 ticker in the variable 'list'.
         #
-        # In order to solve the '1 ticker' case and return always a 'pandas.dataframe' with the ticker name,
-        # we need to convert the 'pandas.series' to a 'pandas.dataframe' and adjust its column name.
+        # In order to solve the '1 ticker' case and return always
+        # a 'pandas.dataframe' with the ticker name, we need to convert
+        # the 'pandas.series' to a 'pandas.dataframe' and adjust its
+        # column name.
         try:
             data = data.to_frame()
             if len(data) == 1:
                 data = data.rename(columns={"Adj Close": list[0]})
         except AttributeError:
             data = data
-
         return data
 
-    # def currentMarketPriceByTickerWebScrappingStatusInvest(self, ticker, market):
-    #     """
-    #     Returns the last price of the stock from website Status Invest.
-
-    #     Requests have taken about 1s to get processed.
-    #     """
-    #     #Prepares the correct URL
-    #     if market == "Ações":
-    #         url = "https://statusinvest.com.br/acoes/"
-    #     elif market == "FII":
-    #         url = "https://statusinvest.com.br/fundos-imobiliarios/"
-    #     elif market == "ETF":
-    #         url = "https://statusinvest.com.br/etfs/"
-
-    #     #Adds the ticket to the URL for search
-    #     url += ticker
-    #     #Get information from URL
-    #     page = requests.get(url)
-    #     soup = BeautifulSoup(page.content, 'html.parser')
-    #     #Get the current value from ticker
-    #     value = soup.find(class_='value').get_text()
-    #     #Replace the comma to point in order to transform the string in a number.
-    #     value = value.replace(',','.')
-
-    #     return float(value)
-
     def sectorOfTicker(self, ticker):
-        """
-        Returns the sector of a given ticker
+        """Return the sector of a given ticker.
 
         The function uses the yfinance library to get the information.
         """
-
         ticker = ticker + ".SA"
         data = yf.Ticker(ticker)
         return data.info["sector"]
 
     def currentPortfolio(self):
-        """
-        Analyzes the operations to get the current wallet.
+        """Analyze the operations to get the current wallet.
+
         Return a dataframe containing the current wallet stocks/FIIs.
         """
         dataframe = self.operations
@@ -336,64 +311,66 @@ class PorfolioInvestment:
             | (dataframe["Mercado"] == "FII")
             | (dataframe["Mercado"] == "BDR")
         ]
-
         dataframe.drop_duplicates(subset="Ticker", keep="first", inplace=True)
 
         # Creates the wallet
         wallet = pd.DataFrame()
-        # Copies the ticker and market information
+
+        # Copy the ticker and market information
         wallet["Ticker"] = dataframe["Ticker"]
         wallet["Mercado"] = dataframe["Mercado"]
+
         # Sort the data by market and ticker
         wallet = wallet.sort_values(by=["Mercado", "Ticker"])
-        wallet["Setor"] = ""  # Creates a blank column
-        wallet["Quantidade"] = ""  # Creates a blank column
-        wallet["Preço médio"] = ""  # Creates a blank column
-        wallet["Cotação"] = ""  # Creates a blank column
-        wallet["Preço pago"] = ""  # Creates a blank column
-        wallet["Preço mercado"] = ""  # Creates a blank column
-        wallet["Proventos"] = ""  # Creates a blank column
-        wallet["Resultado liquido"] = ""  # Creates a blank column
-        wallet["Porcentagem carteira"] = ""  # Creates a blank column
+
+        # Create blank columns
+        wallet["Setor"] = ""
+        wallet["Quantidade"] = ""
+        wallet["Preço médio"] = ""
+        wallet["Cotação"] = ""
+        wallet["Preço pago"] = ""
+        wallet["Preço mercado"] = ""
+        wallet["Proventos"] = ""
+        wallet["Resultado liquido"] = ""
+        wallet["Porcentagem carteira"] = ""
 
         # Calculate of the quantity of all non duplicate tickers
         for index, row in wallet.iterrows():
 
-            avgPrice, numberStocks = self.avgPriceTicker(row["Ticker"])
+            rticker = row["Ticker"]
+            avgPrice, numberStocks = self.avgPriceTicker(rticker)
 
-            # Check the quantity. If zero, there drops it from the dataframe.
+            # Check the quantity.
+            # If zero, then drops it from the dataframe.
             if numberStocks == 0:
                 wallet = wallet.drop([index])
-            # If non zero, keeps the ticker and updates the quantity and the average price.
+            # If non zero, keeps the ticker and updates the
+            # quantity and the average price.
             else:
-                # wallet.at[index, "Setor"] = sectorOfTicker(row["Ticker"])
                 wallet.at[index, "Quantidade"] = int(numberStocks)
                 wallet.at[index, "Preço médio"] = avgPrice
-                # Modifies the name of the ticker so Yahoo Finance can understand. Yahoo Finance adds the ".SA" to the ticker name.
-                # newTicker = row["Ticker"]+".SA"
-                # wallet.at[index, "Cotação"] = currentMarketPriceByTicker(newTicker )
-                # Calculates the earnings by ticket
-                wallet.at[index, "Proventos"] = self.earningsByTicker(row["Ticker"])
+                wallet.at[index, "Proventos"] = self.earningsByTicker(rticker)
 
-        # Creates a list of ticker to be used for finding current prices of the ticker
+        # Create a list of ticker to be used for finding
+        # current prices of the ticker
         listTicker = wallet["Ticker"].tolist()
         for i in range(len(listTicker)):
             listTicker[i] = listTicker[i] + ".SA"
-        # Gets the current values of all tickers in the wallet
+
+        # Get the current values of all tickers in the wallet
         if listTicker:
-            currentPricesTickers = self.currentMarketPriceByTickerList(listTicker)
+            curPricesTickers = self.currentMarketPriceByTickerList(listTicker)
             for index, row in wallet.iterrows():
                 ticker = row["Ticker"] + ".SA"
-                wallet.at[index, "Cotação"] = float(currentPricesTickers[ticker])
+                wallet.at[index, "Cotação"] = float(curPricesTickers[ticker])
 
-        # Calculates the price according with the average price
+        # Calculate the price according with the average price
         wallet["Preço pago"] = wallet["Quantidade"] * wallet["Preço médio"]
-        # Calculates the price according with the current market value
+        # Calculate the price according with the current market value
         wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
-        # Calculates the liquid result of the ticker
-        wallet["Resultado liquido"] = (
-            wallet["Preço mercado"] + wallet["Proventos"] - wallet["Preço pago"]
-        )
+        # Calculate the liquid result of the ticker
+        deltaPrice = wallet["Preço mercado"] - wallet["Preço pago"]
+        wallet["Resultado liquido"] = deltaPrice + wallet["Proventos"]
 
         # Filter the stocks
         walletStock = wallet[wallet["Mercado"] == "Ações"]
@@ -434,6 +411,7 @@ class PorfolioInvestment:
         return wallet
 
     def currentPortfolioGoogleDrive(self):
+        """Save the excel file to be used in Google Drive."""
         # Get the current portfolio
         dataframe = self.current
         # Removes the column from original dataframe
@@ -441,18 +419,22 @@ class PorfolioInvestment:
 
         i = 2
         for index, row in dataframe.iterrows():
-
-            # dataframe.at[index, "Setor"] = self.sectorOfTicker(row["Ticker"])      #This function takes a long time to run. Not suitable to uncomment while testing.
-            dataframe["Cotação"] = '=googlefinance("' + dataframe["Ticker"] + '")'
-            dataframe.at[index, "Preço mercado"] = "=E" + str(i) + "*G" + str(i)
-            dataframe.at[index, "Resultado liquido"] = (
-                "=I" + str(i) + "+J" + str(i) + "-H" + str(i)
-            )
-
-            i += 1  # Increments the index to calculate the cells in Excel file.
+            # This function takes a long time to run.
+            # Not suitable to uncomment while testing.
+            dfticker = dataframe["Ticker"]
+            dataframe["Cotação"] = '=googlefinance("' + dfticker + '")'
+            market_price_str = "=E" + str(i) + "*G" + str(i)
+            dataframe.at[index, "Preço mercado"] = market_price_str
+            net_result_str = "=I" + str(i) + "+J" + str(i) + "-H" + str(i)
+            dataframe.at[index, "Resultado liquido"] = net_result_str
+            # Increment the index to calculate the cells in Excel file.
+            i += 1
 
         # Create a Pandas Excel writer using XlsxWriter as the engine.
-        writer = pd.ExcelWriter("carteiraGoogleDrive.xlsx", engine="xlsxwriter")
+        writer = pd.ExcelWriter(
+            "carteiraGoogleDrive.xlsx",
+            engine="xlsxwriter",
+        )
 
         # Convert the dataframe to an XlsxWriter Excel object.
         dataframe.to_excel(writer, sheet_name="Sheet1")
@@ -462,42 +444,59 @@ class PorfolioInvestment:
         worksheet = writer.sheets["Sheet1"]
 
         # Add some cell formats.
-        format1 = workbook.add_format({"num_format": "#,##0.00", "align": "center"})
-        format2 = workbook.add_format({"align": "center"})
+        format1 = workbook.add_format(
+            {"num_format": "#,##0.00", "align": "center"},
+        )
+        format2 = workbook.add_format(
+            {"align": "center"},
+        )
         formatBorder = workbook.add_format(
-            {"bottom": 1, "top": 1, "left": 1, "right": 1}
+            {"bottom": 1, "top": 1, "left": 1, "right": 1},
         )
 
-        bold = workbook.add_format({"bold": True, "align": "center"})
+        bold = workbook.add_format(
+            {"bold": True, "align": "center"},
+        )
 
         # Green fill with dark green text.
         formatGreen = workbook.add_format(
-            {"bg_color": "#C6EFCE", "font_color": "#006100"}
+            {"bg_color": "#C6EFCE", "font_color": "#006100"},
         )
 
         # Light red fill with dark red text.
         formatRed = workbook.add_format(
-            {"bg_color": "#FFC7CE", "font_color": "#9C0006"}
+            {"bg_color": "#FFC7CE", "font_color": "#9C0006"},
         )
 
         # Conditional formatting. If values are greater equal than zero
         worksheet.conditional_format(
             "K2:K100",
-            {"type": "cell", "criteria": ">=", "value": 0, "format": formatGreen},
+            {
+                "type": "cell",
+                "criteria": ">=",
+                "value": 0,
+                "format": formatGreen,
+            },
         )
+
         # Conditional formatting.If values are lesser than zero
         worksheet.conditional_format(
             "K2:K100",
-            {"type": "cell", "criteria": "<", "value": 0, "format": formatRed},
+            {
+                "type": "cell",
+                "criteria": "<",
+                "value": 0,
+                "format": formatRed,
+            },
         )
 
-        # Note: It isn't possible to format any cells that already have a format such
-        # as the index or headers or any cells that contain dates or datetimes.
+        # Note: It isn't possible to format any cells that
+        # already have a format such as the index or headers
+        # or any cells that contain dates or datetimes.
 
         # Set the column width and format.
         worksheet.set_column("B:B", 14, format1)
         worksheet.set_column("C:C", 14, format1)
-        # worksheet.set_column('D:D', 20, format1)
         worksheet.set_column("E:E", 14, format2)
         worksheet.set_column("F:F", 14, format1)
         worksheet.set_column("G:G", 14, format1)
@@ -506,7 +505,7 @@ class PorfolioInvestment:
         worksheet.set_column("J:J", 14, format1)
         worksheet.set_column("K:K", 20, format1)
 
-        # Creates supplementary table to support graphic of percentage
+        # Create supplementary table to support graphic of percentage
         # List of category
         worksheet.write("M1", "Ativo", bold)
         worksheet.set_column("M:M", 14, format2)
@@ -514,14 +513,16 @@ class PorfolioInvestment:
         worksheet.write("M3", "BDR")
         worksheet.write("M4", "ETF")
         worksheet.write("M5", "FII")
-        # Creates list of the values
+
+        # Create list of the values
         worksheet.set_column("N:N", 18, format1)
-        worksheet.write("N1", "Valor R$", bold)  # List values
+        worksheet.write("N1", "Valor R$", bold)
         worksheet.write("N2", '=SUMIF(C2:C100, "Ações", I2:I100)')
         worksheet.write("N3", '=SUMIF(C2:C100, "BDR", I2:I100)')
         worksheet.write("N4", '=SUMIF(C2:C100, "ETF", I2:I100)')
         worksheet.write("N5", '=SUMIF(C2:C100, "FII", I2:I100)')
-        # Creates conditional format for borders
+
+        # Create conditional format for borders
         worksheet.conditional_format(
             "M1:N5", {"type": "no_errors", "format": formatBorder}
         )
@@ -550,52 +551,58 @@ class PorfolioInvestment:
         return dataframe
 
     def currentMarketPriceTesouroWebScrappingStatusInvest(self, ticker):
-        """
-        Returns the last price of the stock from website Status Invest.
+        """Return the last price of the stock from website Status Invest.
 
-        LFT = Letras Financeira do Tesouro = Tesouro Selic
-        LTN = Letras do Tesouro Nacional = Tesouro Prefixado (sem cupons)
-        NTN-F = Notas do Tesouro Nacional Tipo F = Tesouro Prefixado (com cupons semestrais)
-        NTN-B Principal = Notas do Tesouro Nacional Tipo B Principal = Tesouro IPCA (sem cupons)
-        NTN-B = Notas do Tesouro Nacional Tipo B = Tesouro IPCA (com cupons semestrais)
+        LFT = Letras Financeira do Tesouro
+            -> Tesouro Selic
+        LTN = Letras do Tesouro Nacional
+            -> Tesouro Prefixado sem cupons
+        NTN-F = Notas do Tesouro Nacional Tipo F
+            -> Tesouro Prefixado com cupons semestrais
+        NTN-B Principal = Notas do Tesouro Nacional Tipo B Principal
+            -> Tesouro IPCA sem cupons
+        NTN-B = Notas do Tesouro Nacional Tipo B
+            -> Tesouro IPCA com cupons semestrais
         """
-
+        dig4 = r"(\d\d\d\d)"
+        dig6 = r"(\d\d\d\d\d\d)"
         rgx_selic = re.compile(
-            r"(SELIC) (\d\d\d\d)|(LFT) (\d\d\d\d\d\d)",
+            r"(SELIC) " + dig4 + "|(LFT) " + dig6,
         )
         rgx_pre = re.compile(
-            r"(Prefixado) (\d\d\d\d)|(LTN) (\d\d\d\d\d\d)",
+            r"(Prefixado) " + dig4 + "|(LTN) " + dig6,
         )
         rgx_pre_juros = re.compile(
-            r"(Prefixado com Juros Semestrais) (\d\d\d\d)|(NTN-F) (\d\d\d\d\d\d)",
+            r"(Prefixado com Juros Semestrais) " + dig4 + "|(NTN-F) " + dig6,
         )
         rgx_ipca = re.compile(
-            r"(IPCA\+) (\d\d\d\d)|(NTN-B Principal) (\d\d\d\d\d\d)",
+            r"(IPCA\+) " + dig4 + "|(NTN-B Principal) " + dig6,
         )
         rgx_ipca_juros = re.compile(
-            r"(IPCA\+ com Juros Semestrais) (\d\d\d\d)|(NTN-B) (\d\d\d\d\d\d)",
+            r"(IPCA\+ com Juros Semestrais) " + dig4 + "|(NTN-B) " + dig6,
         )
 
+        init_link = r"https://statusinvest.com.br/tesouro/"
         pattern_dict = {
             "SELIC": [
                 rgx_selic,
-                "https://statusinvest.com.br/tesouro/tesouro-selic-",
+                init_link + "tesouro-selic-",
             ],
             "Prefixado": [
                 rgx_pre,
-                "https://statusinvest.com.br/tesouro/tesouro-prefixado-",
+                init_link + "tesouro-prefixado-",
             ],
             "Prefixado com Juros Semestrais": [
                 rgx_pre_juros,
-                "https://statusinvest.com.br/tesouro/tesouro-prefixado-com-juros-semestrais-",
+                init_link + "tesouro-prefixado-com-juros-semestrais-",
             ],
             "IPCA+": [
                 rgx_ipca,
-                "https://statusinvest.com.br/tesouro/tesouro-ipca-",
+                init_link + "tesouro-ipca-",
             ],
             "IPCA+ com Juros Semestrais": [
                 rgx_ipca_juros,
-                "https://statusinvest.com.br/tesouro/tesouro-ipca-com-juros-semestrais-",
+                init_link + "tesouro-ipca-com-juros-semestrais-",
             ],
         }
 
@@ -626,45 +633,44 @@ class PorfolioInvestment:
         value = 0
         url = getURL(ticker)
 
-        if url != False:
+        if url:
             # Get information from URL
             page = requests.get(url)
             soup = BeautifulSoup(page.content, "html.parser")
+
             # Get the current value from ticker
             value = soup.find(class_="value").get_text()
 
-            # Replace the point to empty in order to transform the string in a number.
+            # Replace the point to empty in order to transform
+            # the string in a number.
             value = value.replace(".", "")
-            # Replace comma to point because Python uses point as decimal spacer.
+
+            # Replace comma to point because Python uses point
+            # as decimal spacer.
             value = value.replace(",", ".")
 
         return float(value)
 
     def currentTesouroDireto(self):
-        """
-        Creates a dataframe with all open operations of Tesouro Direto.
-        """
+        """Create a dataframe with all open operations of Tesouro Direto."""
         dataframe = self.operations
         dataframe = dataframe[dataframe["Mercado"] == "Tesouro Direto"]
         dataframe = dataframe[dataframe["Operação"] != "Cobrança"]
-
         dataframe.drop_duplicates(subset="Ticker", keep="first", inplace=True)
 
-        # Creates the wallet
+        # Create the wallet
         wallet = pd.DataFrame()
-        # Copies the ticker and market information
+
+        # Copy the ticker and market information
         wallet["Ticker"] = dataframe["Ticker"]
         wallet["Mercado"] = dataframe["Mercado"]
         wallet["Indexador"] = dataframe["Indexador"]
 
-        # Sort the data by market and ticker
-        # wallet = wallet.sort_values(by=["Mercado", "Ticker"])
-        wallet["Quantidade"] = ""  # Creates a blank column
-        wallet["Cotação"] = ""  # Creates a blank column
-        # wallet["Preço pago"] = ""           #Creates a blank column
-        wallet["Preço mercado"] = ""  # Creates a blank column
-        # wallet["Resultado liquido"] = ""    #Creates a blank column
-        wallet["Porcentagem carteira"] = ""  # Creates a blank column
+        # Create blank columns
+        wallet["Quantidade"] = ""
+        wallet["Cotação"] = ""
+        wallet["Preço mercado"] = ""
+        wallet["Porcentagem carteira"] = ""
 
         # Sort the data by ticker
         wallet = wallet.sort_values(by=["Ticker"])
@@ -674,10 +680,12 @@ class PorfolioInvestment:
 
             avgPrice, numberStocks = self.avgPriceTicker(row["Ticker"])
 
-            # Check the quantity. If zero, there drops it from the dataframe.
+            # Check the quantity.
+            # If zero, then drops it from the dataframe.
             if round(numberStocks, 2) == 0:
                 wallet = wallet.drop([index])
-            # If non zero, keeps the ticker and updates the quantity and the average price.
+            # If non zero, keeps the ticker and updates
+            # the quantity and the average price.
             else:
                 wallet.at[index, "Quantidade"] = float(numberStocks)
                 wallet.at[
