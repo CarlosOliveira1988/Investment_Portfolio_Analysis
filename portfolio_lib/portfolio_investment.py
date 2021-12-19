@@ -9,11 +9,11 @@ import yfinance as yf
 from bs4 import BeautifulSoup
 
 
-class PorfolioInvestment:
+class PortfolioInvestment:
     """This is a class to manage all portfolio operations."""
 
     def __init__(self):
-        """Create the PorfolioInvestment object."""
+        """Create the PortfolioInvestment object."""
         self.fileOperations = None
         self.operations = None
         self.operationsYear = None
@@ -716,7 +716,7 @@ if __name__ == "__main__":
     file = SOURCE_FILE_DIRECTORY + FILE_NAME
 
     # Example:
-    portfolio = PorfolioInvestment()
+    portfolio = PortfolioInvestment()
     portfolio.setFile(file)
     if portfolio.isValidFile():
         portfolio.run()

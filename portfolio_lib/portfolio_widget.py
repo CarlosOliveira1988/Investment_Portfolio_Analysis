@@ -11,8 +11,9 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from xlrd import XLRDError
 
-from portfolio_lib.portfolio_formater import TreasuriesFormater, VariableIncomesFormater
-from portfolio_lib.portfolio_investment import PorfolioInvestment
+from portfolio_lib.portfolio_formater import TreasuriesFormater as TFormat
+from portfolio_lib.portfolio_formater import VariableIncomesFormater as VFormat
+from portfolio_lib.portfolio_investment import PortfolioInvestment
 from portfolio_lib.portfolio_viewer_manager import PortfolioViewerManager
 
 
@@ -69,13 +70,13 @@ class ExpandCollapsePushButton(StandardPushButton):
         self.__collapseEvent()
 
 
-class PortfolioSummaryWidget(QtWidgets.QWidget):
+class ExtratoWidget(QtWidgets.QWidget):
     """Widget used to show Portfolio summary data."""
 
     EMPTY_SPACE = Window.DEFAULT_BORDER_SIZE
 
     def __init__(self, PortfolioDataFrame):
-        """Create the PortfolioSummaryWidget object.
+        """Create the ExtratoWidget object.
 
         Basically, it has a 'table' and a 'expand/collapse lines push button'.
 
@@ -84,7 +85,7 @@ class PortfolioSummaryWidget(QtWidgets.QWidget):
         """
         # Inheritance
         super().__init__()
-        spacing = PortfolioSummaryWidget.EMPTY_SPACE
+        spacing = ExtratoWidget.EMPTY_SPACE
 
         # PortolioTreeviewManager
         self.__PortfolioViewerManager = PortfolioViewerManager(
@@ -271,8 +272,14 @@ class OperationsHistory:
 
         for index, data_row in filtered_df.iterrows():
 
+            def isBuyOperation(data_row):
+                return data_row["Operação"] == "Compra"
+
+            def isSellOperation(data_row):
+                return data_row["Operação"] == "Venda"
+
             # Set the initial date
-            if (data_row["Operação"] == "Compra") or (data_row["Operação"] == "Venda"):
+            if isBuyOperation(data_row) or isSellOperation(data_row):
 
                 # First part of the operation
                 if initial_date is None:
@@ -346,7 +353,10 @@ class OperationsHistory:
         filtered_df = self._getFilteredDataframePerMarket(market)
 
         # Remove duplicates
-        ticker_list = self.df_filter.getListFromDataframeColumn(filtered_df, "Ticker")
+        ticker_list = self.df_filter.getListFromDataframeColumn(
+            filtered_df,
+            "Ticker",
+        )
         ticker_list = list(set(ticker_list))
 
         # Run per each ticker to create an operations dataframe
@@ -570,17 +580,19 @@ class MarketInformation:
         - Venda-Compra Realizado
         - Líquido Realizado
         """
-        total_mkt_df = pd.DataFrame()
-        total_mkt_df["Mercado"] = ["TOTAL"]
-        total_mkt_df["Taxas"] = [self.mkt_df["Taxas"].sum()]
-        total_mkt_df["IR"] = [self.mkt_df["IR"].sum()]
-        total_mkt_df["Dividendos"] = [self.mkt_df["Dividendos"].sum()]
-        total_mkt_df["JCP"] = [self.mkt_df["JCP"].sum()]
-        total_mkt_df["Venda-Compra Realizado"] = [
-            self.mkt_df["Venda-Compra Realizado"].sum()
+        totaldf = pd.DataFrame()
+        totaldf["Mercado"] = ["TOTAL"]
+        totaldf["Taxas"] = [self.mkt_df["Taxas"].sum()]
+        totaldf["IR"] = [self.mkt_df["IR"].sum()]
+        totaldf["Dividendos"] = [self.mkt_df["Dividendos"].sum()]
+        totaldf["JCP"] = [self.mkt_df["JCP"].sum()]
+        totaldf["Venda-Compra Realizado"] = [
+            self.mkt_df["Venda-Compra Realizado"].sum(),
         ]
-        total_mkt_df["Líquido Realizado"] = [self.mkt_df["Líquido Realizado"].sum()]
-        return total_mkt_df.copy()
+        totaldf["Líquido Realizado"] = [
+            self.mkt_df["Líquido Realizado"].sum(),
+        ]
+        return totaldf.copy()
 
     def getTotalFormattedDataframe(self):
         """Return a formatted dataframe with the sum of the useful data.
@@ -684,9 +696,321 @@ class CustodyInformation:
         return self.cust_df
 
     def getFormattedDataframe(self):
+        """Return a formatted dataframe with useful data.
+
+        The following columns are present:
+        - Mercado
+        - Taxas
+        - IR
+        - Dividendos
+        - JCP
+        - Transferência
+        - Resgate
+        """
         self.cust_formatter.setDataframe(self.cust_df)
         self.cust_formatter.runFormatter()
         return self.cust_formatter.getFormatedDataFrame()
+
+
+class TabViewerWidget:
+    """Widget used to show tabs related to PortfolioViewerWidget."""
+
+    def __init__(self, special_widget_list, tab_title, spacing=0):
+        """Create the TabViewerWidget object.
+
+        The 'special_widget_list' argument is a list of any widgets
+        based on the 'QtWidgets.QWidget' class.
+
+        The 'tab_title' is the text on the tab.
+        """
+        self.tab_title = tab_title
+        self.tab = QtWidgets.QWidget()
+        self.grid_tab = QtWidgets.QGridLayout()
+        self.grid_tab.setContentsMargins(
+            spacing,
+            spacing,
+            spacing,
+            spacing,
+        )
+        self.grid_tab.setSpacing(spacing)
+        for special_widget in special_widget_list:
+            self.grid_tab.addWidget(special_widget)
+        self.tab.setLayout(self.grid_tab)
+
+    def getTab(self):
+        """Return the 'Tab' object."""
+        return self.tab
+
+    def getGridTab(self):
+        """Return the 'GridTab' object."""
+        return self.grid_tab
+
+    def getTabTitle(self):
+        """Return the 'Tab' title."""
+        return self.tab_title
+
+    def setTabIndex(self, tab_index):
+        """Set the tab index."""
+        self.tab_index = tab_index
+
+    def getTabIndex(self):
+        """Return the tab index."""
+        return self.tab_index
+
+
+class TabViewerInterface:
+    """Tab Interface to work together with PortfolioViewerWidget."""
+
+    def __init__(self):
+        """Create the TabViewerInterface object."""
+        pass
+
+    def setNewData(self):
+        """Abstract method to set new data."""
+        pass
+
+    def clearData(self):
+        """Abstract method to clear data."""
+        pass
+
+    def updateData(self):
+        """Abstract method to update data."""
+        pass
+
+    def onChangeAction(self):
+        """Abstract method to execute onChange method."""
+        pass
+
+    def getTabIndex(self):
+        """Abstract method to return the Tab index."""
+        pass
+
+
+class ExtratoTabInterface(TabViewerInterface):
+    """ExtratoTabInterface to work together with PortfolioViewerWidget."""
+
+    def __init__(self, addNewTabMethod):
+        """Create the ExtratoTabInterface object."""
+        super().__init__()
+        self.addNewTabMethod = addNewTabMethod
+        self.ExtratoWidget = None
+        self.ExtratoTab = None
+        self.TabIndex = None
+
+    def setNewData(self, dataframe):
+        """Set the data table."""
+        self.ExtratoWidget = ExtratoWidget(dataframe)
+        self.ExtratoTab = TabViewerWidget(
+            [self.ExtratoWidget],
+            "Extrato",
+        )
+        self.TabIndex = self.addNewTabMethod(self.ExtratoTab)
+
+    def clearData(self):
+        """Clear the data table."""
+        self.ExtratoWidget.clearData()
+
+    def updateData(self, dataframe):
+        """Update the data table."""
+        self.ExtratoWidget.updateData(dataframe)
+
+    def getTabIndex(self):
+        """Return the Tab index."""
+        return self.TabIndex
+
+
+class VariableTabInterface(TabViewerInterface):
+    """VariableTabInterface to work together with PortfolioViewerWidget."""
+
+    def __init__(self, addNewTabMethod):
+        """Create the ExtratoTabInterface object."""
+        super().__init__()
+        self.addNewTabMethod = addNewTabMethod
+        self.formatter = None
+        self.variable_treeview = None
+        self.VariableIncomeTab = None
+
+    def setNewData(self, dataframe):
+        """Set the data table."""
+        self.formatter = VFormat(dataframe)
+        formatted_df = self.formatter.getFormatedPortolioDataFrame()
+        self.variable_treeview = ResizableTreeviewPandas(formatted_df)
+        self.variable_treeview.showPandas(resize_per_contents=False)
+        self.VariableIncomeTab = TabViewerWidget(
+            [self.variable_treeview],
+            "Renda Variável",
+            spacing=Window.DEFAULT_BORDER_SIZE,
+        )
+        self.TabIndex = self.addNewTabMethod(self.VariableIncomeTab)
+
+    def clearData(self):
+        """Clear the data table."""
+        self.variable_treeview.clearData()
+
+    def updateData(self, dataframe):
+        """Update the data table."""
+        self.formatter = VFormat(dataframe)
+        formatted_dataframe = self.formatter.getFormatedPortolioDataFrame()
+        self.variable_treeview.clearData()
+        self.variable_treeview.setDataframe(formatted_dataframe)
+        self.variable_treeview.showPandas(resize_per_contents=False)
+
+    def onChangeAction(self):
+        """Execute during the onChange method."""
+        self.variable_treeview.resizeColumnsToTreeViewWidth()
+
+    def getTabIndex(self):
+        """Return the Tab index."""
+        return self.TabIndex
+
+
+class TreasuriesTabInterface(TabViewerInterface):
+    """TreasuriesTabInterface to work together with PortfolioViewerWidget."""
+
+    def __init__(self, addNewTabMethod):
+        """Create the TreasuriesTabInterface object."""
+        super().__init__()
+        self.addNewTabMethod = addNewTabMethod
+        self.formatter = None
+        self.treasuries_treeview = None
+        self.TreasuriesTab = None
+
+    def setNewData(self, dataframe):
+        """Set the data table."""
+        self.formatter = TFormat(dataframe)
+        formatted_df = self.formatter.getFormatedPortolioDataFrame()
+        self.treasuries_treeview = ResizableTreeviewPandas(formatted_df)
+        self.treasuries_treeview.showPandas(resize_per_contents=False)
+        self.TreasuriesTab = TabViewerWidget(
+            [self.treasuries_treeview],
+            "Tesouro Direto",
+            spacing=Window.DEFAULT_BORDER_SIZE,
+        )
+        self.TabIndex = self.addNewTabMethod(self.TreasuriesTab)
+
+    def clearData(self):
+        """Clear the data table."""
+        self.treasuries_treeview.clearData()
+
+    def updateData(self, dataframe):
+        """Update the data table."""
+        self.formatter = TFormat(dataframe)
+        formatted_df = self.formatter.getFormatedPortolioDataFrame()
+        self.treasuries_treeview.clearData()
+        self.treasuries_treeview.setDataframe(formatted_df)
+        self.treasuries_treeview.showPandas(resize_per_contents=False)
+
+    def onChangeAction(self):
+        """Execute during the onChange method."""
+        self.treasuries_treeview.resizeColumnsToTreeViewWidth()
+
+    def getTabIndex(self):
+        """Return the Tab index."""
+        return self.TabIndex
+
+
+class ShortSummaryTabInterface(TabViewerInterface):
+    """ShortSummaryTabInterface to work together with PortfolioViewerWidget."""
+
+    def __init__(self, addNewTabMethod):
+        """Create the ShortSummaryTabInterface object."""
+        super().__init__()
+        self.addNewTabMethod = addNewTabMethod
+        self.formatter = None
+        self.mkt_info = None
+        self.mkt_summary_tree = None
+        self.operations_info = None
+        self.operations_tree = None
+        self.cust_info = None
+        self.cust_summary_tree = None
+
+    def setNewData(self, dataframe):
+        """Set the data table."""
+        # Treeview related to Market
+        self.mkt_info = MarketInformation(dataframe)
+        formatted_df = self.mkt_info.getFormattedDataframe()
+        total_dataframe = self.mkt_info.getTotalFormattedDataframe()
+        formatted_df = pd.concat(
+            [formatted_df, total_dataframe],
+            ignore_index=True,
+            sort=False,
+        )
+        self.mkt_summary_tree = ResizableTreeviewPandas(formatted_df)
+        self.mkt_summary_tree.showPandas(resize_per_contents=False)
+        self.mkt_summary_tree.setMaximumHeight(9 * Window.DEFAULT_BORDER_SIZE)
+
+        # Treeview related to Closed Operations
+        self.operations_info = OperationsHistory(dataframe)
+        self.operations_tree = ResizableTreeviewPandas(
+            self.operations_info.getFormattedClosedOperationsDataframe(),
+        )
+        self.operations_tree.showPandas(resize_per_contents=True)
+
+        # Treeview related to Custody
+        self.cust_info = CustodyInformation(dataframe)
+        self.cust_summary_tree = ResizableTreeviewPandas(
+            self.cust_info.getFormattedDataframe(),
+        )
+        self.cust_summary_tree.showPandas(resize_per_contents=False)
+        self.cust_summary_tree.setMaximumHeight(3 * Window.DEFAULT_BORDER_SIZE)
+
+        # Short Summary tab
+        self.SummaryTab = TabViewerWidget(
+            [
+                self.mkt_summary_tree,
+                self.operations_tree,
+                self.cust_summary_tree,
+            ],
+            "Resumo Extrato",
+            spacing=Window.DEFAULT_BORDER_SIZE,
+        )
+        self.TabIndex = self.addNewTabMethod(self.SummaryTab)
+
+    def clearData(self):
+        """Clear the data table."""
+        self.mkt_summary_tree.clearData()
+        self.operations_tree.clearData()
+        self.cust_summary_tree.clearData()
+
+    def updateData(self, dataframe):
+        """Update the data table."""
+        # Treeview related to Market
+        self.mkt_info = MarketInformation(dataframe)
+        formatted_dataframe = self.mkt_info.getFormattedDataframe()
+        total_dataframe = self.mkt_info.getTotalFormattedDataframe()
+        formatted_dataframe = pd.concat(
+            [formatted_dataframe, total_dataframe],
+            ignore_index=True,
+            sort=False,
+        )
+        self.mkt_summary_tree.clearData()
+        self.mkt_summary_tree.setDataframe(formatted_dataframe)
+        self.mkt_summary_tree.showPandas(resize_per_contents=False)
+
+        # Treeview related to Closed Operations
+        self.operations_info = OperationsHistory(dataframe)
+        formatted_dataframe = (
+            self.operations_info.getFormattedClosedOperationsDataframe()
+        )
+        self.operations_tree.clearData()
+        self.operations_tree.setDataframe(formatted_dataframe)
+        self.operations_tree.showPandas(resize_per_contents=True)
+
+        # Treeview related to Custody
+        self.cust_info = CustodyInformation(dataframe)
+        formatted_dataframe = self.cust_info.getFormattedDataframe()
+        self.cust_summary_tree.clearData()
+        self.cust_summary_tree.setDataframe(formatted_dataframe)
+        self.cust_summary_tree.showPandas(resize_per_contents=False)
+
+    def onChangeAction(self):
+        """Execute during the onChange method."""
+        self.cust_summary_tree.resizeColumnsToTreeViewWidth()
+        self.mkt_summary_tree.resizeColumnsToTreeViewWidth()
+
+    def getTabIndex(self):
+        """Return the Tab index."""
+        return self.TabIndex
 
 
 class PortfolioViewerWidget(QtWidgets.QTabWidget):
@@ -698,113 +1022,43 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         Arguments:
         - File: the Portfolio file
         """
-        # Internal central widget
         super().__init__()
-        spacing = Window.DEFAULT_BORDER_SIZE
+        self.setNewData(File)
 
-        # PorfolioInvestment
-        self.investment = PorfolioInvestment()
-        self.investment.setFile(File)
+        # Connect tab event
+        self.currentChanged.connect(self.onChange)
 
+    def __updateMainDataframes(self):
         try:
             if self.investment.isValidFile():
                 self.investment.run()
                 self.extrato = self.investment.getExtrato()
                 self.variable_income = self.investment.currentPortfolio()
                 self.treasuries = self.investment.currentTesouroDireto()
+                self.short_summary = self.extrato.copy()
+                return True
             else:
                 self.extrato = None
                 self.variable_income = None
                 self.treasuries = None
+                self.short_summary = None
                 self.__showColumnsErrorMessage()
-
+                return False
         except XLRDError:
             self.extrato = None
             self.variable_income = None
             self.treasuries = None
+            self.short_summary = None
             self.__showXLRDErrorMessage()
+            return False
 
-        # Portfolio Summary tab
-        self.PortfolioSummaryWidget = PortfolioSummaryWidget(self.extrato)
-        self.tab01 = QtWidgets.QWidget()
-        self.grid_tab01 = QtWidgets.QGridLayout()
-        self.grid_tab01.setContentsMargins(0, 0, 0, 0)
-        self.grid_tab01.setSpacing(0)
-        self.grid_tab01.addWidget(self.PortfolioSummaryWidget)
-        self.tab01.setLayout(self.grid_tab01)
-        self.summary_tab_index = self.addTab(self.tab01, "Extrato")
-
-        # Variable Incomes tab
-        formatter = VariableIncomesFormater(self.variable_income)
-        formatted_dataframe = formatter.getFormatedPortolioDataFrame()
-        self.variable_treeview = ResizableTreeviewPandas(formatted_dataframe)
-        self.variable_treeview.showPandas(resize_per_contents=False)
-        self.tab02 = QtWidgets.QWidget()
-        self.grid_tab02 = QtWidgets.QGridLayout()
-        self.grid_tab02.setContentsMargins(spacing, spacing, spacing, spacing)
-        self.grid_tab02.setSpacing(spacing)
-        self.grid_tab02.addWidget(self.variable_treeview)
-        self.tab02.setLayout(self.grid_tab02)
-        self.variable_tab_index = self.addTab(self.tab02, "Renda Variável")
-
-        # Treasuries tab
-        formatter = TreasuriesFormater(self.treasuries)
-        formatted_dataframe = formatter.getFormatedPortolioDataFrame()
-        self.treasuries_treeview = ResizableTreeviewPandas(formatted_dataframe)
-        self.treasuries_treeview.showPandas(resize_per_contents=False)
-        self.tab03 = QtWidgets.QWidget()
-        self.grid_tab03 = QtWidgets.QGridLayout()
-        self.grid_tab03.setContentsMargins(spacing, spacing, spacing, spacing)
-        self.grid_tab03.setSpacing(spacing)
-        self.grid_tab03.addWidget(self.treasuries_treeview)
-        self.tab03.setLayout(self.grid_tab03)
-        self.treasuries_tab_index = self.addTab(self.tab03, "Tesouro Direto")
-
-        # Short Summary tab
-        extrato_df = self.extrato.copy()
-
-        self.mkt_info = MarketInformation(extrato_df)
-        formatted_dataframe = self.mkt_info.getFormattedDataframe()
-        total_dataframe = self.mkt_info.getTotalFormattedDataframe()
-        formatted_dataframe = pd.concat(
-            [formatted_dataframe, total_dataframe],
-            ignore_index=True,
-            sort=False,
+    def __addNewTab(self, tab_widget):
+        tab_index = self.addTab(
+            tab_widget.getTab(),
+            tab_widget.getTabTitle(),
         )
-        self.mkt_summary_tree = ResizableTreeviewPandas(
-            formatted_dataframe,
-        )
-        self.mkt_summary_tree.showPandas(resize_per_contents=False)
-        self.mkt_summary_tree.setMaximumHeight(9 * spacing)
-
-        self.operations_info = OperationsHistory(extrato_df)
-        self.operations_tree = ResizableTreeviewPandas(
-            self.operations_info.getFormattedClosedOperationsDataframe(),
-        )
-        self.operations_tree.showPandas(resize_per_contents=True)
-
-        self.cust_info = CustodyInformation(extrato_df)
-        self.cust_summary_tree = ResizableTreeviewPandas(
-            self.cust_info.getFormattedDataframe(),
-        )
-        self.cust_summary_tree.showPandas(resize_per_contents=False)
-        self.cust_summary_tree.setMaximumHeight(3 * spacing)
-
-        self.tab04 = QtWidgets.QWidget()
-        self.grid_tab04 = QtWidgets.QGridLayout()
-        self.grid_tab04.setContentsMargins(spacing, spacing, spacing, spacing)
-        self.grid_tab04.setSpacing(spacing)
-        self.grid_tab04.addWidget(self.mkt_summary_tree)
-        self.grid_tab04.addWidget(self.operations_tree)
-        self.grid_tab04.addWidget(self.cust_summary_tree)
-        self.tab04.setLayout(self.grid_tab04)
-        self.short_summary_tab_index = self.addTab(
-            self.tab04,
-            "Resumo Extrato",
-        )
-
-        # Connect tab event
-        self.currentChanged.connect(self.onChange)
+        tab_widget.setTabIndex(tab_index)
+        return tab_index
 
     def __showColumnsErrorMessage(self):
         msg = "O arquivo selecionado é inválido.\n\n"
@@ -818,82 +1072,63 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         msg += "Por favor, verifique se o arquivo contém apenas 1 aba."
         QMessageBox.warning(self, "Análise de Portfólio", msg, QMessageBox.Ok)
 
-    def onChange(self, index):
-        """Onchange tab method to render table columns."""
-        if index == self.variable_tab_index:
-            self.variable_treeview.resizeColumnsToTreeViewWidth()
-        elif index == self.treasuries_tab_index:
-            self.treasuries_treeview.resizeColumnsToTreeViewWidth()
-        elif index == self.short_summary_tab_index:
-            self.cust_summary_tree.resizeColumnsToTreeViewWidth()
-            self.mkt_summary_tree.resizeColumnsToTreeViewWidth()
+    def __setTabInterfaceList(self):
+        self.TabInterfaceList = [
+            self.ExtratoTab,
+            self.VariableTab,
+            self.TreasuriesTab,
+            self.ShortSummaryTab,
+        ]
+
+    def __setTabDataframeList(self):
+        self.TabDataframeList = [
+            self.extrato,
+            self.variable_income,
+            self.treasuries,
+            self.short_summary,
+        ]
+
+    def setPortfolioInvestment(self, File):
+        """Read the excel file and update the main dataframes."""
+        self.investment = PortfolioInvestment()
+        self.investment.setFile(File)
+        df_updated_flag = self.__updateMainDataframes()
+        self.__setTabDataframeList()
+        return df_updated_flag
+
+    def setNewData(self, File):
+        """Set the new treeview data lines."""
+        if self.setPortfolioInvestment(File):
+
+            self.ExtratoTab = ExtratoTabInterface(self.__addNewTab)
+            self.ExtratoTab.setNewData(self.extrato)
+
+            self.VariableTab = VariableTabInterface(self.__addNewTab)
+            self.VariableTab.setNewData(self.variable_income)
+
+            self.TreasuriesTab = TreasuriesTabInterface(self.__addNewTab)
+            self.TreasuriesTab.setNewData(self.treasuries)
+
+            self.ShortSummaryTab = ShortSummaryTabInterface(self.__addNewTab)
+            self.ShortSummaryTab.setNewData(self.short_summary)
+
+            self.__setTabInterfaceList()
 
     def clearData(self):
         """Clear the treeview data lines."""
-        self.PortfolioSummaryWidget.clearData()
-        self.variable_treeview.clearData()
-        self.treasuries_treeview.clearData()
-        self.mkt_summary_tree.clearData()
-        self.operations_tree.clearData()
-        self.cust_summary_tree.clearData()
+        for tab_interface in self.TabInterfaceList:
+            tab_interface.clearData()
 
-    def updateData(self, file_name):
+    def updateData(self, File):
         """Update the treeview data lines."""
-        self.investment = PorfolioInvestment()
-        self.investment.setFile(file_name)
+        if self.setPortfolioInvestment(File):
+            for index in range(len(self.TabInterfaceList)):
+                tab_interface = self.TabInterfaceList[index]
+                tab_dataframe = self.TabDataframeList[index]
+                tab_interface.updateData(tab_dataframe)
 
-        try:
-            if self.investment.isValidFile():
-                self.investment.run()
-
-                self.extrato = self.investment.getExtrato()
-                self.PortfolioSummaryWidget.updateData(self.extrato)
-
-                self.variable_income = self.investment.currentPortfolio()
-                formatter = VariableIncomesFormater(self.variable_income)
-                formatted_dataframe = formatter.getFormatedPortolioDataFrame()
-                self.variable_treeview.clearData()
-                self.variable_treeview.setDataframe(formatted_dataframe)
-                self.variable_treeview.showPandas(resize_per_contents=False)
-
-                self.treasuries = self.investment.currentTesouroDireto()
-                formatter = TreasuriesFormater(self.treasuries)
-                formatted_dataframe = formatter.getFormatedPortolioDataFrame()
-                self.treasuries_treeview.clearData()
-                self.treasuries_treeview.setDataframe(formatted_dataframe)
-                self.treasuries_treeview.showPandas(resize_per_contents=False)
-
-                self.mkt_info = MarketInformation(self.extrato.copy())
-                formatted_dataframe = self.mkt_info.getFormattedDataframe()
-                total_dataframe = self.mkt_info.getTotalFormattedDataframe()
-                formatted_dataframe = pd.concat(
-                    [formatted_dataframe, total_dataframe],
-                    ignore_index=True,
-                    sort=False,
-                )
-                self.mkt_summary_tree.clearData()
-                self.mkt_summary_tree.setDataframe(formatted_dataframe)
-                self.mkt_summary_tree.showPandas(resize_per_contents=False)
-
-                self.operations_info = OperationsHistory(self.extrato.copy())
-                formatted_dataframe = (
-                    self.operations_info.getFormattedClosedOperationsDataframe()
-                )
-                self.operations_tree.clearData()
-                self.operations_tree.setDataframe(formatted_dataframe)
-                self.operations_tree.showPandas(resize_per_contents=True)
-
-                self.cust_info = CustodyInformation(self.extrato.copy())
-                formatted_dataframe = self.cust_info.getFormattedDataframe()
-                self.cust_summary_tree.clearData()
-                self.cust_summary_tree.setDataframe(formatted_dataframe)
-                self.cust_summary_tree.showPandas(resize_per_contents=False)
-
-            else:
-                self.__showColumnsErrorMessage()
-
-        except XLRDError:
-            self.extrato = None
-            self.variable_income = None
-            self.treasuries = None
-            self.__showXLRDErrorMessage()
+    def onChange(self, index):
+        """Onchange tab method to render the table columns."""
+        for tab_interface in self.TabInterfaceList:
+            if index == tab_interface.getTabIndex():
+                tab_interface.onChangeAction()
