@@ -324,7 +324,6 @@ class PortfolioInvestment:
         wallet = wallet.sort_values(by=["Mercado", "Ticker"])
 
         # Create blank columns
-        wallet["Setor"] = ""
         wallet["Quantidade"] = ""
         wallet["Preço médio"] = ""
         wallet["Cotação"] = ""

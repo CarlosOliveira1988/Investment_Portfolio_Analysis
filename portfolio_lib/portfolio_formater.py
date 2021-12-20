@@ -130,7 +130,6 @@ class VariableIncomesFormater:
     def __assignColumnVariables(self):
         self.Market = RequiredStringColumnType("Mercado")
         self.Ticker = RequiredStringColumnType("Ticker")
-        self.Sector = RequiredStringColumnType("Setor")
         self.Quantity = FloatColumnType("Quantidade")
         self.MeanPrice = CurencyColumnType("Preço médio")
         self.PaidPrice = CurencyColumnType("Preço pago")
@@ -144,7 +143,6 @@ class VariableIncomesFormater:
     def __appendColumnsVariableList(self):
         self.ColumnsVariableList.append("Market")
         self.ColumnsVariableList.append("Ticker")
-        self.ColumnsVariableList.append("Sector")
         self.ColumnsVariableList.append("Quantity")
         self.ColumnsVariableList.append("MeanPrice")
         self.ColumnsVariableList.append("PaidPrice")
