@@ -550,7 +550,7 @@ class PortfolioInvestment:
 
         return dataframe
 
-    def currentMarketPriceTesouroWebScrappingStatusInvest(self, ticker):
+    def currentMarketTesouro(self, ticker):
         """Return the last price of the stock from website Status Invest.
 
         LFT = Letras Financeira do Tesouro
@@ -653,7 +653,7 @@ class PortfolioInvestment:
 
     def currentTesouroDireto(self):
         """Create a dataframe with all open operations of Tesouro Direto."""
-        dataframe = self.operations
+        dataframe = self.operations.copy()
         dataframe = dataframe[dataframe["Mercado"] == "Tesouro Direto"]
         dataframe = dataframe[dataframe["Operação"] != "Cobrança"]
         dataframe.drop_duplicates(subset="Ticker", keep="first", inplace=True)
@@ -668,8 +668,11 @@ class PortfolioInvestment:
 
         # Create blank columns
         wallet["Quantidade"] = ""
+        wallet["Preço médio"] = ""
+        wallet["Preço pago"] = ""
         wallet["Cotação"] = ""
         wallet["Preço mercado"] = ""
+        wallet["Proventos"] = ""
         wallet["Porcentagem carteira"] = ""
 
         # Sort the data by ticker
@@ -678,7 +681,8 @@ class PortfolioInvestment:
         # Calculate of the quantity of all non duplicate tickers
         for index, row in wallet.iterrows():
 
-            avgPrice, numberStocks = self.avgPriceTicker(row["Ticker"])
+            ticker = row["Ticker"]
+            avgPrice, numberStocks = self.avgPriceTicker(ticker)
 
             # Check the quantity.
             # If zero, then drops it from the dataframe.
@@ -688,14 +692,17 @@ class PortfolioInvestment:
             # the quantity and the average price.
             else:
                 wallet.at[index, "Quantidade"] = float(numberStocks)
-                wallet.at[
-                    index, "Cotação"
-                ] = self.currentMarketPriceTesouroWebScrappingStatusInvest(
-                    row["Ticker"]
-                )
+                wallet.at[index, "Preço médio"] = float(avgPrice)
+                wallet.at[index, "Cotação"] = self.currentMarketTesouro(ticker)
+                wallet.at[index, "Proventos"] = self.earningsByTicker(ticker)
 
-        # Calculates the price according with the current market value
+        # Calculate the prices
         wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
+        wallet["Preço pago"] = wallet["Quantidade"] * wallet["Preço médio"]
+
+        # Calculate the net result
+        deltaPrice = wallet["Preço mercado"] - wallet["Preço pago"]
+        wallet["Resultado liquido"] = deltaPrice + wallet["Proventos"]
 
         totalTesouroDireto = wallet["Preço mercado"].sum()
 
