@@ -1,11 +1,8 @@
-from gui_lib.treeview.treeview_format import (
-    CurencyColumnType,
-    DateColumnType,
-    FloatColumnType,
-    NonRequiredStringColumnType,
-    PercentageColumnType,
-    RequiredStringColumnType,
-)
+from gui_lib.treeview.treeview_format import (CurencyColumnType,
+                                              DateColumnType, FloatColumnType,
+                                              NonRequiredStringColumnType,
+                                              PercentageColumnType,
+                                              RequiredStringColumnType)
 
 
 class PortfolioFormater:
@@ -132,8 +129,8 @@ class VariableIncomesFormater:
         self.Ticker = RequiredStringColumnType("Ticker")
         self.Quantity = FloatColumnType("Quantidade")
         self.MeanPrice = CurencyColumnType("Preço médio")
-        self.PaidPrice = CurencyColumnType("Preço pago")
         self.Quotation = CurencyColumnType("Cotação")
+        self.PaidPrice = CurencyColumnType("Preço pago")
         self.MarketPrice = CurencyColumnType("Preço mercado")
         self.Dividend = CurencyColumnType("Proventos")
         self.NetValue = CurencyColumnType("Resultado liquido")
@@ -145,8 +142,8 @@ class VariableIncomesFormater:
         self.ColumnsVariableList.append("Ticker")
         self.ColumnsVariableList.append("Quantity")
         self.ColumnsVariableList.append("MeanPrice")
-        self.ColumnsVariableList.append("PaidPrice")
         self.ColumnsVariableList.append("Quotation")
+        self.ColumnsVariableList.append("PaidPrice")
         self.ColumnsVariableList.append("MarketPrice")
         self.ColumnsVariableList.append("Dividend")
         self.ColumnsVariableList.append("NetValue")
@@ -212,13 +209,12 @@ class TreasuriesFormater:
     """
 
     def __assignColumnVariables(self):
-        self.Market = RequiredStringColumnType("Mercado")
         self.Ticker = RequiredStringColumnType("Ticker")
         self.Indexer = RequiredStringColumnType("Indexador")
         self.Quantity = FloatColumnType("Quantidade")
         self.MeanPrice = CurencyColumnType("Preço médio")
-        self.BuyPrice = CurencyColumnType("Preço pago")
         self.Quotation = CurencyColumnType("Cotação")
+        self.BuyPrice = CurencyColumnType("Preço pago")
         self.MarketPrice = CurencyColumnType("Preço mercado")
         self.Dividend = CurencyColumnType("Proventos")
         self.NetValue = CurencyColumnType("Resultado liquido")
@@ -226,13 +222,12 @@ class TreasuriesFormater:
         self.ColumnsVariableList = []
 
     def __appendColumnsVariableList(self):
-        self.ColumnsVariableList.append("Market")
         self.ColumnsVariableList.append("Ticker")
         self.ColumnsVariableList.append("Indexer")
         self.ColumnsVariableList.append("Quantity")
         self.ColumnsVariableList.append("MeanPrice")
-        self.ColumnsVariableList.append("BuyPrice")
         self.ColumnsVariableList.append("Quotation")
+        self.ColumnsVariableList.append("BuyPrice")
         self.ColumnsVariableList.append("MarketPrice")
         self.ColumnsVariableList.append("Dividend")
         self.ColumnsVariableList.append("NetValue")

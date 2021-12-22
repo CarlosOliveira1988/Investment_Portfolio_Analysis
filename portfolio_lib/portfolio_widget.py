@@ -765,6 +765,45 @@ class TabViewerInterface:
         """Create the TabViewerInterface object."""
         pass
 
+    def __sumValueColumn(self, dataframe, total_df, column_title):
+        total_df[column_title] = [dataframe[column_title].sum()]
+
+    def __makeUpColumns(self, total_df, target_column, columns_list, df):
+        # Include the 'TOTAL' cell
+        total_df[target_column] = ["TOTAL"]
+
+        # All the column titles from the original dataframe
+        all_df_columns_set = set(list(df))
+
+        # All the columns with total values addded
+        avoid_list = columns_list.copy()
+        avoid_list.extend([target_column])
+
+        # Fill with empty space ' ' the other columns
+        target_empty_columns = all_df_columns_set.difference(avoid_list)
+        for column in target_empty_columns:
+            total_df[column] = ["-"]
+
+    def addTotalLine(self, dataframe, columns_list, target_column):
+        """Include a new line in the dataframe related to the total values."""
+        total_df = pd.DataFrame()
+
+        # Sum the useful columns
+        for column in columns_list:
+            self.__sumValueColumn(dataframe, total_df, column)
+
+        # Make up the columns to avoid displaying unexpected N/A values
+        self.__makeUpColumns(total_df, target_column, columns_list, dataframe)
+
+        # Concatenate the dataframes
+        dataframe = pd.concat(
+            [dataframe, total_df],
+            ignore_index=True,
+            sort=False,
+        )
+
+        return dataframe
+
     def setNewData(self):
         """Abstract method to set new data."""
         pass
@@ -830,8 +869,22 @@ class VariableTabInterface(TabViewerInterface):
         self.variable_treeview = None
         self.VariableIncomeTab = None
 
+    def __addTotalLine(self, dataframe):
+        dataframe = self.addTotalLine(
+            dataframe,
+            [
+                "Preço pago",
+                "Preço mercado",
+                "Proventos",
+                "Resultado liquido",
+            ],
+            "Mercado",
+        )
+        return dataframe
+
     def setNewData(self, dataframe):
         """Set the data table."""
+        dataframe = self.__addTotalLine(dataframe)
         self.formatter = VFormat(dataframe)
         formatted_df = self.formatter.getFormatedPortolioDataFrame()
         self.variable_treeview = ResizableTreeviewPandas(formatted_df)
@@ -849,6 +902,7 @@ class VariableTabInterface(TabViewerInterface):
 
     def updateData(self, dataframe):
         """Update the data table."""
+        dataframe = self.__addTotalLine(dataframe)
         self.formatter = VFormat(dataframe)
         formatted_dataframe = self.formatter.getFormatedPortolioDataFrame()
         self.variable_treeview.clearData()
@@ -875,8 +929,22 @@ class TreasuriesTabInterface(TabViewerInterface):
         self.treasuries_treeview = None
         self.TreasuriesTab = None
 
+    def __addTotalLine(self, dataframe):
+        dataframe = self.addTotalLine(
+            dataframe,
+            [
+                "Preço pago",
+                "Preço mercado",
+                "Proventos",
+                "Resultado liquido",
+            ],
+            "Ticker",
+        )
+        return dataframe
+
     def setNewData(self, dataframe):
         """Set the data table."""
+        dataframe = self.__addTotalLine(dataframe)
         self.formatter = TFormat(dataframe)
         formatted_df = self.formatter.getFormatedPortolioDataFrame()
         self.treasuries_treeview = ResizableTreeviewPandas(formatted_df)
@@ -894,6 +962,7 @@ class TreasuriesTabInterface(TabViewerInterface):
 
     def updateData(self, dataframe):
         """Update the data table."""
+        dataframe = self.__addTotalLine(dataframe)
         self.formatter = TFormat(dataframe)
         formatted_df = self.formatter.getFormatedPortolioDataFrame()
         self.treasuries_treeview.clearData()
