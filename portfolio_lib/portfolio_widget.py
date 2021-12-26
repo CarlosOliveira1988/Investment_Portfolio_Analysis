@@ -768,6 +768,11 @@ class TabViewerInterface:
     def __sumValueColumn(self, dataframe, total_df, column_title):
         total_df[column_title] = [dataframe[column_title].sum()]
 
+    def __sumPercentageColumn(self, total_df, percentage, initial, final):
+        initial_value = total_df[initial].sum()
+        final_value = total_df[final].sum()
+        total_df[percentage] = [final_value / initial_value]
+
     def __makeUpColumns(self, total_df, target_column, columns_list, df):
         # Include the 'TOTAL' cell
         total_df[target_column] = ["TOTAL"]
@@ -784,16 +789,51 @@ class TabViewerInterface:
         for column in target_empty_columns:
             total_df[column] = ["-"]
 
-    def addTotalLine(self, dataframe, columns_list, target_column):
-        """Include a new line in the dataframe related to the total values."""
+    def addTotalLine(
+        self,
+        dataframe,
+        columns_list,
+        target_column,
+        perc_lists=None,
+    ):
+        """Include a new line in the dataframe with the total values.
+
+        Arguments:
+        - dataframe: the dataframe with multiple columns
+        - columns_list: the columns with 'simple sum' values
+        - target_column: the column where the 'TOTAL' text will be inserted
+        - perc_lists: a list of lists where:
+          * 1st item: the percentage column title
+          * 2nd item: the initial value column title
+          * 3rd item: the final value column title
+        """
         total_df = pd.DataFrame()
 
         # Sum the useful columns
         for column in columns_list:
             self.__sumValueColumn(dataframe, total_df, column)
 
+        # Include the percentage columns
+        if perc_lists:
+            for perc in perc_lists:
+                percentage_column = perc[0]
+                initial_column = perc[1]
+                final_column = perc[2]
+                self.__sumPercentageColumn(
+                    total_df,
+                    percentage_column,
+                    initial_column,
+                    final_column,
+                )
+
         # Make up the columns to avoid displaying unexpected N/A values
-        self.__makeUpColumns(total_df, target_column, columns_list, dataframe)
+        avoid_list = []
+        if perc_lists:
+            for perc_list in perc_lists:
+                avoid_list.extend(perc_list)
+        avoid_list.extend(columns_list)
+        avoid_list.extend([target_column])
+        self.__makeUpColumns(total_df, target_column, avoid_list, dataframe)
 
         # Concatenate the dataframes
         dataframe = pd.concat(
@@ -875,10 +915,15 @@ class VariableTabInterface(TabViewerInterface):
             [
                 "Preço pago",
                 "Preço mercado",
+                "Preço mercado-pago",
                 "Proventos",
                 "Resultado liquido",
             ],
             "Mercado",
+            [
+                ["Rentabilidade mercado-pago", "Preço pago", "Preço mercado-pago"],
+                ["Rentabilidade liquida", "Preço pago", "Resultado liquido"],
+            ],
         )
         return dataframe
 
@@ -935,10 +980,15 @@ class TreasuriesTabInterface(TabViewerInterface):
             [
                 "Preço pago",
                 "Preço mercado",
+                "Preço mercado-pago",
                 "Proventos",
                 "Resultado liquido",
             ],
             "Ticker",
+            [
+                ["Rentabilidade mercado-pago", "Preço pago", "Preço mercado-pago"],
+                ["Rentabilidade liquida", "Preço pago", "Resultado liquido"],
+            ],
         )
         return dataframe
 

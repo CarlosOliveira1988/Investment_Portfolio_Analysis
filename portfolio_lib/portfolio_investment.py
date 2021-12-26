@@ -329,8 +329,11 @@ class PortfolioInvestment:
         wallet["Cotação"] = ""
         wallet["Preço pago"] = ""
         wallet["Preço mercado"] = ""
+        wallet["Preço mercado-pago"] = ""
+        wallet["Rentabilidade mercado-pago"] = ""
         wallet["Proventos"] = ""
         wallet["Resultado liquido"] = ""
+        wallet["Rentabilidade liquida"] = ""
         wallet["Porcentagem carteira"] = ""
 
         # Calculate of the quantity of all non duplicate tickers
@@ -369,7 +372,12 @@ class PortfolioInvestment:
         wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
         # Calculate the liquid result of the ticker
         deltaPrice = wallet["Preço mercado"] - wallet["Preço pago"]
-        wallet["Resultado liquido"] = deltaPrice + wallet["Proventos"]
+        wallet["Preço mercado-pago"] = deltaPrice
+        buyPrice = wallet["Preço mercado"]
+        wallet["Rentabilidade mercado-pago"] = deltaPrice / buyPrice
+        netResult = deltaPrice + wallet["Proventos"]
+        wallet["Resultado liquido"] = netResult
+        wallet["Rentabilidade liquida"] = netResult / buyPrice
 
         # Filter the stocks
         walletStock = wallet[wallet["Mercado"] == "Ações"]
@@ -671,7 +679,10 @@ class PortfolioInvestment:
         wallet["Preço pago"] = ""
         wallet["Cotação"] = ""
         wallet["Preço mercado"] = ""
+        wallet["Preço mercado-pago"] = ""
+        wallet["Rentabilidade mercado-pago"] = ""
         wallet["Proventos"] = ""
+        wallet["Resultado liquido"] = ""
         wallet["Porcentagem carteira"] = ""
 
         # Sort the data by ticker
@@ -701,7 +712,12 @@ class PortfolioInvestment:
 
         # Calculate the net result
         deltaPrice = wallet["Preço mercado"] - wallet["Preço pago"]
-        wallet["Resultado liquido"] = deltaPrice + wallet["Proventos"]
+        buyPrice = wallet["Preço pago"]
+        wallet["Preço mercado-pago"] = deltaPrice
+        wallet["Rentabilidade mercado-pago"] = deltaPrice / buyPrice
+        netResult = deltaPrice + wallet["Proventos"]
+        wallet["Resultado liquido"] = netResult
+        wallet["Rentabilidade liquida"] = netResult / buyPrice
 
         totalTesouroDireto = wallet["Preço mercado"].sum()
 

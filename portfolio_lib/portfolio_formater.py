@@ -1,8 +1,11 @@
-from gui_lib.treeview.treeview_format import (CurencyColumnType,
-                                              DateColumnType, FloatColumnType,
-                                              NonRequiredStringColumnType,
-                                              PercentageColumnType,
-                                              RequiredStringColumnType)
+from gui_lib.treeview.treeview_format import (
+    CurencyColumnType,
+    DateColumnType,
+    FloatColumnType,
+    NonRequiredStringColumnType,
+    PercentageColumnType,
+    RequiredStringColumnType,
+)
 
 
 class PortfolioFormater:
@@ -132,8 +135,11 @@ class VariableIncomesFormater:
         self.Quotation = CurencyColumnType("Cotação")
         self.PaidPrice = CurencyColumnType("Preço pago")
         self.MarketPrice = CurencyColumnType("Preço mercado")
+        self.DeltaPrice = CurencyColumnType("Preço mercado-pago")
+        self.RentDelta = PercentageColumnType("Rentabilidade mercado-pago")
         self.Dividend = CurencyColumnType("Proventos")
         self.NetValue = CurencyColumnType("Resultado liquido")
+        self.RentNetValue = PercentageColumnType("Rentabilidade liquida")
         self.WalletPercentage = PercentageColumnType("Porcentagem carteira")
         self.ColumnsVariableList = []
 
@@ -145,8 +151,11 @@ class VariableIncomesFormater:
         self.ColumnsVariableList.append("Quotation")
         self.ColumnsVariableList.append("PaidPrice")
         self.ColumnsVariableList.append("MarketPrice")
+        self.ColumnsVariableList.append("DeltaPrice")
+        self.ColumnsVariableList.append("RentDelta")
         self.ColumnsVariableList.append("Dividend")
         self.ColumnsVariableList.append("NetValue")
+        self.ColumnsVariableList.append("RentNetValue")
         self.ColumnsVariableList.append("WalletPercentage")
 
     def __fillNaValues(self):
@@ -216,8 +225,11 @@ class TreasuriesFormater:
         self.Quotation = CurencyColumnType("Cotação")
         self.BuyPrice = CurencyColumnType("Preço pago")
         self.MarketPrice = CurencyColumnType("Preço mercado")
+        self.DeltaPrice = CurencyColumnType("Preço mercado-pago")
+        self.RentDelta = PercentageColumnType("Rentabilidade mercado-pago")
         self.Dividend = CurencyColumnType("Proventos")
         self.NetValue = CurencyColumnType("Resultado liquido")
+        self.RentNetValue = PercentageColumnType("Rentabilidade liquida")
         self.WalletPercentage = PercentageColumnType("Porcentagem carteira")
         self.ColumnsVariableList = []
 
@@ -229,8 +241,11 @@ class TreasuriesFormater:
         self.ColumnsVariableList.append("Quotation")
         self.ColumnsVariableList.append("BuyPrice")
         self.ColumnsVariableList.append("MarketPrice")
+        self.ColumnsVariableList.append("DeltaPrice")
+        self.ColumnsVariableList.append("RentDelta")
         self.ColumnsVariableList.append("Dividend")
         self.ColumnsVariableList.append("NetValue")
+        self.ColumnsVariableList.append("RentNetValue")
         self.ColumnsVariableList.append("WalletPercentage")
 
     def __fillNaValues(self):
