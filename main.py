@@ -3,6 +3,7 @@
 import webbrowser
 
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 from indexer_lib.economic_indexers_window import EconomicIndexerWindow
 from portfolio_lib.portfolio_widget import PortfolioViewerWidget
@@ -38,54 +39,56 @@ class MainWindow(QtWidgets.QWidget):
         if auto_show:
             self.showMaximized()
 
+    def __setAction(self, menu_tag, function):
+        action = QtWidgets.QAction(menu_tag, self)
+        action.triggered.connect(function)
+        return action
+
     def _createActions(self):
-        self.openAction = QtWidgets.QAction(
+        self.openAction = self.__setAction(
             "&Abrir Extrato",
-            self,
+            self._openFile,
         )
-        self.openAction.triggered.connect(self._openFile)
 
-        self.exitAction = QtWidgets.QAction(
+        self.exitAction = self.__setAction(
             "&Sair",
-            self,
+            self._exitApp,
         )
-        self.exitAction.triggered.connect(self._exitApp)
 
-        self.aboutAction = QtWidgets.QAction(
+        self.exportGDAction = self.__setAction(
+            "&Exportar Planilha Google Drive",
+            self._exportGD,
+        )
+
+        self.aboutAction = self.__setAction(
             "&Sobre",
-            self,
+            self._aboutApp,
         )
-        self.aboutAction.triggered.connect(self._aboutApp)
 
-        self.indexersAction = QtWidgets.QAction(
+        self.indexersAction = self.__setAction(
             "&Indicadores Econômicos",
-            self,
+            self._indexersApp,
         )
-        self.indexersAction.triggered.connect(self._indexersApp)
 
-        self.valuationAction = QtWidgets.QAction(
+        self.valuationAction = self.__setAction(
             "&Indicadores Fundamentalistas",
-            self,
+            self._valuationApp,
         )
-        self.valuationAction.triggered.connect(self._valuationApp)
 
-        self.focusReportAction = QtWidgets.QAction(
+        self.focusReportAction = self.__setAction(
             "&Relatório Focus",
-            self,
+            self._focusReportLink,
         )
-        self.focusReportAction.triggered.connect(self._focusReportLink)
 
-        self.fixedIncomeAction = QtWidgets.QAction(
+        self.fixedIncomeAction = self.__setAction(
             "&Simulador de Renda Fixa",
-            self,
+            self._fixedIncomeLink,
         )
-        self.fixedIncomeAction.triggered.connect(self._fixedIncomeLink)
 
-        self.profitabilityAction = QtWidgets.QAction(
+        self.profitabilityAction = self.__setAction(
             "&Simulador de Rentabilidade",
-            self,
+            self._profitabilityLink,
         )
-        self.profitabilityAction.triggered.connect(self._profitabilityLink)
 
     def _createMenuBar(self):
         # Menu bar
@@ -95,6 +98,7 @@ class MainWindow(QtWidgets.QWidget):
         # File menu
         self.fileMenu = QtWidgets.QMenu("&Arquivo", self.menuBar)
         self.fileMenu.addAction(self.openAction)
+        self.fileMenu.addAction(self.exportGDAction)
         self.fileMenu.addAction(self.exitAction)
         self.menuBar.addMenu(self.fileMenu)
 
@@ -121,13 +125,6 @@ class MainWindow(QtWidgets.QWidget):
         event.accept()
         sys.exit()
 
-    def _exitApp(self):
-        """Close the application."""
-        sys.exit()
-
-    def _aboutApp(self):
-        pass
-
     def _openFile(self):
         file_name_tuple = QtWidgets.QFileDialog.getOpenFileName(
             self,
@@ -140,6 +137,30 @@ class MainWindow(QtWidgets.QWidget):
             self.PortfolioViewerWidget.clearData()
             self.PortfolioViewerWidget.updateData(file_name)
             self.statusBar.showMessage(file_name)
+
+    def _exportGD(self):
+        try:
+            self.PortfolioViewerWidget.exportGoogleDriveSheet()
+            msg = "Planilha Google Drive exportada com sucesso.\n\n"
+            QMessageBox.information(
+                self,
+                "Análise de Portfólio",
+                msg,
+                QMessageBox.Ok,
+            )
+        except AttributeError:
+            msg = "Não foi possível exportar a planilha Google Drive."
+            msg += "\n\nPlanilha extrato inválida."
+            QMessageBox.warning(
+                self,
+                "Análise de Portfólio",
+                msg,
+                QMessageBox.Ok,
+            )
+
+    def _exitApp(self):
+        """Close the application."""
+        sys.exit()
 
     def _indexersApp(self):
         self.EconomicIndexerWindow = EconomicIndexerWindow()
@@ -155,6 +176,9 @@ class MainWindow(QtWidgets.QWidget):
 
     def _profitabilityLink(self):
         webbrowser.open(r"http://rendafixa.herokuapp.com/rentabilidade")
+
+    def _aboutApp(self):
+        pass
 
 
 if __name__ == "__main__":

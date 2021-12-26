@@ -1215,6 +1215,10 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         self.__setTabDataframeList()
         return df_updated_flag
 
+    def exportGoogleDriveSheet(self):
+        """Export the Google Drive spreasheet."""
+        self.investment.currentPortfolioGoogleDrive()
+
     def setNewData(self, File):
         """Set the new treeview data lines."""
         if self.setPortfolioInvestment(File):
