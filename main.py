@@ -3,10 +3,163 @@
 import webbrowser
 
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 from indexer_lib.economic_indexers_window import EconomicIndexerWindow
 from portfolio_lib.portfolio_widget import PortfolioViewerWidget
 from valuation_lib.valuation_window import ValuationWindow
+
+
+class MenuInterface(QtWidgets.QMenu):
+    """MenuInterface class for menus creation."""
+
+    def __init__(self, tag_menu, menu_bar, function):
+        """Create the MenuInterface object."""
+        super().__init__(tag_menu, menu_bar)
+        self.action = self.setAction(tag_menu, function)
+
+    def setAction(self, menu_tag, function):
+        """Set the related 'Action' to a specific 'menu'."""
+        action = QtWidgets.QAction(menu_tag)
+        action.triggered.connect(function)
+        return action
+
+    def getAction(self):
+        """Return the 'Action'."""
+        return self.action
+
+
+class FileMenu(QtWidgets.QMenu):
+    """FileMenu class."""
+
+    def __init__(self, menu_bar, status_bar, PortfolioViewerWidget):
+        """Create the FileMenu object."""
+        super().__init__("&Arquivo", menu_bar)
+
+        self.PortfolioViewerWidget = PortfolioViewerWidget
+        self.status_bar = status_bar
+
+        self.open = MenuInterface("&Abrir Extrato", menu_bar, self.openFile)
+        self.addAction(self.open.getAction())
+
+        self.exportGD = MenuInterface("&Exportar GD", menu_bar, self.exportGD)
+        self.addAction(self.exportGD.getAction())
+
+        self.exit = MenuInterface("&Sair", menu_bar, self.exitApp)
+        self.addAction(self.exit.getAction())
+
+    def openFile(self):
+        """Open the 'Extrato' spreadsheet."""
+        file_name_tuple = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            "Selecione o arquivo XLSX relacionado ao portfolio",
+            sys.path[0],
+            "xlsx(*.xlsx)",
+        )
+        file_name = file_name_tuple[0]
+        if ".xlsx" in file_name:
+            self.PortfolioViewerWidget.clearData()
+            self.PortfolioViewerWidget.updateData(file_name)
+            self.status_bar.showMessage(file_name)
+
+    def exportGD(self):
+        """Export the Google Drive spreadsheet."""
+        try:
+            self.PortfolioViewerWidget.exportGoogleDriveSheet()
+            msg = "Planilha Google Drive exportada com sucesso.\n\n"
+            QMessageBox.information(
+                self,
+                "Análise de Portfólio",
+                msg,
+                QMessageBox.Ok,
+            )
+        except AttributeError:
+            msg = "Não foi possível exportar a planilha Google Drive."
+            msg += "\n\nPlanilha extrato inválida."
+            QMessageBox.warning(
+                self,
+                "Análise de Portfólio",
+                msg,
+                QMessageBox.Ok,
+            )
+
+    def exitApp(self):
+        """Close the application."""
+        sys.exit()
+
+
+class ToolsMenu(QtWidgets.QMenu):
+    """ToolsMenu class."""
+
+    def __init__(self, menu_bar):
+        """Create the ToolsMenu object."""
+        super().__init__("&Ferramentas", menu_bar)
+
+        self.EconomicIndexerWindow = None
+        self.ValuationWindow = None
+
+        self.indexers = MenuInterface(
+            "&Indicadores Econômicos",
+            menu_bar,
+            self.indexer,
+        )
+        self.addAction(self.indexers.getAction())
+
+        self.valuation = MenuInterface(
+            "&Indicadores Fundamentalistas",
+            menu_bar,
+            self.valuation,
+        )
+        self.addAction(self.valuation.getAction())
+
+    def indexer(self):
+        """Launch the EconomicIndexer app."""
+        self.EconomicIndexerWindow = EconomicIndexerWindow()
+
+    def valuation(self):
+        """Launch the Valuation app."""
+        self.ValuationWindow = ValuationWindow()
+
+
+class LinksMenu(QtWidgets.QMenu):
+    """LinksMenu class."""
+
+    def __init__(self, menu_bar):
+        """Create the LinksMenu object."""
+        super().__init__("&Links", menu_bar)
+
+        self.focus = MenuInterface(
+            "&Relatório Focus",
+            menu_bar,
+            self.focusReportLink,
+        )
+        self.addAction(self.focus.getAction())
+
+        self.fixedIncome = MenuInterface(
+            "&Simulador de Renda Fixa",
+            menu_bar,
+            self.fixedIncomeLink,
+        )
+        self.addAction(self.fixedIncome.getAction())
+
+        self.profitability = MenuInterface(
+            "&Simulador de Rentabilidade",
+            menu_bar,
+            self.profitabilityLink,
+        )
+        self.addAction(self.profitability.getAction())
+
+    def focusReportLink(self):
+        """Open the 'Relatorio Focus' weblink."""
+        webbrowser.open(r"https://www.bcb.gov.br/publicacoes/focus")
+
+    def fixedIncomeLink(self):
+        """Open a weblink related to 'Renda Fixa'."""
+        webbrowser.open(r"https://rendafixa.herokuapp.com")
+
+    def profitabilityLink(self):
+        """Open a weblink related to 'Rentabilidade'."""
+        webbrowser.open(r"http://rendafixa.herokuapp.com/rentabilidade")
 
 
 class MainWindow(QtWidgets.QWidget):
@@ -21,10 +174,6 @@ class MainWindow(QtWidgets.QWidget):
         self.grid = QtWidgets.QGridLayout()
         self.setLayout(self.grid)
 
-        # Add menu bar
-        self._createActions()
-        self._createMenuBar()
-
         # Portfolio widget
         self.PortfolioViewerWidget = PortfolioViewerWidget(file)
         self.grid.addWidget(self.PortfolioViewerWidget)
@@ -34,58 +183,12 @@ class MainWindow(QtWidgets.QWidget):
         self.grid.addWidget(self.statusBar)
         self.statusBar.showMessage(file)
 
+        # Add menu bar
+        self._createMenuBar()
+
         # Show the window
         if auto_show:
             self.showMaximized()
-
-    def _createActions(self):
-        self.openAction = QtWidgets.QAction(
-            "&Abrir Extrato",
-            self,
-        )
-        self.openAction.triggered.connect(self._openFile)
-
-        self.exitAction = QtWidgets.QAction(
-            "&Sair",
-            self,
-        )
-        self.exitAction.triggered.connect(self._exitApp)
-
-        self.aboutAction = QtWidgets.QAction(
-            "&Sobre",
-            self,
-        )
-        self.aboutAction.triggered.connect(self._aboutApp)
-
-        self.indexersAction = QtWidgets.QAction(
-            "&Indicadores Econômicos",
-            self,
-        )
-        self.indexersAction.triggered.connect(self._indexersApp)
-
-        self.valuationAction = QtWidgets.QAction(
-            "&Indicadores Fundamentalistas",
-            self,
-        )
-        self.valuationAction.triggered.connect(self._valuationApp)
-
-        self.focusReportAction = QtWidgets.QAction(
-            "&Relatório Focus",
-            self,
-        )
-        self.focusReportAction.triggered.connect(self._focusReportLink)
-
-        self.fixedIncomeAction = QtWidgets.QAction(
-            "&Simulador de Renda Fixa",
-            self,
-        )
-        self.fixedIncomeAction.triggered.connect(self._fixedIncomeLink)
-
-        self.profitabilityAction = QtWidgets.QAction(
-            "&Simulador de Rentabilidade",
-            self,
-        )
-        self.profitabilityAction.triggered.connect(self._profitabilityLink)
 
     def _createMenuBar(self):
         # Menu bar
@@ -93,68 +196,29 @@ class MainWindow(QtWidgets.QWidget):
         self.grid.setMenuBar(self.menuBar)
 
         # File menu
-        self.fileMenu = QtWidgets.QMenu("&Arquivo", self.menuBar)
-        self.fileMenu.addAction(self.openAction)
-        self.fileMenu.addAction(self.exitAction)
+        self.fileMenu = FileMenu(
+            self.menuBar,
+            self.statusBar,
+            self.PortfolioViewerWidget,
+        )
         self.menuBar.addMenu(self.fileMenu)
 
         # Tools menu
-        self.toolsMenu = QtWidgets.QMenu("&Ferramentas", self.menuBar)
-        self.toolsMenu.addAction(self.indexersAction)
-        self.toolsMenu.addAction(self.valuationAction)
+        self.toolsMenu = ToolsMenu(
+            self.menuBar,
+        )
         self.menuBar.addMenu(self.toolsMenu)
 
         # Links menu
-        self.linksMenu = QtWidgets.QMenu("&Links", self.menuBar)
-        self.linksMenu.addAction(self.focusReportAction)
-        self.linksMenu.addAction(self.fixedIncomeAction)
-        self.linksMenu.addAction(self.profitabilityAction)
+        self.linksMenu = LinksMenu(
+            self.menuBar,
+        )
         self.menuBar.addMenu(self.linksMenu)
-
-        # Help menu
-        self.helpMenu = QtWidgets.QMenu("&Ajuda", self.menuBar)
-        self.helpMenu.addAction(self.aboutAction)
-        self.menuBar.addMenu(self.helpMenu)
 
     def closeEvent(self, event):
         """Override 'QtWidgets.QWidget.closeEvent'."""
         event.accept()
         sys.exit()
-
-    def _exitApp(self):
-        """Close the application."""
-        sys.exit()
-
-    def _aboutApp(self):
-        pass
-
-    def _openFile(self):
-        file_name_tuple = QtWidgets.QFileDialog.getOpenFileName(
-            self,
-            "Selecione o arquivo XLSX relacionado ao portfolio",
-            sys.path[0],
-            "xlsx(*.xlsx)",
-        )
-        file_name = file_name_tuple[0]
-        if ".xlsx" in file_name:
-            self.PortfolioViewerWidget.clearData()
-            self.PortfolioViewerWidget.updateData(file_name)
-            self.statusBar.showMessage(file_name)
-
-    def _indexersApp(self):
-        self.EconomicIndexerWindow = EconomicIndexerWindow()
-
-    def _valuationApp(self):
-        self.ValuationWindow = ValuationWindow()
-
-    def _focusReportLink(self):
-        webbrowser.open(r"https://www.bcb.gov.br/publicacoes/focus")
-
-    def _fixedIncomeLink(self):
-        webbrowser.open(r"https://rendafixa.herokuapp.com")
-
-    def _profitabilityLink(self):
-        webbrowser.open(r"http://rendafixa.herokuapp.com/rentabilidade")
 
 
 if __name__ == "__main__":

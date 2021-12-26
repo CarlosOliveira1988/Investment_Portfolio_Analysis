@@ -26,11 +26,6 @@ class NovaPoupanca(IndexerManager):
         super().__init__("Poupança nova mensal.xlsx")
 
 
-class AntigaPoupanca(IndexerManager):
-    def __init__(self):
-        super().__init__("Poupança antiga mensal.xlsx")
-
-
 class EconomicIndexer:
     """
     This class provides a collection of Economic Indexers.
@@ -42,7 +37,6 @@ class EconomicIndexer:
         self.CDI = CDI()
         self.FGTS = FGTS()
         self.NovaPoupanca = NovaPoupanca()
-        self.AntigaPoupanca = AntigaPoupanca()
 
     def getNamesList(self):
         return self.__dict__.keys()

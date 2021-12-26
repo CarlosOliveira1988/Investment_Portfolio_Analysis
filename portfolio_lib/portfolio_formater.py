@@ -130,28 +130,32 @@ class VariableIncomesFormater:
     def __assignColumnVariables(self):
         self.Market = RequiredStringColumnType("Mercado")
         self.Ticker = RequiredStringColumnType("Ticker")
-        self.Sector = RequiredStringColumnType("Setor")
         self.Quantity = FloatColumnType("Quantidade")
         self.MeanPrice = CurencyColumnType("Preço médio")
         self.Quotation = CurencyColumnType("Cotação")
         self.PaidPrice = CurencyColumnType("Preço pago")
         self.MarketPrice = CurencyColumnType("Preço mercado")
+        self.DeltaPrice = CurencyColumnType("Preço mercado-pago")
+        self.RentDelta = PercentageColumnType("Rentabilidade mercado-pago")
         self.Dividend = CurencyColumnType("Proventos")
         self.NetValue = CurencyColumnType("Resultado liquido")
+        self.RentNetValue = PercentageColumnType("Rentabilidade liquida")
         self.WalletPercentage = PercentageColumnType("Porcentagem carteira")
         self.ColumnsVariableList = []
 
     def __appendColumnsVariableList(self):
         self.ColumnsVariableList.append("Market")
         self.ColumnsVariableList.append("Ticker")
-        self.ColumnsVariableList.append("Sector")
         self.ColumnsVariableList.append("Quantity")
         self.ColumnsVariableList.append("MeanPrice")
         self.ColumnsVariableList.append("Quotation")
         self.ColumnsVariableList.append("PaidPrice")
         self.ColumnsVariableList.append("MarketPrice")
+        self.ColumnsVariableList.append("DeltaPrice")
+        self.ColumnsVariableList.append("RentDelta")
         self.ColumnsVariableList.append("Dividend")
         self.ColumnsVariableList.append("NetValue")
+        self.ColumnsVariableList.append("RentNetValue")
         self.ColumnsVariableList.append("WalletPercentage")
 
     def __fillNaValues(self):
@@ -214,22 +218,34 @@ class TreasuriesFormater:
     """
 
     def __assignColumnVariables(self):
-        self.Market = RequiredStringColumnType("Mercado")
         self.Ticker = RequiredStringColumnType("Ticker")
         self.Indexer = RequiredStringColumnType("Indexador")
         self.Quantity = FloatColumnType("Quantidade")
+        self.MeanPrice = CurencyColumnType("Preço médio")
         self.Quotation = CurencyColumnType("Cotação")
+        self.BuyPrice = CurencyColumnType("Preço pago")
         self.MarketPrice = CurencyColumnType("Preço mercado")
+        self.DeltaPrice = CurencyColumnType("Preço mercado-pago")
+        self.RentDelta = PercentageColumnType("Rentabilidade mercado-pago")
+        self.Dividend = CurencyColumnType("Proventos")
+        self.NetValue = CurencyColumnType("Resultado liquido")
+        self.RentNetValue = PercentageColumnType("Rentabilidade liquida")
         self.WalletPercentage = PercentageColumnType("Porcentagem carteira")
         self.ColumnsVariableList = []
 
     def __appendColumnsVariableList(self):
-        self.ColumnsVariableList.append("Market")
         self.ColumnsVariableList.append("Ticker")
         self.ColumnsVariableList.append("Indexer")
         self.ColumnsVariableList.append("Quantity")
+        self.ColumnsVariableList.append("MeanPrice")
         self.ColumnsVariableList.append("Quotation")
+        self.ColumnsVariableList.append("BuyPrice")
         self.ColumnsVariableList.append("MarketPrice")
+        self.ColumnsVariableList.append("DeltaPrice")
+        self.ColumnsVariableList.append("RentDelta")
+        self.ColumnsVariableList.append("Dividend")
+        self.ColumnsVariableList.append("NetValue")
+        self.ColumnsVariableList.append("RentNetValue")
         self.ColumnsVariableList.append("WalletPercentage")
 
     def __fillNaValues(self):
