@@ -430,9 +430,13 @@ class PortfolioInvestment:
             # Not suitable to uncomment while testing.
             dfticker = dataframe["Ticker"]
             dataframe["Cotação"] = '=googlefinance("' + dfticker + '")'
-            market_price_str = "=E" + str(i) + "*G" + str(i)
+            market_price_str = "=D" + str(i) + "*F" + str(i)
             dataframe.at[index, "Preço mercado"] = market_price_str
-            net_result_str = "=I" + str(i) + "+J" + str(i) + "-H" + str(i)
+            gain_price_str = "=H" + str(i) + "-G" + str(i)
+            dataframe.at[index, "Preço mercado-pago"] = gain_price_str
+            rent_gain_str = "=I" + str(i) + "/G" + str(i)
+            dataframe.at[index, "Rentabilidade mercado-pago"] = rent_gain_str
+            net_result_str = "=H" + str(i) + "+K" + str(i) + "-G" + str(i)
             dataframe.at[index, "Resultado liquido"] = net_result_str
             # Increment the index to calculate the cells in Excel file.
             i += 1
@@ -457,6 +461,9 @@ class PortfolioInvestment:
         format2 = workbook.add_format(
             {"align": "center"},
         )
+        format3 = workbook.add_format(
+            {"num_format": "0.00%", "align": "center"},
+        )
         formatBorder = workbook.add_format(
             {"bottom": 1, "top": 1, "left": 1, "right": 1},
         )
@@ -477,7 +484,7 @@ class PortfolioInvestment:
 
         # Conditional formatting. If values are greater equal than zero
         worksheet.conditional_format(
-            "K2:K100",
+            "L2:L100",
             {
                 "type": "cell",
                 "criteria": ">=",
@@ -488,7 +495,7 @@ class PortfolioInvestment:
 
         # Conditional formatting.If values are lesser than zero
         worksheet.conditional_format(
-            "K2:K100",
+            "L2:L100",
             {
                 "type": "cell",
                 "criteria": "<",
@@ -502,15 +509,16 @@ class PortfolioInvestment:
         # or any cells that contain dates or datetimes.
 
         # Set the column width and format.
-        worksheet.set_column("B:B", 14, format1)
-        worksheet.set_column("C:C", 14, format1)
-        worksheet.set_column("E:E", 14, format2)
+        worksheet.set_column("B:B", 14, format2)
+        worksheet.set_column("C:C", 14, format2)
+        worksheet.set_column("E:E", 14, format1)
         worksheet.set_column("F:F", 14, format1)
         worksheet.set_column("G:G", 14, format1)
         worksheet.set_column("H:H", 14, format1)
-        worksheet.set_column("I:I", 16, format1)
-        worksheet.set_column("J:J", 14, format1)
-        worksheet.set_column("K:K", 20, format1)
+        worksheet.set_column("I:I", 14, format1)
+        worksheet.set_column("J:J", 14, format3)
+        worksheet.set_column("K:K", 14, format1)
+        worksheet.set_column("L:L", 20, format1)
 
         # Create supplementary table to support graphic of percentage
         # List of category
@@ -524,10 +532,10 @@ class PortfolioInvestment:
         # Create list of the values
         worksheet.set_column("N:N", 18, format1)
         worksheet.write("N1", "Valor R$", bold)
-        worksheet.write("N2", '=SUMIF(C2:C100, "Ações", I2:I100)')
-        worksheet.write("N3", '=SUMIF(C2:C100, "BDR", I2:I100)')
-        worksheet.write("N4", '=SUMIF(C2:C100, "ETF", I2:I100)')
-        worksheet.write("N5", '=SUMIF(C2:C100, "FII", I2:I100)')
+        worksheet.write("N2", '=SUMIF(C2:C100, "Ações", H2:H100)')
+        worksheet.write("N3", '=SUMIF(C2:C100, "BDR", H2:H100)')
+        worksheet.write("N4", '=SUMIF(C2:C100, "ETF", H2:H100)')
+        worksheet.write("N5", '=SUMIF(C2:C100, "FII", H2:H100)')
 
         # Create conditional format for borders
         worksheet.conditional_format(
