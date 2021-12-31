@@ -90,7 +90,7 @@ class PortfolioInvestment:
 
         The lists are linked between themselves according to the year.
         """
-        dataframe = self.operations
+        dataframe = self.operations.copy()
         firstYear = dataframe["Data"].min()
         lastYear = dataframe["Data"].max()
 
@@ -304,7 +304,7 @@ class PortfolioInvestment:
 
         Return a dataframe containing the current wallet stocks/FIIs.
         """
-        dataframe = self.operations
+        dataframe = self.operations.copy()
         dataframe = dataframe[
             (dataframe["Mercado"] == "Ações")
             | (dataframe["Mercado"] == "ETF")
@@ -733,6 +733,82 @@ class PortfolioInvestment:
         for index, row in wallet.iterrows():
             wallet.at[index, "Porcentagem carteira"] = (
                 row["Preço mercado"] / totalTesouroDireto
+            )
+
+        return wallet
+
+    def currentValRendaFixa(self, ticker):
+        """Return the current price of the related 'Renda Fixa' ticker."""
+        ticker = ticker
+        return float(0.01)
+
+    def currentRendaFixa(self):
+        """Create a dataframe with all open operations of Renda Fixa."""
+        dataframe = self.operations.copy()
+        dataframe = dataframe[dataframe["Mercado"] == "Renda Fixa"]
+        dataframe = dataframe[dataframe["Operação"] != "Cobrança"]
+        dataframe.drop_duplicates(subset="Ticker", keep="first", inplace=True)
+
+        # Create the wallet
+        wallet = pd.DataFrame()
+
+        # Copy the ticker and market information
+        wallet["Ticker"] = dataframe["Ticker"]
+        wallet["Mercado"] = dataframe["Mercado"]
+        wallet["Indexador"] = dataframe["Indexador"]
+
+        # Create blank columns
+        wallet["Quantidade"] = ""
+        wallet["Preço médio"] = ""
+        wallet["Preço pago"] = ""
+        wallet["Cotação"] = ""
+        wallet["Preço mercado"] = ""
+        wallet["Preço mercado-pago"] = ""
+        wallet["Rentabilidade mercado-pago"] = ""
+        wallet["Proventos"] = ""
+        wallet["Resultado liquido"] = ""
+        wallet["Porcentagem carteira"] = ""
+
+        # Sort the data by ticker
+        wallet = wallet.sort_values(by=["Ticker"])
+
+        # Calculate of the quantity of all non duplicate tickers
+        for index, row in wallet.iterrows():
+
+            ticker = row["Ticker"]
+            avgPrice, numberStocks = self.avgPriceTicker(ticker)
+
+            # Check the quantity.
+            # If zero, then drops it from the dataframe.
+            if round(numberStocks, 2) == 0:
+                wallet = wallet.drop([index])
+            # If non zero, keeps the ticker and updates
+            # the quantity and the average price.
+            else:
+                wallet.at[index, "Quantidade"] = float(numberStocks)
+                wallet.at[index, "Preço médio"] = float(avgPrice)
+                wallet.at[index, "Cotação"] = wallet.at[index, "Preço médio"]
+                wallet.at[index, "Proventos"] = self.earningsByTicker(ticker)
+
+        # Calculate the prices
+        wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
+        wallet["Preço pago"] = wallet["Quantidade"] * wallet["Preço médio"]
+
+        # Calculate the net result
+        deltaPrice = wallet["Preço mercado"] - wallet["Preço pago"]
+        buyPrice = wallet["Preço pago"]
+        wallet["Preço mercado-pago"] = deltaPrice
+        wallet["Rentabilidade mercado-pago"] = deltaPrice / buyPrice
+        netResult = deltaPrice + wallet["Proventos"]
+        wallet["Resultado liquido"] = netResult
+        wallet["Rentabilidade liquida"] = netResult / buyPrice
+
+        totalRendaFixa = wallet["Preço mercado"].sum()
+
+        # Calculates the percentage of stocks and FIIs in the wallet
+        for index, row in wallet.iterrows():
+            wallet.at[index, "Porcentagem carteira"] = (
+                row["Preço mercado"] / totalRendaFixa
             )
 
         return wallet

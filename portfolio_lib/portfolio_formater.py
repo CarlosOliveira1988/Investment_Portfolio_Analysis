@@ -1,6 +1,7 @@
 """This file is useful to format the portfolio dataframe."""
 
 
+from gui_lib.treeview.format_applier import TreeviewFormatApplier
 from gui_lib.treeview.treeview_format import (
     CurencyColumnType,
     DateColumnType,
@@ -285,3 +286,74 @@ class TreasuriesFormater:
     def getFormatedPortolioDataFrame(self):
         """Return the formatted dataframe."""
         return self.FormatedDF
+
+
+class FixedIncomesFormater:
+    """This class is useful to format Portfolio DataFrames.
+
+    Basically, here we manipulate the dataframe to define:
+
+    Arguments:
+    - portfolio_data_frame: the portfolio pandas dataframe
+    """
+
+    def __init__(self, portfolio_data_frame):
+        """Create the FixedIncomesFormater object."""
+        self.formatter = TreeviewFormatApplier()
+        self.formatter.setDataframe(portfolio_data_frame)
+        self.formatter.setCurrencyType(
+            [
+                "Proventos",
+                "Resultado liquido",
+                "Preço médio",
+                "Cotação",
+                "Preço pago",
+                "Preço mercado",
+                "Preço mercado-pago",
+            ]
+        )
+        self.formatter.setFloatType(["Quantidade"])
+        self.formatter.setPercentageType(
+            [
+                "Rentabilidade mercado-pago",
+                "Rentabilidade liquida",
+                "Porcentagem carteira",
+            ]
+        )
+        self.formatter.setRequiredString(
+            [
+                "Ticker",
+                "Indexador",
+            ]
+        )
+        self.formatter.setColumnOrder(
+            [
+                "Ticker",
+                "Indexador",
+                "Quantidade",
+                "Preço médio",
+                "Cotação",
+                "Preço pago",
+                "Preço mercado",
+                "Preço mercado-pago",
+                "Rentabilidade mercado-pago",
+                "Proventos",
+                "Resultado liquido",
+                "Rentabilidade liquida",
+                "Porcentagem carteira",
+            ]
+        )
+        self.formatter.runFormatter()
+        self.formatedDF = self.formatter.getFormatedDataFrame()
+
+    """
+    Public methods
+    """
+
+    def getColumnsTitleList(self):
+        """Return a columns title list."""
+        return list(self.formatedDF)
+
+    def getFormatedPortolioDataFrame(self):
+        """Return the formatted dataframe."""
+        return self.formatedDF

@@ -11,6 +11,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from xlrd import XLRDError
 
+from portfolio_lib.portfolio_formater import FixedIncomesFormater as FixFormat
 from portfolio_lib.portfolio_formater import TreasuriesFormater as TFormat
 from portfolio_lib.portfolio_formater import VariableIncomesFormater as VFormat
 from portfolio_lib.portfolio_investment import PortfolioInvestment
@@ -948,6 +949,7 @@ class VariableTabInterface(TabViewerInterface):
             spacing=Window.DEFAULT_BORDER_SIZE,
         )
         self.TabIndex = self.addNewTabMethod(self.VariableIncomeTab)
+        self.onChangeAction()
 
     def clearData(self):
         """Clear the data table."""
@@ -961,6 +963,7 @@ class VariableTabInterface(TabViewerInterface):
         self.variable_treeview.clearData()
         self.variable_treeview.setDataframe(formatted_dataframe)
         self.variable_treeview.showPandas(resize_per_contents=False)
+        self.onChangeAction()
 
     def onChangeAction(self):
         """Execute during the onChange method."""
@@ -1021,6 +1024,7 @@ class TreasuriesTabInterface(TabViewerInterface):
             spacing=Window.DEFAULT_BORDER_SIZE,
         )
         self.TabIndex = self.addNewTabMethod(self.TreasuriesTab)
+        self.onChangeAction()
 
     def clearData(self):
         """Clear the data table."""
@@ -1034,14 +1038,90 @@ class TreasuriesTabInterface(TabViewerInterface):
         self.treasuries_treeview.clearData()
         self.treasuries_treeview.setDataframe(formatted_df)
         self.treasuries_treeview.showPandas(resize_per_contents=False)
+        self.onChangeAction()
 
     def onChangeAction(self):
         """Execute during the onChange method."""
-        self.treasuries_treeview.resizeColumnsToTreeViewWidth()
+        self.treasuries_treeview.resizeColumnsToContents()
 
     def getTabIndex(self):
         """Return the Tab index."""
         return self.TabIndex
+
+
+class FixedIncomeTabInterface(TabViewerInterface):
+    """FixedIncomeTabInterface to work together with PortfolioViewerWidget."""
+
+    def __init__(self, addNewTabMethod):
+        """Create the FixedIncomeTabInterface object."""
+        super().__init__()
+        self.addNewTabMethod = addNewTabMethod
+        self.formatter = None
+        self.treeview = None
+        self.tab = None
+
+    def __addTotalLine(self, dataframe):
+        dataframe = self.addTotalLine(
+            dataframe,
+            [
+                "Preço pago",
+                "Preço mercado",
+                "Preço mercado-pago",
+                "Proventos",
+                "Resultado liquido",
+            ],
+            "Ticker",
+            [
+                [
+                    "Rentabilidade mercado-pago",
+                    "Preço pago",
+                    "Preço mercado-pago",
+                ],
+                [
+                    "Rentabilidade liquida",
+                    "Preço pago",
+                    "Resultado liquido",
+                ],
+            ],
+        )
+        return dataframe
+
+    def setNewData(self, dataframe):
+        """Set the data table."""
+        dataframe = self.__addTotalLine(dataframe)
+        self.formatter = FixFormat(dataframe)
+        formatted_df = self.formatter.getFormatedPortolioDataFrame()
+        self.treeview = ResizableTreeviewPandas(formatted_df)
+        self.treeview.showPandas(resize_per_contents=False)
+        self.tab = TabViewerWidget(
+            [self.treeview],
+            "Renda Fixa",
+            spacing=Window.DEFAULT_BORDER_SIZE,
+        )
+        self.tab_index = self.addNewTabMethod(self.tab)
+        self.onChangeAction()
+
+    def clearData(self):
+        """Clear the data table."""
+        self.treeview.clearData()
+
+    def updateData(self, dataframe):
+        """Update the data table."""
+        dataframe = self.__addTotalLine(dataframe)
+        self.formatter = FixFormat(dataframe)
+        formatted_df = self.formatter.getFormatedPortolioDataFrame()
+        self.treeview.clearData()
+        self.treeview.setDataframe(formatted_df)
+        self.treeview.showPandas(resize_per_contents=False)
+        self.onChangeAction()
+
+    def onChangeAction(self):
+        """Execute during the onChange method."""
+        self.treeview.resizeColumnsToContents()
+
+    def getTabIndex(self):
+        """Return the Tab index."""
+        return self.tab_index
 
 
 class ShortSummaryTabInterface(TabViewerInterface):
@@ -1169,12 +1249,14 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
                 self.investment.run()
                 self.extrato = self.investment.getExtrato()
                 self.variable_income = self.investment.currentPortfolio()
+                self.fixed_income = self.investment.currentRendaFixa()
                 self.treasuries = self.investment.currentTesouroDireto()
                 self.short_summary = self.extrato.copy()
                 return True
             else:
                 self.extrato = None
                 self.variable_income = None
+                self.fixed_income = None
                 self.treasuries = None
                 self.short_summary = None
                 self.__showColumnsErrorMessage()
@@ -1182,6 +1264,7 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         except XLRDError:
             self.extrato = None
             self.variable_income = None
+            self.fixed_income = None
             self.treasuries = None
             self.short_summary = None
             self.__showXLRDErrorMessage()
@@ -1211,6 +1294,7 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         self.TabInterfaceList = [
             self.ExtratoTab,
             self.VariableTab,
+            self.FixedTab,
             self.TreasuriesTab,
             self.ShortSummaryTab,
         ]
@@ -1219,6 +1303,7 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         self.TabDataframeList = [
             self.extrato,
             self.variable_income,
+            self.fixed_income,
             self.treasuries,
             self.short_summary,
         ]
@@ -1244,6 +1329,9 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
 
             self.VariableTab = VariableTabInterface(self.__addNewTab)
             self.VariableTab.setNewData(self.variable_income)
+
+            self.FixedTab = FixedIncomeTabInterface(self.__addNewTab)
+            self.FixedTab.setNewData(self.fixed_income)
 
             self.TreasuriesTab = TreasuriesTabInterface(self.__addNewTab)
             self.TreasuriesTab.setNewData(self.treasuries)
