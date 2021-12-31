@@ -1,6 +1,8 @@
 """This file has a set of classes related to "QtWidgets.QTreeView"."""
 
-from gui_lib.treeview.treeview import ResizableTreeview, Treeview, TreeviewInterface
+from gui_lib.treeview.treeview import ResizableTreeview as ResTreeview
+from gui_lib.treeview.treeview import Treeview
+from gui_lib.treeview.treeview import TreeviewInterface as IntTreeview
 
 
 class TreeviewPandas(Treeview):
@@ -10,10 +12,10 @@ class TreeviewPandas(Treeview):
         self,
         CentralWidget,
         PandasDataFrame,
-        coordinate_X=TreeviewInterface.EMPTY_SPACE,
-        coordinate_Y=TreeviewInterface.EMPTY_SPACE,
-        width=TreeviewInterface.DEFAULT_WIDTH,
-        height=TreeviewInterface.DEFAULT_HEIGHT,
+        coordinate_X=IntTreeview.EMPTY_SPACE,
+        coordinate_Y=IntTreeview.EMPTY_SPACE,
+        width=IntTreeview.DEFAULT_WIDTH,
+        height=IntTreeview.DEFAULT_HEIGHT,
     ):
         """Create a Treeview table object from "QtWidgets.QTreeView".
 
@@ -51,7 +53,7 @@ class TreeviewPandas(Treeview):
         self.PandasDataFrame = dataframe.copy()
 
 
-class ResizableTreeviewPandas(ResizableTreeview):
+class ResizableTreeviewPandas(ResTreeview):
     """Class used to create a special Treeview with "QtWidgets.QTreeView"."""
 
     def __init__(self, PandasDataFrame):

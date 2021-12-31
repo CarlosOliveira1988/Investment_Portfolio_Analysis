@@ -1,3 +1,6 @@
+"""This file is useful to format the portfolio dataframe."""
+
+
 from gui_lib.treeview.treeview_format import (
     CurencyColumnType,
     DateColumnType,
@@ -9,8 +12,9 @@ from gui_lib.treeview.treeview_format import (
 
 
 class PortfolioFormater:
-    """
-    This class is useful to format Portfolio DataFrames by setting:
+    """This class is useful to format Portfolio DataFrames.
+
+    Basically, here we manipulate the dataframe to define:
     - the columns order
     - the columns types
     - the number of columns
@@ -20,7 +24,8 @@ class PortfolioFormater:
     """
 
     def __init__(self, portfolio_data_frame):
-        self.FormatedPortolioDataFrame = portfolio_data_frame
+        """Create the PortfolioFormater object."""
+        self.FormatedDF = portfolio_data_frame
         self.__assignColumnVariables()
         self.__appendColumnsVariableList()
         self.__setColumnOrder()
@@ -73,7 +78,7 @@ class PortfolioFormater:
             column_type = PortfolioFormater.__getattribute__(
                 self, column_variable_string
             )
-            column_type.fillNaDataFrameColumnValues(self.FormatedPortolioDataFrame)
+            column_type.fillNaDataFrameColumnValues(self.FormatedDF)
 
     def __setColumnOrder(self):
         columns_title_list = []
@@ -82,41 +87,40 @@ class PortfolioFormater:
                 self, column_variable_string
             )
             columns_title_list.append(column_type.getTitle())
-        self.FormatedPortolioDataFrame = self.FormatedPortolioDataFrame[
-            columns_title_list
-        ]
+        self.FormatedDF = self.FormatedDF[columns_title_list]
 
     def __format(self):
         for column_variable_string in self.ColumnsVariableList:
             column_type = PortfolioFormater.__getattribute__(
                 self, column_variable_string
             )
-            column_type.formatDataFrameColumnValues(self.FormatedPortolioDataFrame)
+            column_type.formatDataFrameColumnValues(self.FormatedDF)
 
     """
     Public methods
     """
 
     def getColumnsTitleList(self):
-        return list(self.FormatedPortolioDataFrame)
+        """Return a columns title list."""
+        return list(self.FormatedDF)
 
     def getFormatedPortolioDataFrame(self):
-        return self.FormatedPortolioDataFrame
+        """Return the formatted dataframe."""
+        return self.FormatedDF
 
 
 class VariableIncomesFormater:
-    """
-    This class is useful to format Portfolio DataFrames by setting:
-    - the columns order
-    - the columns types
-    - the number of columns
+    """This class is useful to format Portfolio DataFrames.
+
+    Basically, here we manipulate the dataframe to define:
 
     Arguments:
     - portfolio_data_frame: the portfolio pandas dataframe
     """
 
     def __init__(self, portfolio_data_frame):
-        self.FormatedPortolioDataFrame = portfolio_data_frame
+        """Create the VariableIncomesFormater object."""
+        self.FormatedDF = portfolio_data_frame
         self.__assignColumnVariables()
         self.__appendColumnsVariableList()
         self.__setColumnOrder()
@@ -163,7 +167,7 @@ class VariableIncomesFormater:
             column_type = VariableIncomesFormater.__getattribute__(
                 self, column_variable_string
             )
-            column_type.fillNaDataFrameColumnValues(self.FormatedPortolioDataFrame)
+            column_type.fillNaDataFrameColumnValues(self.FormatedDF)
 
     def __setColumnOrder(self):
         columns_title_list = []
@@ -172,41 +176,40 @@ class VariableIncomesFormater:
                 self, column_variable_string
             )
             columns_title_list.append(column_type.getTitle())
-        self.FormatedPortolioDataFrame = self.FormatedPortolioDataFrame[
-            columns_title_list
-        ]
+        self.FormatedDF = self.FormatedDF[columns_title_list]
 
     def __format(self):
         for column_variable_string in self.ColumnsVariableList:
             column_type = VariableIncomesFormater.__getattribute__(
                 self, column_variable_string
             )
-            column_type.formatDataFrameColumnValues(self.FormatedPortolioDataFrame)
+            column_type.formatDataFrameColumnValues(self.FormatedDF)
 
     """
     Public methods
     """
 
     def getColumnsTitleList(self):
-        return list(self.FormatedPortolioDataFrame)
+        """Return a columns title list."""
+        return list(self.FormatedDF)
 
     def getFormatedPortolioDataFrame(self):
-        return self.FormatedPortolioDataFrame
+        """Return the formatted dataframe."""
+        return self.FormatedDF
 
 
 class TreasuriesFormater:
-    """
-    This class is useful to format Portfolio DataFrames by setting:
-    - the columns order
-    - the columns types
-    - the number of columns
+    """This class is useful to format Portfolio DataFrames.
+
+    Basically, here we manipulate the dataframe to define:
 
     Arguments:
     - portfolio_data_frame: the portfolio pandas dataframe
     """
 
     def __init__(self, portfolio_data_frame):
-        self.FormatedPortolioDataFrame = portfolio_data_frame
+        """Create the TreasuriesFormater object."""
+        self.FormatedDF = portfolio_data_frame
         self.__assignColumnVariables()
         self.__appendColumnsVariableList()
         self.__setColumnOrder()
@@ -253,7 +256,7 @@ class TreasuriesFormater:
             column_type = TreasuriesFormater.__getattribute__(
                 self, column_variable_string
             )
-            column_type.fillNaDataFrameColumnValues(self.FormatedPortolioDataFrame)
+            column_type.fillNaDataFrameColumnValues(self.FormatedDF)
 
     def __setColumnOrder(self):
         columns_title_list = []
@@ -262,23 +265,23 @@ class TreasuriesFormater:
                 self, column_variable_string
             )
             columns_title_list.append(column_type.getTitle())
-        self.FormatedPortolioDataFrame = self.FormatedPortolioDataFrame[
-            columns_title_list
-        ]
+        self.FormatedDF = self.FormatedDF[columns_title_list]
 
     def __format(self):
         for column_variable_string in self.ColumnsVariableList:
             column_type = TreasuriesFormater.__getattribute__(
                 self, column_variable_string
             )
-            column_type.formatDataFrameColumnValues(self.FormatedPortolioDataFrame)
+            column_type.formatDataFrameColumnValues(self.FormatedDF)
 
     """
     Public methods
     """
 
     def getColumnsTitleList(self):
-        return list(self.FormatedPortolioDataFrame)
+        """Return a columns title list."""
+        return list(self.FormatedDF)
 
     def getFormatedPortolioDataFrame(self):
-        return self.FormatedPortolioDataFrame
+        """Return the formatted dataframe."""
+        return self.FormatedDF

@@ -1,3 +1,5 @@
+"""This file has a set of classes to format the treeviews."""
+
 import locale
 from datetime import datetime
 
@@ -5,8 +7,9 @@ import pandas as pd
 
 
 class TreeviewValueFormat:
-    """
-    A collection of methods to format values as follows:
+    """A collection of methods to format single values.
+
+    It formats as follows:
     - Date: 2021/06/27
     - Float: 1.00
     - Percentage: 1.00%
@@ -14,44 +17,51 @@ class TreeviewValueFormat:
     - String: String
     """
 
-    def setDateFormat(date_string):
-        if isinstance(date_string, pd.Timestamp) or isinstance(date_string, datetime):
-            return str(date_string.strftime("%Y/%m/%d"))
+    def setDateFormat(datestr):
+        """Set the value as Date."""
+        if isinstance(datestr, pd.Timestamp) or isinstance(datestr, datetime):
+            return str(datestr.strftime("%Y/%m/%d"))
         else:
-            return date_string
+            return datestr
 
-    def setDateTimeFormat(date_string):
-        if isinstance(date_string, pd.Timestamp) or isinstance(date_string, datetime):
-            return str(date_string.strftime("%Y/%m/%d %H:%M:%S"))
+    def setDateTimeFormat(datestr):
+        """Set the value as DateTime."""
+        if isinstance(datestr, pd.Timestamp) or isinstance(datestr, datetime):
+            return str(datestr.strftime("%Y/%m/%d %H:%M:%S"))
         else:
-            return date_string
+            return datestr
 
     def setFloatFormat(float_value):
+        """Set the value as Float with 2 decimals."""
         if isinstance(float_value, float) or isinstance(float_value, int):
             return "{0:.2f}".format(float(float_value))
         else:
             return float_value
 
-    def setPercentageFormat(percentage_value):
-        if isinstance(percentage_value, float) or isinstance(percentage_value, int):
-            return "{0:.2f}%".format(float(percentage_value) * 100)
+    def setPercentageFormat(perc_value):
+        """Set the value as percentage with 2 decimals."""
+        if isinstance(perc_value, float) or isinstance(perc_value, int):
+            return "{0:.2f}%".format(float(perc_value) * 100)
         else:
-            return percentage_value
+            return perc_value
 
-    def setCurrencyFormat(currency_value):
+    def setCurrencyFormat(currency_val):
+        """Set the value as Currency."""
         locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
-        if isinstance(currency_value, float) or isinstance(currency_value, int):
-            return locale.currency(float(currency_value), grouping=True)
+        if isinstance(currency_val, float) or isinstance(currency_val, int):
+            return locale.currency(float(currency_val), grouping=True)
         else:
-            return currency_value
+            return currency_val
 
     def setStringFormat(string_value):
-        return string_value
+        """Set the value as string."""
+        return str(string_value)
 
 
 class TreeviewDataframeFormat:
-    """
-    A collection of methods to format data frame columns as follows:
+    """A collection of methods to format dataframe column values.
+
+    It formats as follows:
     - Date: 2021-06-27
     - Float: 1.00
     - Percentage: 1.00%
@@ -60,13 +70,15 @@ class TreeviewDataframeFormat:
     """
 
     def setDateFormat(data_frame, date_column):
+        """Set the column as Date."""
         date_list = [
-            TreeviewValueFormat.setDateFormat(date_string)
-            for date_string in list(data_frame[date_column])
+            TreeviewValueFormat.setDateFormat(datestr)
+            for datestr in list(data_frame[date_column])
         ]
         data_frame[date_column] = date_list
 
     def setFloatFormat(data_frame, float_column):
+        """Set the column as Float."""
         float_list = [
             TreeviewValueFormat.setFloatFormat(float_value)
             for float_value in list(data_frame[float_column])
@@ -74,20 +86,23 @@ class TreeviewDataframeFormat:
         data_frame[float_column] = float_list
 
     def setPercentageFormat(data_frame, percentage_column):
+        """Set the column as Percentage."""
         percentage_list = [
-            TreeviewValueFormat.setPercentageFormat(percentage_value)
-            for percentage_value in list(data_frame[percentage_column])
+            TreeviewValueFormat.setPercentageFormat(perc_value)
+            for perc_value in list(data_frame[percentage_column])
         ]
         data_frame[percentage_column] = percentage_list
 
     def setCurrencyFormat(data_frame, currency_column):
+        """Set the column as Currency."""
         currency_list = [
-            TreeviewValueFormat.setCurrencyFormat(currency_value)
-            for currency_value in list(data_frame[currency_column])
+            TreeviewValueFormat.setCurrencyFormat(currency_val)
+            for currency_val in list(data_frame[currency_column])
         ]
         data_frame[currency_column] = currency_list
 
     def setStringFormat(data_frame, string_column):
+        """Set the column as String."""
         string_list = [
             TreeviewValueFormat.setStringFormat(string_value)
             for string_value in list(data_frame[string_column])
@@ -96,8 +111,9 @@ class TreeviewDataframeFormat:
 
 
 class TreeviewColumn:
-    """
-    A collection of methods and attributes to format data frame columns as follows:
+    """A collection of methods and attributes to format dataframe columns.
+
+    It formats as follows:
     - Date: 2021-06-27
     - Float: 1.00
     - Percentage: 1.00%
@@ -106,16 +122,18 @@ class TreeviewColumn:
 
     Arguments:
     - title: the column title
-    - format_type: the column format (date / float / percentage / currency / string)
+    - format_type: the column format (date/float/percentage/currency/string)
     - na_value: the string used to fill na values (example: 'R$ 0.00')
     """
 
     def __init__(self, title, format_type, na_value):
+        """Create the TreeviewColumn object."""
         self.Title = title
         self.FormatType = format_type
         self.NaValue = na_value
 
     def formatValue(self, value):
+        """Format the value as specified in the object initialization."""
         if self.FormatType == "date":
             return TreeviewValueFormat.setDateFormat(value)
         elif self.FormatType == "float":
@@ -128,6 +146,7 @@ class TreeviewColumn:
             return TreeviewValueFormat.setStringFormat(value)
 
     def formatDataFrameColumnValues(self, data_frame):
+        """Format the column as specified in the object initialization."""
         if self.FormatType == "date":
             TreeviewDataframeFormat.setDateFormat(data_frame, self.Title)
         elif self.FormatType == "float":
@@ -140,37 +159,57 @@ class TreeviewColumn:
             TreeviewDataframeFormat.setStringFormat(data_frame, self.Title)
 
     def fillNaDataFrameColumnValues(self, data_frame):
+        """Fill the NA values as specified in the object initialization."""
         data_frame[self.Title].fillna(value=self.NaValue, inplace=True)
 
     def getTitle(self):
+        """Return the column title."""
         return self.Title
 
 
 class RequiredStringColumnType(TreeviewColumn):
+    """Class to format columns with the String format."""
+
     def __init__(self, title):
+        """Create the RequiredStringColumnType object."""
         super(RequiredStringColumnType, self).__init__(title, "string", "NA")
 
 
 class NonRequiredStringColumnType(TreeviewColumn):
+    """Class to format columns with the String format."""
+
     def __init__(self, title):
+        """Create the NonRequiredStringColumnType object."""
         super(NonRequiredStringColumnType, self).__init__(title, "string", " ")
 
 
 class DateColumnType(TreeviewColumn):
+    """Class to format columns with the Date format."""
+
     def __init__(self, title):
+        """Create the DateColumnType object."""
         super(DateColumnType, self).__init__(title, "date", " ")
 
 
 class PercentageColumnType(TreeviewColumn):
+    """Class to format columns with the Percentage format."""
+
     def __init__(self, title):
+        """Create the PercentageColumnType object."""
         super(PercentageColumnType, self).__init__(title, "percentage", " ")
 
 
 class FloatColumnType(TreeviewColumn):
+    """Class to format columns with the Float format."""
+
     def __init__(self, title):
+        """Create the FloatColumnType object."""
         super(FloatColumnType, self).__init__(title, "float", "0.00")
 
 
 class CurencyColumnType(TreeviewColumn):
+    """Class to format columns with the Currency format."""
+
     def __init__(self, title):
+        """Create the CurencyColumnType object."""
         super(CurencyColumnType, self).__init__(title, "currency", "0.00")

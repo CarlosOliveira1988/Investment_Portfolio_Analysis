@@ -921,8 +921,16 @@ class VariableTabInterface(TabViewerInterface):
             ],
             "Mercado",
             [
-                ["Rentabilidade mercado-pago", "Preço pago", "Preço mercado-pago"],
-                ["Rentabilidade liquida", "Preço pago", "Resultado liquido"],
+                [
+                    "Rentabilidade mercado-pago",
+                    "Preço pago",
+                    "Preço mercado-pago",
+                ],
+                [
+                    "Rentabilidade liquida",
+                    "Preço pago",
+                    "Resultado liquido",
+                ],
             ],
         )
         return dataframe
@@ -986,8 +994,16 @@ class TreasuriesTabInterface(TabViewerInterface):
             ],
             "Ticker",
             [
-                ["Rentabilidade mercado-pago", "Preço pago", "Preço mercado-pago"],
-                ["Rentabilidade liquida", "Preço pago", "Resultado liquido"],
+                [
+                    "Rentabilidade mercado-pago",
+                    "Preço pago",
+                    "Preço mercado-pago",
+                ],
+                [
+                    "Rentabilidade liquida",
+                    "Preço pago",
+                    "Resultado liquido",
+                ],
             ],
         )
         return dataframe
