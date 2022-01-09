@@ -469,6 +469,7 @@ class VariableTabInterface(TabViewerInterface):
                 "Preço mercado",
                 "Preço mercado-pago",
                 "Proventos",
+                "Custos",
                 "Resultado liquido",
             ],
             "Mercado",

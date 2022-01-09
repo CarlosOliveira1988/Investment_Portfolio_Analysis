@@ -135,6 +135,7 @@ class VariableIncomesFormater:
     def __assignColumnVariables(self):
         self.Market = RequiredStringColumnType("Mercado")
         self.Ticker = RequiredStringColumnType("Ticker")
+        self.InitialDate = DateColumnType("Data Inicial")
         self.Quantity = FloatColumnType("Quantidade")
         self.MeanPrice = CurencyColumnType("Preço médio")
         self.Quotation = CurencyColumnType("Cotação")
@@ -143,6 +144,7 @@ class VariableIncomesFormater:
         self.DeltaPrice = CurencyColumnType("Preço mercado-pago")
         self.RentDelta = PercentageColumnType("Rentabilidade mercado-pago")
         self.Dividend = CurencyColumnType("Proventos")
+        self.Costs = CurencyColumnType("Custos")
         self.NetValue = CurencyColumnType("Resultado liquido")
         self.RentNetValue = PercentageColumnType("Rentabilidade liquida")
         self.WalletPercentage = PercentageColumnType("Porcentagem carteira")
@@ -151,6 +153,7 @@ class VariableIncomesFormater:
     def __appendColumnsVariableList(self):
         self.ColumnsVariableList.append("Market")
         self.ColumnsVariableList.append("Ticker")
+        self.ColumnsVariableList.append("InitialDate")
         self.ColumnsVariableList.append("Quantity")
         self.ColumnsVariableList.append("MeanPrice")
         self.ColumnsVariableList.append("Quotation")
@@ -159,6 +162,7 @@ class VariableIncomesFormater:
         self.ColumnsVariableList.append("DeltaPrice")
         self.ColumnsVariableList.append("RentDelta")
         self.ColumnsVariableList.append("Dividend")
+        self.ColumnsVariableList.append("Costs")
         self.ColumnsVariableList.append("NetValue")
         self.ColumnsVariableList.append("RentNetValue")
         self.ColumnsVariableList.append("WalletPercentage")

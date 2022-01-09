@@ -8,6 +8,8 @@ import requests
 import yfinance as yf
 from bs4 import BeautifulSoup
 
+from portfolio_lib.portfolio_history import OperationsHistory as OpInfo
+
 
 class PortfolioInvestment:
     """This is a class to manage all portfolio operations."""
@@ -299,65 +301,57 @@ class PortfolioInvestment:
         data = yf.Ticker(ticker)
         return data.info["sector"]
 
+    def __getMarketValueSum(self, wallet, market):
+        df = wallet[wallet["Mercado"] == market]
+        return df["Preço mercado"].sum()
+
+    def __setTickerPercentage(self, wallet, market):
+        marketValue = self.__getMarketValueSum(wallet, market)
+        marketDF = wallet[wallet["Mercado"].isin([market])]
+        for index, row in marketDF.iterrows():
+            marketPrice = row["Preço mercado"]
+            percentage = marketPrice / marketValue
+            wallet.at[index, "Porcentagem carteira"] = percentage
+
     def currentPortfolio(self):
         """Analyze the operations to get the current wallet.
 
-        Return a dataframe containing the current wallet stocks/FIIs.
+        Return a dataframe containing the current wallet of stocks, FIIs,
+        ETFs and BDRs.
         """
-        dataframe = self.operations.copy()
-        dataframe = dataframe[
-            (dataframe["Mercado"] == "Ações")
-            | (dataframe["Mercado"] == "ETF")
-            | (dataframe["Mercado"] == "FII")
-            | (dataframe["Mercado"] == "BDR")
-        ]
+        # Prepare the filtered dataframe
+        market_list = ["Ações", "ETF", "FII", "BDR"]
+        history = OpInfo(self.operations.copy())
+        dataframe = history.getOpenedOperationsDataframe()
+        dataframe = dataframe[dataframe["Mercado"].isin(market_list)]
         dataframe.drop_duplicates(subset="Ticker", keep="first", inplace=True)
 
-        # Creates the wallet
+        # Copy the useful data to the 'wallet'
         wallet = pd.DataFrame()
-
-        # Copy the ticker and market information
         wallet["Ticker"] = dataframe["Ticker"]
         wallet["Mercado"] = dataframe["Mercado"]
+        wallet["Data Inicial"] = dataframe["Data Inicial"]
+        wallet["Quantidade"] = dataframe["Quantidade Compra"]
+        wallet["Preço médio"] = dataframe["Preço-médio Compra"]
+        wallet["Preço pago"] = dataframe["Preço-total Compra"]
+        wallet["Proventos"] = dataframe["Dividendos"] + dataframe["JCP"]
+        wallet["Custos"] = dataframe["Taxas"] + dataframe["IR"]
 
         # Sort the data by market and ticker
         wallet = wallet.sort_values(by=["Mercado", "Ticker"])
 
         # Create blank columns
-        wallet["Quantidade"] = ""
-        wallet["Preço médio"] = ""
         wallet["Cotação"] = ""
-        wallet["Preço pago"] = ""
         wallet["Preço mercado"] = ""
         wallet["Preço mercado-pago"] = ""
         wallet["Rentabilidade mercado-pago"] = ""
-        wallet["Proventos"] = ""
         wallet["Resultado liquido"] = ""
         wallet["Rentabilidade liquida"] = ""
         wallet["Porcentagem carteira"] = ""
 
-        # Calculate of the quantity of all non duplicate tickers
-        for index, row in wallet.iterrows():
-
-            rticker = row["Ticker"]
-            avgPrice, numberStocks = self.avgPriceTicker(rticker)
-
-            # Check the quantity.
-            # If zero, then drops it from the dataframe.
-            if numberStocks == 0:
-                wallet = wallet.drop([index])
-            # If non zero, keeps the ticker and updates the
-            # quantity and the average price.
-            else:
-                wallet.at[index, "Quantidade"] = int(numberStocks)
-                wallet.at[index, "Preço médio"] = avgPrice
-                wallet.at[index, "Proventos"] = self.earningsByTicker(rticker)
-
-        # Create a list of ticker to be used for finding
-        # current prices of the ticker
+        # Create a list of ticker to be used in YFinance API
         listTicker = wallet["Ticker"].tolist()
-        for i in range(len(listTicker)):
-            listTicker[i] = listTicker[i] + ".SA"
+        listTicker = [(Ticker + ".SA") for Ticker in listTicker]
 
         # Get the current values of all tickers in the wallet
         if listTicker:
@@ -366,54 +360,19 @@ class PortfolioInvestment:
                 ticker = row["Ticker"] + ".SA"
                 wallet.at[index, "Cotação"] = float(curPricesTickers[ticker])
 
-        # Calculate the price according with the average price
-        wallet["Preço pago"] = wallet["Quantidade"] * wallet["Preço médio"]
-        # Calculate the price according with the current market value
+        # Calculate the target values
         wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
-        # Calculate the liquid result of the ticker
         deltaPrice = wallet["Preço mercado"] - wallet["Preço pago"]
         wallet["Preço mercado-pago"] = deltaPrice
-        buyPrice = wallet["Preço mercado"]
+        buyPrice = wallet["Preço pago"]
         wallet["Rentabilidade mercado-pago"] = deltaPrice / buyPrice
-        netResult = deltaPrice + wallet["Proventos"]
+        netResult = deltaPrice + wallet["Proventos"] - wallet["Custos"]
         wallet["Resultado liquido"] = netResult
         wallet["Rentabilidade liquida"] = netResult / buyPrice
 
-        # Filter the stocks
-        walletStock = wallet[wallet["Mercado"] == "Ações"]
-        # Calculates the market value of stocks
-        marketValueStock = walletStock["Preço mercado"].sum()
-        # Filter the ETFs
-        walletETF = wallet[wallet["Mercado"] == "ETF"]
-        # Calculates the market value of ETFs
-        marketValueETF = walletETF["Preço mercado"].sum()
-        # Filter the FIIs
-        walletFII = wallet[wallet["Mercado"] == "FII"]
-        # Calculates the market value of FIIs
-        marketValueFII = walletFII["Preço mercado"].sum()
-        # Filter the BDRs
-        walletBDR = wallet[wallet["Mercado"] == "BDR"]
-        # Calculates the market value of FIIs
-        marketValueBDR = walletBDR["Preço mercado"].sum()
-
-        # Calculates the percentage of stocks and FIIs in the wallet
-        for index, row in wallet.iterrows():
-            if row["Mercado"] == "Ações":
-                wallet.at[index, "Porcentagem carteira"] = (
-                    row["Preço mercado"] / marketValueStock
-                )
-            elif row["Mercado"] == "ETF":
-                wallet.at[index, "Porcentagem carteira"] = (
-                    row["Preço mercado"] / marketValueETF
-                )
-            elif row["Mercado"] == "FII":
-                wallet.at[index, "Porcentagem carteira"] = (
-                    row["Preço mercado"] / marketValueFII
-                )
-            elif row["Mercado"] == "BDR":
-                wallet.at[index, "Porcentagem carteira"] = (
-                    row["Preço mercado"] / marketValueBDR
-                )
+        # Calculate the ticker percentage per market
+        for mkt in market_list:
+            self.__setTickerPercentage(wallet, mkt)
 
         return wallet
 
