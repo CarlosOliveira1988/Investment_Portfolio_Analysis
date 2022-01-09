@@ -231,10 +231,12 @@ class OperationsHistory:
         price_sell = 0
         initial_date = None
         final_date = None
+        indexer = None
 
         market_list = []
         operation_list = []
         ticker_list = []
+        indexer_list = []
         initial_date_list = []
         final_date_list = []
         days_list = []
@@ -272,6 +274,7 @@ class OperationsHistory:
             market_list.append(market)
             operation_list.append("OP" + str(operation_ID))
             ticker_list.append(ticker)
+            indexer_list.append(indexer)
             initial_date_list.append(initial_date)
             final_date_list.append(final_date)
             range_date = final_date - initial_date
@@ -337,6 +340,7 @@ class OperationsHistory:
                     elif data_row["Operação"] == "Venda":
                         quantity_sell += data_row["Quantidade"]
                         price_sell += data_row["Preço Total"]
+                    indexer = data_row["Indexador"]
                     initial_date = data_row["Data"]
                     market = data_row["Mercado"]
 
@@ -348,6 +352,7 @@ class OperationsHistory:
                     elif data_row["Operação"] == "Venda":
                         quantity_sell += data_row["Quantidade"]
                         price_sell += data_row["Preço Total"]
+                    indexer = data_row["Indexador"]
                     if quantity_buy == quantity_sell:
                         final_date = data_row["Data"]
 
@@ -362,6 +367,7 @@ class OperationsHistory:
                     initial_date = None
                     final_date = None
                     operation_ID += 1
+                    indexer = None
 
                 # Register the data in the lists if 'opened_operation' is found
                 elif total_lines == lines:
@@ -376,10 +382,12 @@ class OperationsHistory:
                         initial_date = None
                         final_date = None
                         operation_ID += 1
+                        indexer = None
 
         operations_df = pd.DataFrame()
         operations_df["Mercado"] = market_list
         operations_df["Ticker"] = ticker_list
+        operations_df["Indexador"] = indexer_list
         operations_df["Operação"] = operation_list
         operations_df["Data Inicial"] = initial_date_list
         operations_df["Data Final"] = final_date_list

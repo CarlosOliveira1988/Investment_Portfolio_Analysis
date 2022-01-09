@@ -17,9 +17,11 @@ class PortfolioInvestment:
     def __init__(self):
         """Create the PortfolioInvestment object."""
         self.fileOperations = None
+        self.openedOperations = None
         self.operations = None
         self.operationsYear = None
-        self.current = None
+        self.currentVariableIncome = None
+        self.currentFixedIncome = None
         self.expected_title_list = [
             "Mercado",
             "Ticker",
@@ -68,11 +70,18 @@ class PortfolioInvestment:
         # Dataframe with all the operations from the Excel file.
         self.operations = self.getExtrato()
 
+        # Dataframe with opened operations
+        history = OpInfo(self.operations.copy())
+        self.openedOperations = history.getOpenedOperationsDataframe()
+
         # 3 lists of number of operations by year. Suitable to be plot.
         self.operationsYear = self.numberOperationsYear()
 
-        # Dataframe of the current portfolio. Suitable to be plot.
-        self.current = self.currentPortfolio()
+        # Dataframe of the current portfolio related to 'Renda Variavel'
+        self.currentVariableIncome = self.__currentPortfolio()
+
+        # Dataframe of the current portfolio related to 'Renda Fixa'
+        self.currentFixedIncome = self.__currentRendaFixa()
 
     def getExtrato(self):
         """Return the raw dataframe related to the excel porfolio file."""
@@ -313,16 +322,11 @@ class PortfolioInvestment:
             percentage = marketPrice / marketValue
             wallet.at[index, "Porcentagem carteira"] = percentage
 
-    def currentPortfolio(self):
-        """Analyze the operations to get the current wallet.
+    def __createWalletDefaultColumns(self, market_list):
+        # Dataframe with opened operations
+        dataframe = self.openedOperations.copy()
 
-        Return a dataframe containing the current wallet of stocks, FIIs,
-        ETFs and BDRs.
-        """
-        # Prepare the filtered dataframe
-        market_list = ["Ações", "ETF", "FII", "BDR"]
-        history = OpInfo(self.operations.copy())
-        dataframe = history.getOpenedOperationsDataframe()
+        # Prepare the dataframe
         dataframe = dataframe[dataframe["Mercado"].isin(market_list)]
         dataframe.drop_duplicates(subset="Ticker", keep="first", inplace=True)
 
@@ -330,6 +334,7 @@ class PortfolioInvestment:
         wallet = pd.DataFrame()
         wallet["Ticker"] = dataframe["Ticker"]
         wallet["Mercado"] = dataframe["Mercado"]
+        wallet["Indexador"] = dataframe["Indexador"]
         wallet["Data Inicial"] = dataframe["Data Inicial"]
         wallet["Quantidade"] = dataframe["Quantidade Compra"]
         wallet["Preço médio"] = dataframe["Preço-médio Compra"]
@@ -349,17 +354,9 @@ class PortfolioInvestment:
         wallet["Rentabilidade liquida"] = ""
         wallet["Porcentagem carteira"] = ""
 
-        # Create a list of ticker to be used in YFinance API
-        listTicker = wallet["Ticker"].tolist()
-        listTicker = [(Ticker + ".SA") for Ticker in listTicker]
+        return wallet
 
-        # Get the current values of all tickers in the wallet
-        if listTicker:
-            curPricesTickers = self.currentMarketPriceByTickerList(listTicker)
-            for index, row in wallet.iterrows():
-                ticker = row["Ticker"] + ".SA"
-                wallet.at[index, "Cotação"] = float(curPricesTickers[ticker])
-
+    def __calculateWalletDefaultColumns(self, wallet, market_list):
         # Calculate the target values
         wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
         deltaPrice = wallet["Preço mercado"] - wallet["Preço pago"]
@@ -374,12 +371,40 @@ class PortfolioInvestment:
         for mkt in market_list:
             self.__setTickerPercentage(wallet, mkt)
 
+    def currentPortfolio(self):
+        """Analyze the operations to get the current wallet.
+
+        Return a dataframe containing the current wallet of stocks, FIIs,
+        ETFs and BDRs.
+        """
+        return self.currentVariableIncome.copy()
+
+    def __currentPortfolio(self):
+        # Prepare the default wallet dataframe
+        market_list = ["Ações", "ETF", "FII", "BDR"]
+        wallet = self.__createWalletDefaultColumns(market_list)
+
+        # Create a list of ticker to be used in YFinance API
+        listTicker = wallet["Ticker"].tolist()
+        listTicker = [(Ticker + ".SA") for Ticker in listTicker]
+
+        # Get the current values of all tickers in the wallet
+        if listTicker:
+            curPricesTickers = self.currentMarketPriceByTickerList(listTicker)
+            for index, row in wallet.iterrows():
+                ticker = row["Ticker"] + ".SA"
+                wallet.at[index, "Cotação"] = float(curPricesTickers[ticker])
+
+        # Calculate values related to the wallet default columns
+        self.__calculateWalletDefaultColumns(wallet, market_list)
+
         return wallet
 
     def currentPortfolioGoogleDrive(self):
         """Save the excel file to be used in Google Drive."""
         # Get the current portfolio
-        dataframe = self.current
+        dataframe = self.currentPortfolio()
+
         # Removes the column from original dataframe
         dataframe = dataframe.drop(["Porcentagem carteira"], axis=1)
 
@@ -703,72 +728,19 @@ class PortfolioInvestment:
 
     def currentRendaFixa(self):
         """Create a dataframe with all open operations of Renda Fixa."""
-        dataframe = self.operations.copy()
-        dataframe = dataframe[dataframe["Mercado"] == "Renda Fixa"]
-        dataframe = dataframe[dataframe["Operação"] != "Cobrança"]
-        dataframe.drop_duplicates(subset="Ticker", keep="first", inplace=True)
+        return self.currentFixedIncome.copy()
 
-        # Create the wallet
-        wallet = pd.DataFrame()
+    def __currentRendaFixa(self):
+        # Prepare the default wallet dataframe
+        market_list = ["Renda Fixa"]
+        wallet = self.__createWalletDefaultColumns(market_list)
 
-        # Copy the ticker and market information
-        wallet["Ticker"] = dataframe["Ticker"]
-        wallet["Mercado"] = dataframe["Mercado"]
-        wallet["Indexador"] = dataframe["Indexador"]
-
-        # Create blank columns
-        wallet["Quantidade"] = ""
-        wallet["Preço médio"] = ""
-        wallet["Preço pago"] = ""
-        wallet["Cotação"] = ""
-        wallet["Preço mercado"] = ""
-        wallet["Preço mercado-pago"] = ""
-        wallet["Rentabilidade mercado-pago"] = ""
-        wallet["Proventos"] = ""
-        wallet["Resultado liquido"] = ""
-        wallet["Porcentagem carteira"] = ""
-
-        # Sort the data by ticker
-        wallet = wallet.sort_values(by=["Ticker"])
-
-        # Calculate of the quantity of all non duplicate tickers
+        # Insert the current market values
         for index, row in wallet.iterrows():
+            wallet.at[index, "Cotação"] = wallet.at[index, "Preço médio"]
 
-            ticker = row["Ticker"]
-            avgPrice, numberStocks = self.avgPriceTicker(ticker)
-
-            # Check the quantity.
-            # If zero, then drops it from the dataframe.
-            if round(numberStocks, 2) == 0:
-                wallet = wallet.drop([index])
-            # If non zero, keeps the ticker and updates
-            # the quantity and the average price.
-            else:
-                wallet.at[index, "Quantidade"] = float(numberStocks)
-                wallet.at[index, "Preço médio"] = float(avgPrice)
-                wallet.at[index, "Cotação"] = wallet.at[index, "Preço médio"]
-                wallet.at[index, "Proventos"] = self.earningsByTicker(ticker)
-
-        # Calculate the prices
-        wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
-        wallet["Preço pago"] = wallet["Quantidade"] * wallet["Preço médio"]
-
-        # Calculate the net result
-        deltaPrice = wallet["Preço mercado"] - wallet["Preço pago"]
-        buyPrice = wallet["Preço pago"]
-        wallet["Preço mercado-pago"] = deltaPrice
-        wallet["Rentabilidade mercado-pago"] = deltaPrice / buyPrice
-        netResult = deltaPrice + wallet["Proventos"]
-        wallet["Resultado liquido"] = netResult
-        wallet["Rentabilidade liquida"] = netResult / buyPrice
-
-        totalRendaFixa = wallet["Preço mercado"].sum()
-
-        # Calculates the percentage of stocks and FIIs in the wallet
-        for index, row in wallet.iterrows():
-            wallet.at[index, "Porcentagem carteira"] = (
-                row["Preço mercado"] / totalRendaFixa
-            )
+        # Calculate values related to the wallet default columns
+        self.__calculateWalletDefaultColumns(wallet, market_list)
 
         return wallet
 

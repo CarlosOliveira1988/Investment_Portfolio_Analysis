@@ -308,6 +308,7 @@ class FixedIncomesFormater:
         self.formatter.setCurrencyType(
             [
                 "Proventos",
+                "Custos",
                 "Resultado liquido",
                 "Preço médio",
                 "Cotação",
@@ -317,6 +318,7 @@ class FixedIncomesFormater:
             ]
         )
         self.formatter.setFloatType(["Quantidade"])
+        self.formatter.setDateType(["Data Inicial"])
         self.formatter.setPercentageType(
             [
                 "Rentabilidade mercado-pago",
@@ -334,6 +336,7 @@ class FixedIncomesFormater:
             [
                 "Ticker",
                 "Indexador",
+                "Data Inicial",
                 "Quantidade",
                 "Preço médio",
                 "Cotação",
@@ -342,6 +345,7 @@ class FixedIncomesFormater:
                 "Preço mercado-pago",
                 "Rentabilidade mercado-pago",
                 "Proventos",
+                "Custos",
                 "Resultado liquido",
                 "Rentabilidade liquida",
                 "Porcentagem carteira",
