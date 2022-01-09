@@ -545,6 +545,7 @@ class TreasuriesTabInterface(TabViewerInterface):
                 "Preço mercado",
                 "Preço mercado-pago",
                 "Proventos",
+                "Custos",
                 "Resultado liquido",
             ],
             "Ticker",

@@ -313,7 +313,8 @@ class OperationsHistory:
             gross_result = total_price_sell - total_price_buy
             gross_result_list.append(gross_result)
             costs = taxes + IR
-            net_result = gross_result - costs
+            earns = dividend + JCP
+            net_result = gross_result - costs + earns
             net_result_list.append(net_result)
             try:
                 rentability = net_result / (total_price_buy + costs)
@@ -480,6 +481,11 @@ class OperationsHistory:
                 "Operação",
             ]
         )
+        op_formatter.setNonRequiredString(
+            [
+                "Indexador",
+            ]
+        )
         op_formatter.setCurrencyType(
             [
                 "Preço-médio Compra",
@@ -488,6 +494,8 @@ class OperationsHistory:
                 "Preço-total Venda",
                 "Taxas",
                 "IR",
+                "Dividendos",
+                "JCP",
                 "Venda-Compra Realizado",
                 "Líquido Realizado",
             ]

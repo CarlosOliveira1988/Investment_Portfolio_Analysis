@@ -22,6 +22,7 @@ class PortfolioInvestment:
         self.operationsYear = None
         self.currentVariableIncome = None
         self.currentFixedIncome = None
+        self.currentTreasuries = None
         self.expected_title_list = [
             "Mercado",
             "Ticker",
@@ -82,6 +83,9 @@ class PortfolioInvestment:
 
         # Dataframe of the current portfolio related to 'Renda Fixa'
         self.currentFixedIncome = self.__currentRendaFixa()
+
+        # Dataframe of the current portfolio related to 'Tesouro Direto'
+        self.currentTreasuries = self.__currentTesouroDireto()
 
     def getExtrato(self):
         """Return the raw dataframe related to the excel porfolio file."""
@@ -652,72 +656,20 @@ class PortfolioInvestment:
 
     def currentTesouroDireto(self):
         """Create a dataframe with all open operations of Tesouro Direto."""
-        dataframe = self.operations.copy()
-        dataframe = dataframe[dataframe["Mercado"] == "Tesouro Direto"]
-        dataframe = dataframe[dataframe["Operação"] != "Cobrança"]
-        dataframe.drop_duplicates(subset="Ticker", keep="first", inplace=True)
+        return self.currentTreasuries.copy()
 
-        # Create the wallet
-        wallet = pd.DataFrame()
+    def __currentTesouroDireto(self):
+        # Prepare the default wallet dataframe
+        market_list = ["Tesouro Direto"]
+        wallet = self.__createWalletDefaultColumns(market_list)
 
-        # Copy the ticker and market information
-        wallet["Ticker"] = dataframe["Ticker"]
-        wallet["Mercado"] = dataframe["Mercado"]
-        wallet["Indexador"] = dataframe["Indexador"]
-
-        # Create blank columns
-        wallet["Quantidade"] = ""
-        wallet["Preço médio"] = ""
-        wallet["Preço pago"] = ""
-        wallet["Cotação"] = ""
-        wallet["Preço mercado"] = ""
-        wallet["Preço mercado-pago"] = ""
-        wallet["Rentabilidade mercado-pago"] = ""
-        wallet["Proventos"] = ""
-        wallet["Resultado liquido"] = ""
-        wallet["Porcentagem carteira"] = ""
-
-        # Sort the data by ticker
-        wallet = wallet.sort_values(by=["Ticker"])
-
-        # Calculate of the quantity of all non duplicate tickers
+        # Insert the current market values
         for index, row in wallet.iterrows():
-
             ticker = row["Ticker"]
-            avgPrice, numberStocks = self.avgPriceTicker(ticker)
+            wallet.at[index, "Cotação"] = self.currentMarketTesouro(ticker)
 
-            # Check the quantity.
-            # If zero, then drops it from the dataframe.
-            if round(numberStocks, 2) == 0:
-                wallet = wallet.drop([index])
-            # If non zero, keeps the ticker and updates
-            # the quantity and the average price.
-            else:
-                wallet.at[index, "Quantidade"] = float(numberStocks)
-                wallet.at[index, "Preço médio"] = float(avgPrice)
-                wallet.at[index, "Cotação"] = self.currentMarketTesouro(ticker)
-                wallet.at[index, "Proventos"] = self.earningsByTicker(ticker)
-
-        # Calculate the prices
-        wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
-        wallet["Preço pago"] = wallet["Quantidade"] * wallet["Preço médio"]
-
-        # Calculate the net result
-        deltaPrice = wallet["Preço mercado"] - wallet["Preço pago"]
-        buyPrice = wallet["Preço pago"]
-        wallet["Preço mercado-pago"] = deltaPrice
-        wallet["Rentabilidade mercado-pago"] = deltaPrice / buyPrice
-        netResult = deltaPrice + wallet["Proventos"]
-        wallet["Resultado liquido"] = netResult
-        wallet["Rentabilidade liquida"] = netResult / buyPrice
-
-        totalTesouroDireto = wallet["Preço mercado"].sum()
-
-        # Calculates the percentage of stocks and FIIs in the wallet
-        for index, row in wallet.iterrows():
-            wallet.at[index, "Porcentagem carteira"] = (
-                row["Preço mercado"] / totalTesouroDireto
-            )
+        # Calculate values related to the wallet default columns
+        self.__calculateWalletDefaultColumns(wallet, market_list)
 
         return wallet
 
