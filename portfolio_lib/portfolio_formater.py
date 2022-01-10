@@ -325,6 +325,7 @@ class FixedIncomesFormater:
         self.formatter.setDateType(["Data Inicial"])
         self.formatter.setPercentageType(
             [
+                "Rentabilidade Contratada",
                 "Rentabilidade mercado-pago",
                 "Rentabilidade liquida",
                 "Porcentagem carteira",
@@ -340,6 +341,7 @@ class FixedIncomesFormater:
             [
                 "Ticker",
                 "Indexador",
+                "Rentabilidade Contratada",
                 "Data Inicial",
                 "Quantidade",
                 "Preço médio",

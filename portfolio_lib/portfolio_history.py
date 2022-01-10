@@ -229,6 +229,7 @@ class OperationsHistory:
         quantity_sell = 0
         price_buy = 0
         price_sell = 0
+        rate_price_buy = 0
         initial_date = None
         final_date = None
         indexer = None
@@ -237,6 +238,7 @@ class OperationsHistory:
         operation_list = []
         ticker_list = []
         indexer_list = []
+        contracted_rate_list = []
         initial_date_list = []
         final_date_list = []
         days_list = []
@@ -275,6 +277,11 @@ class OperationsHistory:
             operation_list.append("OP" + str(operation_ID))
             ticker_list.append(ticker)
             indexer_list.append(indexer)
+            try:
+                contracted_rate = rate_price_buy / price_buy
+            except ZeroDivisionError:
+                contracted_rate = 0.0
+            contracted_rate_list.append(contracted_rate)
             initial_date_list.append(initial_date)
             final_date_list.append(final_date)
             range_date = final_date - initial_date
@@ -338,6 +345,9 @@ class OperationsHistory:
                     if data_row["Operação"] == "Compra":
                         quantity_buy += data_row["Quantidade"]
                         price_buy += data_row["Preço Total"]
+                        rate = data_row["Rentabilidade Contratada"]
+                        price = data_row["Preço Total"]
+                        rate_price_buy += rate * price
                     elif data_row["Operação"] == "Venda":
                         quantity_sell += data_row["Quantidade"]
                         price_sell += data_row["Preço Total"]
@@ -350,6 +360,9 @@ class OperationsHistory:
                     if data_row["Operação"] == "Compra":
                         quantity_buy += data_row["Quantidade"]
                         price_buy += data_row["Preço Total"]
+                        rate = data_row["Rentabilidade Contratada"]
+                        price = data_row["Preço Total"]
+                        rate_price_buy += rate * price
                     elif data_row["Operação"] == "Venda":
                         quantity_sell += data_row["Quantidade"]
                         price_sell += data_row["Preço Total"]
@@ -365,6 +378,7 @@ class OperationsHistory:
                     quantity_sell = 0
                     price_buy = 0
                     price_sell = 0
+                    rate_price_buy = 0
                     initial_date = None
                     final_date = None
                     operation_ID += 1
@@ -380,6 +394,7 @@ class OperationsHistory:
                         quantity_sell = 0
                         price_buy = 0
                         price_sell = 0
+                        rate_price_buy = 0
                         initial_date = None
                         final_date = None
                         operation_ID += 1
@@ -389,6 +404,7 @@ class OperationsHistory:
         operations_df["Mercado"] = market_list
         operations_df["Ticker"] = ticker_list
         operations_df["Indexador"] = indexer_list
+        operations_df["Taxa Contratada"] = contracted_rate_list
         operations_df["Operação"] = operation_list
         operations_df["Data Inicial"] = initial_date_list
         operations_df["Data Final"] = final_date_list
@@ -517,6 +533,7 @@ class OperationsHistory:
         op_formatter.setPercentageType(
             [
                 "Rentabilidade Líquida",
+                "Taxa Contratada",
             ]
         )
         op_formatter.runFormatter()

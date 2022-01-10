@@ -7,6 +7,7 @@ import pandas as pd
 import requests
 import yfinance as yf
 from bs4 import BeautifulSoup
+from indexer_lib.fixed_income import FixedIncomeCalculation
 
 from portfolio_lib.portfolio_history import OperationsHistory as OpInfo
 
@@ -16,6 +17,7 @@ class PortfolioInvestment:
 
     def __init__(self):
         """Create the PortfolioInvestment object."""
+        self.fixedIncomeCalc = FixedIncomeCalculation()
         self.fileOperations = None
         self.openedOperations = None
         self.operations = None
@@ -339,7 +341,9 @@ class PortfolioInvestment:
         wallet["Ticker"] = dataframe["Ticker"]
         wallet["Mercado"] = dataframe["Mercado"]
         wallet["Indexador"] = dataframe["Indexador"]
+        wallet["Rentabilidade Contratada"] = dataframe["Taxa Contratada"]
         wallet["Data Inicial"] = dataframe["Data Inicial"]
+        wallet["Data Final"] = dataframe["Data Final"]
         wallet["Quantidade"] = dataframe["Quantidade Compra"]
         wallet["Preço médio"] = dataframe["Preço-médio Compra"]
         wallet["Preço pago"] = dataframe["Preço-total Compra"]
@@ -673,10 +677,25 @@ class PortfolioInvestment:
 
         return wallet
 
-    def currentValRendaFixa(self, ticker):
+    def currentValRendaFixa(
+        self,
+        initial_date,
+        final_date,
+        indexer,
+        rate,
+        buyPrice,
+    ):
         """Return the current price of the related 'Renda Fixa' ticker."""
-        ticker = ticker
-        return float(0.01)
+        # indexer == PREFIXADO
+        if indexer == "PREFIXADO":
+            return self.fixedIncomeCalc.getValueByPrefixedRate(
+                initial_date,
+                final_date,
+                rate,
+                buyPrice,
+            )
+        else:
+            return float(buyPrice)
 
     def currentRendaFixa(self):
         """Create a dataframe with all open operations of Renda Fixa."""
@@ -689,7 +708,18 @@ class PortfolioInvestment:
 
         # Insert the current market values
         for index, row in wallet.iterrows():
-            wallet.at[index, "Cotação"] = wallet.at[index, "Preço médio"]
+            initial_date = row["Data Inicial"]
+            final_date = row["Data Final"]
+            indexer = row["Indexador"]
+            rate = row["Rentabilidade Contratada"]
+            buy_price = row["Preço médio"]
+            wallet.at[index, "Cotação"] = self.currentValRendaFixa(
+                initial_date,
+                final_date,
+                indexer,
+                rate,
+                buy_price,
+            )
 
         # Calculate values related to the wallet default columns
         self.__calculateWalletDefaultColumns(wallet, market_list)
