@@ -686,9 +686,22 @@ class PortfolioInvestment:
         buyPrice,
     ):
         """Return the current price of the related 'Renda Fixa' ticker."""
-        # indexer == PREFIXADO
         if indexer == "PREFIXADO":
             return self.fixedIncomeCalc.getValueByPrefixedRate(
+                initial_date,
+                final_date,
+                rate,
+                buyPrice,
+            )
+        elif indexer == "IPCA":
+            return self.fixedIncomeCalc.getValueByPrefixedRatePlusIPCA(
+                initial_date,
+                final_date,
+                rate,
+                buyPrice,
+            )
+        elif indexer == "CDI":
+            return self.fixedIncomeCalc.getValueByProportionalCDI(
                 initial_date,
                 final_date,
                 rate,

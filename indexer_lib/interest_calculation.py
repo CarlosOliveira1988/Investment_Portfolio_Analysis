@@ -443,8 +443,16 @@ class Benchmark:
     Private methods
     """
 
-    def __getInterestValueFromIndexer(self, economic_indexer):
-        dataframe = economic_indexer.getDataframe()
+    def _getInterestValueFromIndexer(self, economic_indexer, ext_mode=False):
+        """When 'ext_mode=False', then we use the spreadsheets as-is.
+
+        When 'ext_mode=True', the last empty months of the spreadsheets are
+        replaced with non-zero values.
+        """
+        if ext_mode:
+            dataframe = economic_indexer.getExtendedDataframe()
+        else:
+            dataframe = economic_indexer.getDataframe()
         filtered_dataframe = self.DataframeFilter.filterDataframePerPeriod(
             dataframe,
             self.StackedFormatConstants.getAdjustedDateTitle(),
@@ -492,14 +500,14 @@ class Benchmark:
         interest_value = self.InterestCalculation.calculateInterestValueByValues(
             self.initial_value, self.final_value
         )
-        cdi_interest_value = self.__getInterestValueFromIndexer(self.CDI)
+        cdi_interest_value = self._getInterestValueFromIndexer(self.CDI)
         return interest_value / cdi_interest_value
 
     def getIPCAEquivalentInterestRate(self):
         interest_value = self.InterestCalculation.calculateInterestValueByValues(
             self.initial_value, self.final_value
         )
-        ipca_interest_value = self.__getInterestValueFromIndexer(self.IPCA)
+        ipca_interest_value = self._getInterestValueFromIndexer(self.IPCA)
         prefixed_interest_value = interest_value - ipca_interest_value
         prefixed_interest_rate = self.InterestCalculation.calculateInterestRateByValues(
             self.initial_value, (self.initial_value + prefixed_interest_value)
@@ -517,3 +525,9 @@ class Benchmark:
         return self.InterestCalculation.calculateInterestRate(
             monthly_prefixed_interest_rate_list
         )
+
+    def getIPCA(self):
+        return self.IPCA
+
+    def getCDI(self):
+        return self.CDI
