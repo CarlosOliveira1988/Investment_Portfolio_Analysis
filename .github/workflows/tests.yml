@@ -34,8 +34,8 @@ jobs:
     - name: Copy file
       uses: canastro/copy-action@0.0.2
       with:
-        source: "Investment_Portfolio_Analysis/indexer_lib/data/CDI.xlsx"
-        target: "Investment_Portfolio_Analysis-indexer_lib-data-CDI.xlsx"
+        source: "indexer_lib/data/CDI.xlsx"
+        target: "indexer_lib-data-CDI.xlsx"
 
     - name: Test with pytest
       run: |
