@@ -100,9 +100,9 @@ class IndexerManager:
     """
 
     # General contants related to the Indexer Manager
-    MODULE_PATH = __file__.replace("\indexer_manager.py", "")
-    EXCEL_DATA_FOLDER_NAME = "data"
-    EXCEL_DATA_PATH = MODULE_PATH + "\\" + EXCEL_DATA_FOLDER_NAME
+    MODULE_PATH = __file__.replace(r"\indexer_manager.py", "")
+    EXCEL_DATA_FOLDER_NAME = r"data"
+    EXCEL_DATA_PATH = MODULE_PATH + r"\\" + EXCEL_DATA_FOLDER_NAME
 
     def __init__(self, FileName, day=1):
         self.extended_value_mode = False
@@ -131,7 +131,7 @@ class IndexerManager:
     def __createFileVariables(self, FileName):
         self.__FileName = FileName
         self.__FilePath = IndexerManager.EXCEL_DATA_PATH
-        self.__File = self.__FilePath + "\\" + self.__FileName
+        self.__File = self.__FilePath + r"\\" + self.__FileName
 
     def __setOriginalColumnFormat(self, df):
         fdf = df[self.__OriginalConstants.getColumnsTitleList()]
