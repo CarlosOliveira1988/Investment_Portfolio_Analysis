@@ -5,8 +5,7 @@ from datetime import datetime
 import pandas as pd
 from dateutil.relativedelta import *
 
-from indexer_lib.indexer_formater import (OriginalIndexerFormater,
-                                          StackedIndexerFormater)
+from indexer_lib.indexer_formater import OriginalIndexerFormater, StackedIndexerFormater
 from indexer_lib.interest_calculation import InterestCalculation
 
 
@@ -97,7 +96,7 @@ class IndexerManager:
     The files shall be located in the 'indexer_lib' sub folder.
 
     Arguments:
-    - FileName: the name of the Excel file (example: 'IPCA mensal.xlsx')
+    - FileName: the name of the Excel file (example: 'IPCA.xlsx')
     """
 
     # General contants related to the Indexer Manager
