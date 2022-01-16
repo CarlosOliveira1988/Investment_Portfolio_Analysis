@@ -876,24 +876,21 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
 
     def setNewData(self, File):
         """Set the new treeview data lines."""
+        # Create the special tabs
+        self.ExtratoTab = ExtratoTabInterface(self.__addNewTab)
+        self.VariableTab = VariableTabInterface(self.__addNewTab)
+        self.FixedTab = FixedIncomeTabInterface(self.__addNewTab)
+        self.TreasuriesTab = TreasuriesTabInterface(self.__addNewTab)
+        self.ShortSummaryTab = ShortSummaryTabInterface(self.__addNewTab)
+        self.__setTabInterfaceList()
+
+        # Set the data in the tabs
         if self.setPortfolioInvestment(File):
-
-            self.ExtratoTab = ExtratoTabInterface(self.__addNewTab)
             self.ExtratoTab.setNewData(self.extrato)
-
-            self.VariableTab = VariableTabInterface(self.__addNewTab)
             self.VariableTab.setNewData(self.variable_income)
-
-            self.FixedTab = FixedIncomeTabInterface(self.__addNewTab)
             self.FixedTab.setNewData(self.fixed_income)
-
-            self.TreasuriesTab = TreasuriesTabInterface(self.__addNewTab)
             self.TreasuriesTab.setNewData(self.treasuries)
-
-            self.ShortSummaryTab = ShortSummaryTabInterface(self.__addNewTab)
             self.ShortSummaryTab.setNewData(self.short_summary)
-
-            self.__setTabInterfaceList()
 
     def clearData(self):
         """Clear the treeview data lines."""

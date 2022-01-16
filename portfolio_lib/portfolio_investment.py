@@ -92,7 +92,15 @@ class PortfolioInvestment:
     def getExtrato(self):
         """Return the raw dataframe related to the excel porfolio file."""
         extrato = pd.read_excel(self.fileOperations)
-        return extrato
+
+        # Excel file has title and data lines
+        if len(extrato):
+            return extrato
+
+        # Excel file has ONLY the title line
+        else:
+            col_list = self.getExpectedColumnsTitleList()
+            return pd.DataFrame(columns=col_list)
 
     def overallTaxAndIncomes(self):
         """Return the sum of the fees, income tax, dividend and jcp."""
@@ -328,41 +336,65 @@ class PortfolioInvestment:
             percentage = marketPrice / marketValue
             wallet.at[index, "Porcentagem carteira"] = percentage
 
+    def __getDefaultDataframe(self):
+        col_list = [
+            "Ticker",
+            "Mercado",
+            "Indexador",
+            "Rentabilidade-média Contratada",
+            "Data Inicial",
+            "Data Final",
+            "Quantidade",
+            "Preço médio",
+            "Preço pago",
+            "Proventos",
+            "Custos",
+            "Cotação",
+            "Preço mercado",
+            "Preço mercado-pago",
+            "Rentabilidade mercado-pago",
+            "Resultado liquido",
+            "Rentabilidade liquida",
+            "Porcentagem carteira",
+        ]
+        defaultDF = pd.DataFrame(columns=col_list)
+        return defaultDF
+
     def __createWalletDefaultColumns(self, market_list):
         # Dataframe with opened operations
-        dataframe = self.openedOperations.copy()
+        df = self.openedOperations.copy()
 
-        # Prepare the dataframe
-        dataframe = dataframe[dataframe["Mercado"].isin(market_list)]
-        dataframe.drop_duplicates(subset="Ticker", keep="first", inplace=True)
+        # 'Extrato' dataframe has title and data lines
+        if len(df):
+            # Wallet default dataframe with all empty columns
+            wallet = self.__getDefaultDataframe()
 
-        # Copy the useful data to the 'wallet'
-        wallet = pd.DataFrame()
-        wallet["Ticker"] = dataframe["Ticker"]
-        wallet["Mercado"] = dataframe["Mercado"]
-        wallet["Indexador"] = dataframe["Indexador"]
-        wallet["Rentabilidade Contratada"] = dataframe["Taxa Contratada"]
-        wallet["Data Inicial"] = dataframe["Data Inicial"]
-        wallet["Data Final"] = dataframe["Data Final"]
-        wallet["Quantidade"] = dataframe["Quantidade Compra"]
-        wallet["Preço médio"] = dataframe["Preço-médio Compra"]
-        wallet["Preço pago"] = dataframe["Preço-total Compra"]
-        wallet["Proventos"] = dataframe["Dividendos"] + dataframe["JCP"]
-        wallet["Custos"] = dataframe["Taxas"] + dataframe["IR"]
+            # Prepare the useful dataframe
+            df = df[df["Mercado"].isin(market_list)]
+            df.drop_duplicates(subset="Ticker", keep="first", inplace=True)
 
-        # Sort the data by market and ticker
-        wallet = wallet.sort_values(by=["Mercado", "Ticker"])
+            # Copy the useful data to the 'wallet'
+            # wallet = pd.DataFrame()
+            wallet["Ticker"] = df["Ticker"]
+            wallet["Mercado"] = df["Mercado"]
+            wallet["Indexador"] = df["Indexador"]
+            wallet["Rentabilidade-média Contratada"] = df["Taxa Contratada"]
+            wallet["Data Inicial"] = df["Data Inicial"]
+            wallet["Data Final"] = df["Data Final"]
+            wallet["Quantidade"] = df["Quantidade Compra"]
+            wallet["Preço médio"] = df["Preço-médio Compra"]
+            wallet["Preço pago"] = df["Preço-total Compra"]
+            wallet["Proventos"] = df["Dividendos"] + df["JCP"]
+            wallet["Custos"] = df["Taxas"] + df["IR"]
 
-        # Create blank columns
-        wallet["Cotação"] = ""
-        wallet["Preço mercado"] = ""
-        wallet["Preço mercado-pago"] = ""
-        wallet["Rentabilidade mercado-pago"] = ""
-        wallet["Resultado liquido"] = ""
-        wallet["Rentabilidade liquida"] = ""
-        wallet["Porcentagem carteira"] = ""
+            # Sort the data by market and ticker
+            wallet = wallet.sort_values(by=["Mercado", "Ticker"])
 
-        return wallet
+            return wallet
+
+        # 'Extrato' dataframe has ONLY the title line
+        else:
+            return self.__getDefaultDataframe()
 
     def __calculateWalletDefaultColumns(self, wallet, market_list):
         # Calculate the target values
@@ -724,7 +756,7 @@ class PortfolioInvestment:
             initial_date = row["Data Inicial"]
             final_date = row["Data Final"]
             indexer = row["Indexador"]
-            rate = row["Rentabilidade Contratada"]
+            rate = row["Rentabilidade-média Contratada"]
             buy_price = row["Preço médio"]
             wallet.at[index, "Cotação"] = self.currentValRendaFixa(
                 initial_date,

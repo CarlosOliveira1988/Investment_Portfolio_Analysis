@@ -221,6 +221,33 @@ class OperationsHistory:
         filtered_df = self._sortDataframePerData(filtered_df)
         return filtered_df
 
+    def __getDefaultHistoryDataframe(self):
+        col_list = [
+            "Mercado",
+            "Ticker",
+            "Indexador",
+            "Taxa Contratada",
+            "Operação",
+            "Data Inicial",
+            "Data Final",
+            "Duração dias",
+            "Duração meses",
+            "Quantidade Compra",
+            "Preço-médio Compra",
+            "Preço-total Compra",
+            "Quantidade Venda",
+            "Preço-médio Venda",
+            "Preço-total Venda",
+            "Taxas",
+            "IR",
+            "Dividendos",
+            "JCP",
+            "Venda-Compra Realizado",
+            "Líquido Realizado",
+            "Rentabilidade Líquida",
+        ]
+        return pd.DataFrame(columns=col_list)
+
     def _getHistOperationsDataframe(self, filtered_df, ticker, closed=True):
 
         operation_ID = 1
@@ -280,7 +307,7 @@ class OperationsHistory:
             try:
                 contracted_rate = rate_price_buy / price_buy
             except ZeroDivisionError:
-                contracted_rate = 0.0
+                contracted_rate = ""
             contracted_rate_list.append(contracted_rate)
             initial_date_list.append(initial_date)
             final_date_list.append(final_date)
@@ -400,7 +427,7 @@ class OperationsHistory:
                         operation_ID += 1
                         indexer = None
 
-        operations_df = pd.DataFrame()
+        operations_df = self.__getDefaultHistoryDataframe()
         operations_df["Mercado"] = market_list
         operations_df["Ticker"] = ticker_list
         operations_df["Indexador"] = indexer_list
@@ -462,7 +489,7 @@ class OperationsHistory:
         return operations_mkt_df
 
     def __getHistOperationsDataframe(self, closed=True):
-        operations_mkt_df = pd.DataFrame({})
+        operations_mkt_df = self.__getDefaultHistoryDataframe()
         mkt_info = MarketInformation(self.extrato_df)
         mkt_list = mkt_info._getMarketList()
         for market in mkt_list:

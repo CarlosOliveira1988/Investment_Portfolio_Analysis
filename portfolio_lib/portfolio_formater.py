@@ -228,6 +228,7 @@ class TreasuriesFormater:
     def __assignColumnVariables(self):
         self.Ticker = RequiredStringColumnType("Ticker")
         self.Indexer = RequiredStringColumnType("Indexador")
+        self.MeanRate = PercentageColumnType("Rentabilidade-média Contratada")
         self.InitialDate = DateColumnType("Data Inicial")
         self.Quantity = FloatColumnType("Quantidade")
         self.MeanPrice = CurencyColumnType("Preço médio")
@@ -246,6 +247,7 @@ class TreasuriesFormater:
     def __appendColumnsVariableList(self):
         self.ColumnsVariableList.append("Ticker")
         self.ColumnsVariableList.append("Indexer")
+        self.ColumnsVariableList.append("MeanRate")
         self.ColumnsVariableList.append("InitialDate")
         self.ColumnsVariableList.append("Quantity")
         self.ColumnsVariableList.append("MeanPrice")
@@ -325,7 +327,7 @@ class FixedIncomesFormater:
         self.formatter.setDateType(["Data Inicial"])
         self.formatter.setPercentageType(
             [
-                "Rentabilidade Contratada",
+                "Rentabilidade-média Contratada",
                 "Rentabilidade mercado-pago",
                 "Rentabilidade liquida",
                 "Porcentagem carteira",
@@ -341,7 +343,7 @@ class FixedIncomesFormater:
             [
                 "Ticker",
                 "Indexador",
-                "Rentabilidade Contratada",
+                "Rentabilidade-média Contratada",
                 "Data Inicial",
                 "Quantidade",
                 "Preço médio",
