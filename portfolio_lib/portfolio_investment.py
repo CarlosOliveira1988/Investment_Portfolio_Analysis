@@ -445,53 +445,99 @@ class PortfolioInvestment:
         # Get the current portfolio
         dataframe = self.currentPortfolio()
 
-        # Removes the column from original dataframe
-        dataframe = dataframe.drop(["Porcentagem carteira"], axis=1)
+        # Define the columns to be displayed in the exported spreadsheet
+        # This will also define the columns order, that is useful to the
+        # next steps
+        expected_col_list = [
+            "Ticker",
+            "Mercado",
+            "Quantidade",
+            "Preço médio",
+            "Preço pago",
+            "Proventos",
+            "Custos",
+            "Cotação",
+            "Preço mercado",
+            "Preço mercado-pago",
+            "Rentabilidade mercado-pago",
+            "Resultado liquido",
+            "Rentabilidade liquida",
+        ]
+        dataframe = dataframe[expected_col_list]
 
+        # Define the columns in the exported spreadsheet
+        ticker_col = "A"
+        market_col = "B"
+        quantity_col = "C"
+        mean_price_col = "D"
+        buy_price_col = "E"
+        earning_col = "F"
+        costs_col = "G"
+        quotation_col = "H"
+        market_price_col = "I"
+        rent_gain_price_col = "J"
+        gain_price_col = "K"
+        net_result_col = "L"
+        net_result_perc_col = "M"
+        empty_col = "N"
+        chart_col = "O"
+        sum_if_col = "P"
+
+        # Add some formulas to be used in GoogleSheets
         i = 2
         for index, row in dataframe.iterrows():
             # This function takes a long time to run.
             # Not suitable to uncomment while testing.
             dfticker = dataframe["Ticker"]
             dataframe["Cotação"] = '=googlefinance("' + dfticker + '")'
-            market_price_str = "=D" + str(i) + "*F" + str(i)
+
+            market_price_str = "=" + quantity_col + str(i)
+            market_price_str += "*" + quotation_col + str(i)
             dataframe.at[index, "Preço mercado"] = market_price_str
-            gain_price_str = "=H" + str(i) + "-G" + str(i)
+
+            gain_price_str = "=" + market_price_col + str(i)
+            gain_price_str += "-" + buy_price_col + str(i)
             dataframe.at[index, "Preço mercado-pago"] = gain_price_str
-            rent_gain_str = "=I" + str(i) + "/G" + str(i)
+
+            rent_gain_str = "=" + rent_gain_price_col + str(i)
+            rent_gain_str += "/" + buy_price_col + str(i)
             dataframe.at[index, "Rentabilidade mercado-pago"] = rent_gain_str
-            net_result_str = "=H" + str(i) + "+K" + str(i) + "-G" + str(i)
+
+            net_result_str = "=" + earning_col + str(i)
+            net_result_str += "+" + rent_gain_price_col + str(i)
+            net_result_str += "-" + costs_col + str(i)
             dataframe.at[index, "Resultado liquido"] = net_result_str
+
+            net_perc_str = "=" + net_result_col + str(i)
+            net_perc_str += "/" + buy_price_col + str(i)
+            dataframe.at[index, "Rentabilidade liquida"] = net_perc_str
             # Increment the index to calculate the cells in Excel file.
             i += 1
 
-        # Create a Pandas Excel writer using XlsxWriter as the engine.
-        writer = pd.ExcelWriter(
-            "carteiraGoogleDrive.xlsx",
-            engine="xlsxwriter",
-        )
+        # Create a Pandas Excel writer using XlsxWriter as the engine
+        file_name = "carteiraGoogleDrive.xlsx"
+        writer = pd.ExcelWriter(file_name, engine="xlsxwriter")
 
         # Convert the dataframe to an XlsxWriter Excel object.
-        dataframe.to_excel(writer, sheet_name="Sheet1")
+        dataframe.to_excel(writer, sheet_name="Sheet1", index=False)
 
         # Get the xlsxwriter workbook and worksheet objects.
         workbook = writer.book
         worksheet = writer.sheets["Sheet1"]
 
         # Add some cell formats.
-        format1 = workbook.add_format(
+        formatFloat = workbook.add_format(
             {"num_format": "#,##0.00", "align": "center"},
         )
-        format2 = workbook.add_format(
+        formatText = workbook.add_format(
             {"align": "center"},
         )
-        format3 = workbook.add_format(
+        formatPerc = workbook.add_format(
             {"num_format": "0.00%", "align": "center"},
         )
         formatBorder = workbook.add_format(
             {"bottom": 1, "top": 1, "left": 1, "right": 1},
         )
-
         bold = workbook.add_format(
             {"bold": True, "align": "center"},
         )
@@ -507,8 +553,9 @@ class PortfolioInvestment:
         )
 
         # Conditional formatting. If values are greater equal than zero
+        df_len = str(len(dataframe) + 1)
         worksheet.conditional_format(
-            "L2:L100",
+            rent_gain_price_col + "2:" + net_result_perc_col + df_len,
             {
                 "type": "cell",
                 "criteria": ">=",
@@ -519,7 +566,7 @@ class PortfolioInvestment:
 
         # Conditional formatting.If values are lesser than zero
         worksheet.conditional_format(
-            "L2:L100",
+            rent_gain_price_col + "2:" + net_result_perc_col + df_len,
             {
                 "type": "cell",
                 "criteria": "<",
@@ -532,49 +579,87 @@ class PortfolioInvestment:
         # already have a format such as the index or headers
         # or any cells that contain dates or datetimes.
 
-        # Set the column width and format.
-        worksheet.set_column("B:B", 14, format2)
-        worksheet.set_column("C:C", 14, format2)
-        worksheet.set_column("E:E", 14, format1)
-        worksheet.set_column("F:F", 14, format1)
-        worksheet.set_column("G:G", 14, format1)
-        worksheet.set_column("H:H", 14, format1)
-        worksheet.set_column("I:I", 14, format1)
-        worksheet.set_column("J:J", 14, format3)
-        worksheet.set_column("K:K", 14, format1)
-        worksheet.set_column("L:L", 20, format1)
+        # Set the column width and format
+        def formatAsText(col_list, width=15):
+            for col in col_list:
+                worksheet.set_column(col + ":" + col, width, formatText)
+
+        def formatAsFloat(col_list, width=15):
+            for col in col_list:
+                worksheet.set_column(col + ":" + col, width, formatFloat)
+
+        def formatAsPercentage(col_list, width=15):
+            for col in col_list:
+                worksheet.set_column(col + ":" + col, width, formatPerc)
+
+        formatAsText(
+            [
+                ticker_col,
+                market_col,
+            ]
+        )
+        formatAsFloat(
+            [
+                quantity_col,
+                mean_price_col,
+                buy_price_col,
+                earning_col,
+                costs_col,
+                quotation_col,
+                market_price_col,
+            ]
+        )
+        formatAsFloat(
+            [
+                rent_gain_price_col,
+                net_result_col,
+            ],
+            width=25,
+        )
+        formatAsPercentage(
+            [
+                gain_price_col,
+                net_result_perc_col,
+            ],
+            width=25,
+        )
 
         # Create supplementary table to support graphic of percentage
         # List of category
-        worksheet.write("M1", "Ativo", bold)
-        worksheet.set_column("M:M", 14, format2)
-        worksheet.write("M2", "Ações")
-        worksheet.write("M3", "BDR")
-        worksheet.write("M4", "ETF")
-        worksheet.write("M5", "FII")
+        formatAsText([chart_col])
+        worksheet.write(chart_col + "1", "Ativo", bold)
+        worksheet.write(chart_col + "2", "Ações")
+        worksheet.write(chart_col + "3", "BDR")
+        worksheet.write(chart_col + "4", "ETF")
+        worksheet.write(chart_col + "5", "FII")
 
         # Create list of the values
-        worksheet.set_column("N:N", 18, format1)
-        worksheet.write("N1", "Valor R$", bold)
-        worksheet.write("N2", '=SUMIF(C2:C100, "Ações", H2:H100)')
-        worksheet.write("N3", '=SUMIF(C2:C100, "BDR", H2:H100)')
-        worksheet.write("N4", '=SUMIF(C2:C100, "ETF", H2:H100)')
-        worksheet.write("N5", '=SUMIF(C2:C100, "FII", H2:H100)')
+        formatAsFloat([sum_if_col], width=20)
+        start_sumif = "=SUMIF(" + market_col + "2:" + market_col + '100, "'
+        end_sumif = '", ' + market_price_col + "2:" + market_price_col + "100)"
+        worksheet.write(sum_if_col + "1", "Valor R$", bold)
+        worksheet.write(sum_if_col + "2", start_sumif + "Ações" + end_sumif)
+        worksheet.write(sum_if_col + "3", start_sumif + "BDR" + end_sumif)
+        worksheet.write(sum_if_col + "4", start_sumif + "ETF" + end_sumif)
+        worksheet.write(sum_if_col + "5", start_sumif + "FII" + end_sumif)
 
         # Create conditional format for borders
+        chart_table_range = chart_col + "1:" + sum_if_col + "5"
         worksheet.conditional_format(
-            "M1:N5", {"type": "no_errors", "format": formatBorder}
+            chart_table_range, {"type": "no_errors", "format": formatBorder}
         )
 
         # Creates a Pie chart
         chart1 = workbook.add_chart({"type": "pie"})
 
-        # Configure the series and add user defined segment colors.
+        # Configure the series and add user defined segment colors
+        categ_range = "=Sheet1!$" + chart_col + "$2:$" + chart_col + "$5"
+        val_range = "=Sheet1!$" + sum_if_col + "$2:$" + sum_if_col + "$5"
         chart1.add_series(
             {
                 "data_labels": {"percentage": True},
-                "categories": "=Sheet1!$M$2:$M$5",
-                "values": "=Sheet1!$N$2:$N$5",
+                "categories": categ_range,
+                "values": val_range,
             }
         )
 
@@ -582,7 +667,12 @@ class PortfolioInvestment:
         chart1.set_title({"name": "Composição da carteira"})
 
         # Insert the chart into the worksheet (with an offset)
-        worksheet.insert_chart("M8", chart1, {"x_offset": 25, "y_offset": 10})
+        chart_cell = chart_col + "8"
+        worksheet.insert_chart(
+            chart_cell,
+            chart1,
+            {"x_offset": 25, "y_offset": 10},
+        )
 
         # Close the Pandas Excel writer and output the Excel file
         writer.save()
