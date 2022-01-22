@@ -3,27 +3,27 @@ from indexer_lib.indexer_manager import IndexerManager
 
 class IPCA(IndexerManager):
     def __init__(self):
-        super().__init__("IPCA mensal.xlsx")
+        super().__init__("IPCA.xlsx")
 
 
 class SELIC(IndexerManager):
     def __init__(self):
-        super().__init__("SELIC mensal.xlsx")
+        super().__init__("SELIC.xlsx")
 
 
 class CDI(IndexerManager):
     def __init__(self):
-        super().__init__("CDI mensal.xlsx")
+        super().__init__("CDI.xlsx")
 
 
 class FGTS(IndexerManager):
     def __init__(self):
-        super().__init__("FGTS mensal.xlsx")
+        super().__init__("FGTS.xlsx")
 
 
 class NovaPoupanca(IndexerManager):
     def __init__(self):
-        super().__init__("Poupança nova mensal.xlsx")
+        super().__init__("Poupanca.xlsx")
 
 
 class EconomicIndexer:

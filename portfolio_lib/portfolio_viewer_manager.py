@@ -1,31 +1,33 @@
+"""This file is useful to format the portfolio dataframe."""
+
 from portfolio_lib.portfolio_formater import PortfolioFormater
 
 
 class PortfolioViewerManager:
-    """
-    This class is useful to handle the portfolio dataframe visualization.
+    """This class is useful to handle the portfolio dataframe visualization.
 
-    Basically, it formats each column according to a pre-defined 'string formats'.
+    Basically, it formats each column according to some 'string formats'.
 
     Arguments:
     - PortolioDataFrame: the portfolio pandas dataframe
     """
 
     def __init__(self, PortolioDataFrame):
+        """Create the PortfolioViewerManager object."""
         self.PortfolioFormater = PortfolioFormater(PortolioDataFrame)
-        self.FormatedPortolioDataFrame = (
-            self.PortfolioFormater.getFormatedPortolioDataFrame()
-        )
+        self.FormatedDF = self.PortfolioFormater.getFormatedPortolioDataFrame()
 
     """
     Public methods
     """
 
     def getColumnsTitleList(self):
+        """Return a columns title list."""
         return self.PortfolioFormater.getColumnsTitleList()
 
     def getColumnNonDuplicatedValuesList(self, column_header):
-        column_list = list(self.FormatedPortolioDataFrame[column_header])
+        """Return a list with non-duplicated values."""
+        column_list = list(self.FormatedDF[column_header])
         column_list = list(set(column_list))
         if "NA" in column_list:
             column_list.remove("NA")
@@ -41,31 +43,23 @@ class PortfolioViewerManager:
         index="all",
         operation="all",
     ):
+        """Apply some filter in the dataframe."""
         if ticker != "all":
-            table = self.FormatedPortolioDataFrame[
-                self.FormatedPortolioDataFrame["Ticker"] == ticker
-            ]
+            table = self.FormatedDF[self.FormatedDF["Ticker"] == ticker]
         if market != "all":
-            table = self.FormatedPortolioDataFrame[
-                self.FormatedPortolioDataFrame["Mercado"] == market
-            ]
+            table = self.FormatedDF[self.FormatedDF["Mercado"] == market]
         if dueDate != "NA":
-            table = self.FormatedPortolioDataFrame[
-                self.FormatedPortolioDataFrame["Vencimento"] == dueDate
-            ]
+            table = self.FormatedDF[self.FormatedDF["Vencimento"] == dueDate]
         if profitability != "NA":
-            table = self.FormatedPortolioDataFrame[
-                self.FormatedPortolioDataFrame["Rentabilidade Contratada"] == dueDate
+            table = self.FormatedDF[
+                self.FormatedDF["Rentabilidade Contratada"] == dueDate
             ]
         if index != "all":
-            table = self.FormatedPortolioDataFrame[
-                self.FormatedPortolioDataFrame["Indexador"] == index
-            ]
+            table = self.FormatedDF[self.FormatedDF["Indexador"] == index]
         if operation != "all":
-            table = self.FormatedPortolioDataFrame[
-                self.FormatedPortolioDataFrame["Operação"] == operation
-            ]
+            table = self.FormatedDF[self.FormatedDF["Operação"] == operation]
         return table
 
     def getFormattedDataframe(self):
-        return self.FormatedPortolioDataFrame
+        """Return a formatted dataframe."""
+        return self.FormatedDF

@@ -1,3 +1,5 @@
+"""This file has a class to edit dates with comboboxes."""
+
 from datetime import datetime
 
 from gui_lib.combobox import StandardComboBox
@@ -71,8 +73,7 @@ class DateComboBox(WidgetInterface):
         self.ComboBoxYear.addItems(years_list)
 
     def getSelectedPeriod(self, as_string=True):
-        """
-        Return the selected period (Year and Month).
+        """Return the selected period (Year and Month).
 
         If 'as_string' is 'True', return 'Janeiro', 'Fevereiro', etc.
         If 'as_string' is 'False', return '1', '2', etc.

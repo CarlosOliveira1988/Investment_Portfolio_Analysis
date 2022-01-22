@@ -1,6 +1,9 @@
+import os
+from datetime import *
 from datetime import datetime
 
 import pandas as pd
+from dateutil.relativedelta import *
 
 from indexer_lib.indexer_formater import OriginalIndexerFormater, StackedIndexerFormater
 from indexer_lib.interest_calculation import InterestCalculation
@@ -93,15 +96,15 @@ class IndexerManager:
     The files shall be located in the 'indexer_lib' sub folder.
 
     Arguments:
-    - FileName: the name of the Excel file (example: 'IPCA mensal.xlsx')
+    - FileName: the name of the Excel file (example: 'IPCA.xlsx')
     """
 
     # General contants related to the Indexer Manager
-    MODULE_PATH = __file__.replace("\indexer_manager.py", "")
-    EXCEL_DATA_FOLDER_NAME = "data"
-    EXCEL_DATA_PATH = MODULE_PATH + "\\" + EXCEL_DATA_FOLDER_NAME
+    MODULE_PATH = os.path.curdir
+    EXCEL_DATA_PATH = os.path.join(MODULE_PATH, "indexer_lib", "data")
 
     def __init__(self, FileName, day=1):
+        self.extended_value_mode = False
         self.__createConstantObjects()
         self.__createPeriodVariables(day)
         self.__createFileVariables(FileName)
@@ -127,16 +130,12 @@ class IndexerManager:
     def __createFileVariables(self, FileName):
         self.__FileName = FileName
         self.__FilePath = IndexerManager.EXCEL_DATA_PATH
-        self.__File = self.__FilePath + "\\" + self.__FileName
+        self.__File = os.path.join(self.__FilePath, self.__FileName)
 
-    def __setOriginalColumnFormat(self, dataframe):
-        original_formated_dataframe = dataframe[
-            self.__OriginalConstants.getColumnsTitleList()
-        ]
-        original_formated_dataframe = original_formated_dataframe.sort_values(
-            by=[self.__OriginalConstants.getYearTitle()]
-        )
-        return original_formated_dataframe
+    def __setOriginalColumnFormat(self, df):
+        fdf = df[self.__OriginalConstants.getColumnsTitleList()]
+        fdf = fdf.sort_values(by=[self.__OriginalConstants.getYearTitle()])
+        return fdf
 
     def __getAdjustedDateList(self, year):
         year_string = str(year)
@@ -225,6 +224,104 @@ class IndexerManager:
             True,
         )
 
+    def _getYearMonthDay(self, date, defaultDay=None):
+        month = date.month
+        year = date.year
+        if defaultDay:
+            day = defaultDay
+        else:
+            day = date.day
+        return year, month, day
+
+    def _getDate(self, year, month, day):
+        string_list = [str(year), str(month), str(day)]
+        date_str = "-".join(string_list)
+        return datetime.strptime(date_str, "%Y-%m-%d")
+
+    def _getDateFromString(self, date_str):
+        return datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+
+    def __getLastLineDataframe(self, df):
+        df = df.iloc[-1:]
+        for index, row in df.iterrows():
+            index = index
+        return df, index
+
+    def __getOneLineParams(self, one_line_df):
+        for index, row in one_line_df.iterrows():
+            year = int(row[self.__StackedConstants.getYearTitle()])
+            month_str = str(row[self.__StackedConstants.getMonthTitle()])
+            month = self.__MonthsList.index(month_str) + 1
+            datestr = str(row[self.__StackedConstants.getAdjustedDateTitle()])
+            date = self._getDateFromString(datestr)
+            rate = float(row[self.__StackedConstants.getInterestTitle()])
+        return year, month, date, rate
+
+    def __getNextMonthDate(self, date):
+        next_date = date + relativedelta(months=+1)
+        year, month, day = self._getYearMonthDay(next_date)
+        date_string = self._getDate(year, month, day)
+        return year, month, day, next_date, date_string
+
+    def __addNewLine(self, extended_df, syear, smonth, sdatestr, srate):
+        month_str = self.__MonthsList[smonth - 1]
+        line_df = pd.DataFrame()
+        line_df[self.__StackedConstants.getYearTitle()] = [syear]
+        line_df[self.__StackedConstants.getMonthTitle()] = [month_str]
+        line_df[self.__StackedConstants.getAdjustedDateTitle()] = [sdatestr]
+        line_df[self.__StackedConstants.getInterestTitle()] = [srate]
+        extended_df = pd.concat(
+            [extended_df, line_df],
+            ignore_index=True,
+            sort=False,
+        )
+        return extended_df
+
+    def __filterNotValidLines(self, extended_df, line_index):
+        return extended_df[extended_df.index <= line_index]
+
+    def __setExtendedDataframe(self, stacked_df):
+        # Select the last line with 'rate != 0.0'
+        rate_col = self.__StackedConstants.getInterestTitle()
+        filtered_df = stacked_df.loc[stacked_df[rate_col] != 0.0000]
+        last_valid_line, last_vl_idx = self.__getLastLineDataframe(filtered_df)
+
+        # Get the parameters of the 'last_valid_line'
+        lyear, lmonth, ldate, lrate = self.__getOneLineParams(last_valid_line)
+
+        # Create the extended stacked dataframe
+        extended_df = stacked_df.copy()
+        extended_df = self.__filterNotValidLines(extended_df, last_vl_idx)
+
+        # Set the adjusted current date variables (day=1)
+        cur_date = datetime.today()
+        cyear, cmonth, cday = self._getYearMonthDay(cur_date, defaultDay=1)
+        cdate = self._getDate(cyear, cmonth, cday)
+        cdate_str = self._getDate(cyear, cmonth, cday)
+
+        # Set the last line variables related to the extended stacked dataframe
+        last_sline, last_sline_idx = self.__getLastLineDataframe(extended_df)
+        syear, smonth, sdate, srate = self.__getOneLineParams(last_sline)
+
+        # Extend the 'extended_df'
+        while sdate <= cdate:
+            # 'extended_df' is fully updated with data from web
+            if (syear == cyear) and (smonth == cmonth):
+                break
+            # 'extended_df' is missing updated data from web
+            else:
+                self.extended_value_mode = True
+                param_tuple = self.__getNextMonthDate(sdate)
+                syear, smonth, sday, sdate, sdatestr = param_tuple
+                extended_df = self.__addNewLine(
+                    extended_df,
+                    syear,
+                    smonth,
+                    sdatestr,
+                    lrate,
+                )
+        return extended_df
+
     def __createDataframes(self):
         self.__OriginalDataframe = pd.read_excel(self.__File)
         self.__addYearlyRateColumnToOriginalDF()
@@ -234,11 +331,16 @@ class IndexerManager:
         self.__StackedDataframe = self.__setStackedColumnFormat(
             self.__OriginalDataframe
         )
+        self.__ExtendedStackedDataframe = self.__setExtendedDataframe(
+            self.__StackedDataframe
+        )
 
     def __divideInterestValuesPer100(self):
         for month in self.__OriginalConstants.getMonthsList():
             self.__OriginalDataframe[month] /= 100
-        self.__StackedDataframe[self.__StackedConstants.getInterestTitle()] /= 100
+        rate_col = self.__StackedConstants.getInterestTitle()
+        self.__StackedDataframe[rate_col] /= 100
+        self.__ExtendedStackedDataframe[rate_col] /= 100
 
     def __setInitialFinalPeriods(self):
         year_list = list(
@@ -292,6 +394,18 @@ class IndexerManager:
             return self.__StackedDataframe
         else:
             return self.__OriginalDataframe
+
+    def getExtendedDataframe(self):
+        """
+        Returns the extended dataframe related to the data series, in 'stacked' format
+        """
+        return self.__ExtendedStackedDataframe
+
+    def isExtendedModeEnabled(self):
+        """
+        Return if the spreadsheet data, related to the economic indexers, is manipulated or not.
+        """
+        return self.extended_value_mode
 
     def getFormatedDataframe(self, stacked=True):
         """

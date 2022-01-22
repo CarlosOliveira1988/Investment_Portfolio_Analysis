@@ -82,6 +82,15 @@ class FileMenu(QtWidgets.QMenu):
                 msg,
                 QMessageBox.Ok,
             )
+        except PermissionError:
+            msg = "Não foi possível exportar a planilha Google Drive."
+            msg += "\n\nVerifique se o arquivo não está aberto."
+            QMessageBox.warning(
+                self,
+                "Análise de Portfólio",
+                msg,
+                QMessageBox.Ok,
+            )
 
     def exitApp(self):
         """Close the application."""
@@ -226,7 +235,7 @@ if __name__ == "__main__":
     import sys
 
     SOURCE_FILE_DIRECTORY = sys.path[0] + "\\portfolio_lib"
-    FILE_NAME = r"\PORTFOLIO_TEMPLATE.xlsx"
+    FILE_NAME = r"\PORTFOLIO_TEMPLATE_EMPTY.xlsx"
     FILE = SOURCE_FILE_DIRECTORY + FILE_NAME
 
     # Create the application
