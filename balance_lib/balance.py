@@ -1,4 +1,4 @@
-"""This file is useful to handle portfolio balancing."""
+"""This file is useful to handle portfolio balancing and contributions."""
 
 import numpy as np
 import pandas as pd
@@ -227,6 +227,72 @@ class ContributionBox:
         return self.df[self.expected_output_columns].copy()
 
 
+class BalancingBox(ContributionBox):
+    """Class used to handle balancing of portfolio."""
+
+    def __init__(self, box_title):
+        """Create the BalancingBox object."""
+        super().__init__(box_title)
+        self.expected_output_columns = [
+            box_title,
+            "Meta(%)",
+            "Meta(R$)",
+            "Atual(%)",
+            "Atual(R$)",
+            "Desejado-Atual",
+        ]
+
+    """Public methods."""
+
+    def getDataframe(self):
+        """Return the ContributionBox dataframe.
+
+        The following columns are present:
+        - 1st column title: defined by the 'box_title' parameter
+        - 2nd column: 'Meta(%)'
+        - 3rd column: 'Meta(R$)'
+        - 4th column: 'Atual(%)'
+        - 5th column: 'Atual(R$)'
+        - 6th column: 'Movimentação sugerida'
+        """
+        dict_rename = {"Desejado-Atual": "Movimentação sugerida"}
+        df = self.df[self.expected_output_columns].copy()
+        return df.rename(columns=dict_rename, inplace=False)
+
+
+class NewContributionBox(ContributionBox):
+    """Class used to handle new contribution in portfolio."""
+
+    def __init__(self, box_title):
+        """Create the NewContributionBox object."""
+        super().__init__(box_title)
+        self.expected_output_columns = [
+            box_title,
+            "Meta(%)",
+            "Meta(R$)",
+            "Atual(%)",
+            "Atual(R$)",
+            "Aporte Real",
+        ]
+
+    """Public methods."""
+
+    def getDataframe(self):
+        """Return the ContributionBox dataframe.
+
+        The following columns are present:
+        - 1st column title: defined by the 'box_title' parameter
+        - 2nd column: 'Meta(%)'
+        - 3rd column: 'Meta(R$)'
+        - 4th column: 'Atual(%)'
+        - 5th column: 'Atual(R$)'
+        - 6th column: 'Novo Aporte'
+        """
+        dict_rename = {"Aporte Real": "Novo Aporte"}
+        df = self.df[self.expected_output_columns].copy()
+        return df.rename(columns=dict_rename, inplace=False)
+
+
 if __name__ == "__main__":
 
     # Box parameters
@@ -246,6 +312,19 @@ if __name__ == "__main__":
     # ContributionBox
     print("\nContributionBox")
     cbox = ContributionBox(box_title)
+    cbox.setValues(target_list, value_list, type_list)
+    cbox.setContribution(2000.0)
+    print(cbox.getDataframe())
+
+    # BalancingBox
+    print("\nBalancingBox")
+    cbox = BalancingBox(box_title)
+    cbox.setValues(target_list, value_list, type_list)
+    print(cbox.getDataframe())
+
+    # NewContributionBox
+    print("\nNewContributionBox")
+    cbox = NewContributionBox(box_title)
     cbox.setValues(target_list, value_list, type_list)
     cbox.setContribution(2000.0)
     print(cbox.getDataframe())

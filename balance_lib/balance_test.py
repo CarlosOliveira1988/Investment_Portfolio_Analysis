@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from balance import ContributionBox, InvestmentBox
+from balance import BalancingBox, ContributionBox, InvestmentBox, NewContributionBox
 
 
 class Test_InvestmentBox:
@@ -82,3 +82,59 @@ class Test_ContributionBox:
         assert boxdf["Atual(R$)"].sum() == 2 * 126000
         assert boxdf["Meta(%)"].sum() == pytest.approx(2 * 1.0, 0.001)
         assert boxdf["Atual(%)"].sum() == pytest.approx(2 * 1.0, 0.001)
+
+
+class Test_BalancingBox:
+    """Tests for 'BalancingBox' class."""
+
+    def test_getDataframe(self):
+        """Test the 'getDataframe' method."""
+        bbox = BalancingBox("Classe de investimento")
+        boxdf = bbox.getDataframe()
+        title_list = [
+            "Classe de investimento",
+            "Meta(%)",
+            "Meta(R$)",
+            "Atual(%)",
+            "Atual(R$)",
+            "Movimentação sugerida",
+        ]
+
+        # A dataframe with 1 total line is expected
+        assert isinstance(boxdf, pd.DataFrame) is True
+        assert len(boxdf) == 1
+
+        # The total line has values=0
+        assert boxdf["Meta(R$)"].sum() == 0.0
+        assert boxdf["Atual(R$)"].sum() == 0.0
+        assert boxdf["Meta(%)"].sum() == 0.0
+        assert boxdf["Atual(%)"].sum() == 0.0
+        assert list(boxdf) == title_list
+
+
+class Test_NewContributionBox:
+    """Tests for 'NewContributionBox' class."""
+
+    def test_getDataframe(self):
+        """Test the 'getDataframe' method."""
+        bbox = NewContributionBox("Classe de investimento")
+        boxdf = bbox.getDataframe()
+        title_list = [
+            "Classe de investimento",
+            "Meta(%)",
+            "Meta(R$)",
+            "Atual(%)",
+            "Atual(R$)",
+            "Novo Aporte",
+        ]
+
+        # A dataframe with 1 total line is expected
+        assert isinstance(boxdf, pd.DataFrame) is True
+        assert len(boxdf) == 1
+
+        # The total line has values=0
+        assert boxdf["Meta(R$)"].sum() == 0.0
+        assert boxdf["Atual(R$)"].sum() == 0.0
+        assert boxdf["Meta(%)"].sum() == 0.0
+        assert boxdf["Atual(%)"].sum() == 0.0
+        assert list(boxdf) == title_list
