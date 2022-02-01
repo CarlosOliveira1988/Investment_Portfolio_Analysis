@@ -1,7 +1,18 @@
 """This file is useful to handle portfolio balancing and contributions."""
 
+import os
+import sys
+
 import numpy as np
 import pandas as pd
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+from balance_lib.balance_formatter import (
+    BalancingBoxFormatter,
+    NewContributionBoxFormatter,
+)
 
 
 class InvestmentBox:
@@ -259,6 +270,11 @@ class BalancingBox(ContributionBox):
         df = self.df[self.expected_output_columns].copy()
         return df.rename(columns=dict_rename, inplace=False)
 
+    def getFormattedDataframe(self):
+        """Return the ContributionBox formatted dataframe."""
+        formatter = BalancingBoxFormatter(self.getDataframe())
+        return formatter.getFormattedDataFrame()
+
 
 class NewContributionBox(ContributionBox):
     """Class used to handle new contribution in portfolio."""
@@ -278,7 +294,7 @@ class NewContributionBox(ContributionBox):
     """Public methods."""
 
     def getDataframe(self):
-        """Return the ContributionBox dataframe.
+        """Return the NewContributionBox dataframe.
 
         The following columns are present:
         - 1st column title: defined by the 'box_title' parameter
@@ -291,6 +307,11 @@ class NewContributionBox(ContributionBox):
         dict_rename = {"Aporte Real": "Novo Aporte"}
         df = self.df[self.expected_output_columns].copy()
         return df.rename(columns=dict_rename, inplace=False)
+
+    def getFormattedDataframe(self):
+        """Return the NewContributionBox formatted dataframe."""
+        formatter = NewContributionBoxFormatter(self.getDataframe())
+        return formatter.getFormattedDataFrame()
 
 
 if __name__ == "__main__":
@@ -320,11 +341,11 @@ if __name__ == "__main__":
     print("\nBalancingBox")
     cbox = BalancingBox(box_title)
     cbox.setValues(target_list, value_list, type_list)
-    print(cbox.getDataframe())
+    print(cbox.getFormattedDataframe())
 
     # NewContributionBox
     print("\nNewContributionBox")
     cbox = NewContributionBox(box_title)
     cbox.setValues(target_list, value_list, type_list)
     cbox.setContribution(2000.0)
-    print(cbox.getDataframe())
+    print(cbox.getFormattedDataframe())
