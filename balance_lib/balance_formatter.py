@@ -1,10 +1,10 @@
 """This file is useful to format the balancing dataframes."""
 
 
-from gui_lib.treeview.format_applier import TreeviewFormatApplier
+from gui_lib.treeview.format_applier import EasyFormatter
 
 
-class BalancingBoxFormatter:
+class BalancingBoxFormatter(EasyFormatter):
     """This class is useful to format BalancingBox dataFrames.
 
     Basically, here we manipulate the dataframe to define:
@@ -16,53 +16,18 @@ class BalancingBoxFormatter:
     def __init__(self, dataframe):
         """Create the BalancingBoxFormatter object."""
         first_column_title = list(dataframe)[0]
-        self.formatter = TreeviewFormatApplier()
-        self.formatter.setDataframe(dataframe)
-        self.formatter.setRequiredString(
-            [
-                first_column_title,
-            ]
-        )
-        self.formatter.setCurrencyType(
-            [
-                "Meta(R$)",
-                "Atual(R$)",
-                "Movimentação sugerida",
-            ]
-        )
-        self.formatter.setPercentageType(
-            [
-                "Meta(%)",
-                "Atual(%)",
-            ]
-        )
-        self.formatter.setColumnOrder(
-            [
-                first_column_title,
-                "Meta(%)",
-                "Meta(R$)",
-                "Atual(%)",
-                "Atual(R$)",
-                "Movimentação sugerida",
-            ]
-        )
-        self.formatter.runFormatter()
-        self.formattedDF = self.formatter.getFormatedDataFrame()
-
-    """
-    Public methods
-    """
-
-    def getColumnsTitleList(self):
-        """Return a columns title list."""
-        return list(self.formattedDF)
-
-    def getFormattedDataFrame(self):
-        """Return the formatted dataframe."""
-        return self.formattedDF
+        column_type_dict = {
+            first_column_title: "s",
+            "Meta(%)": "%",
+            "Meta(R$)": "$",
+            "Atual(%)": "%",
+            "Atual(R$)": "$",
+            "Movimentação sugerida": "$",
+        }
+        super().__init__(dataframe, column_type_dict)
 
 
-class NewContributionBoxFormatter:
+class NewContributionBoxFormatter(EasyFormatter):
     """This class is useful to format NewContributionBox dataFrames.
 
     Basically, here we manipulate the dataframe to define:
@@ -74,47 +39,12 @@ class NewContributionBoxFormatter:
     def __init__(self, dataframe):
         """Create the NewContributionBoxFormatter object."""
         first_column_title = list(dataframe)[0]
-        self.formatter = TreeviewFormatApplier()
-        self.formatter.setDataframe(dataframe)
-        self.formatter.setRequiredString(
-            [
-                first_column_title,
-            ]
-        )
-        self.formatter.setCurrencyType(
-            [
-                "Meta(R$)",
-                "Atual(R$)",
-                "Novo Aporte",
-            ]
-        )
-        self.formatter.setPercentageType(
-            [
-                "Meta(%)",
-                "Atual(%)",
-            ]
-        )
-        self.formatter.setColumnOrder(
-            [
-                first_column_title,
-                "Meta(%)",
-                "Meta(R$)",
-                "Atual(%)",
-                "Atual(R$)",
-                "Novo Aporte",
-            ]
-        )
-        self.formatter.runFormatter()
-        self.formattedDF = self.formatter.getFormatedDataFrame()
-
-    """
-    Public methods
-    """
-
-    def getColumnsTitleList(self):
-        """Return a columns title list."""
-        return list(self.formattedDF)
-
-    def getFormattedDataFrame(self):
-        """Return the formatted dataframe."""
-        return self.formattedDF
+        column_type_dict = {
+            first_column_title: "s",
+            "Meta(%)": "%",
+            "Meta(R$)": "$",
+            "Atual(%)": "%",
+            "Atual(R$)": "$",
+            "Novo Aporte": "$",
+        }
+        super().__init__(dataframe, column_type_dict)
