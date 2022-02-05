@@ -1,10 +1,12 @@
 """This is the main file of the project."""
 
+import os
 import webbrowser
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
+from balance_lib.balance_window import BalancingWindow
 from indexer_lib.economic_indexers_window import EconomicIndexerWindow
 from portfolio_lib.portfolio_widget import PortfolioViewerWidget
 from valuation_lib.valuation_window import ValuationWindow
@@ -103,31 +105,48 @@ class ToolsMenu(QtWidgets.QMenu):
     def __init__(self, menu_bar):
         """Create the ToolsMenu object."""
         super().__init__("&Ferramentas", menu_bar)
+        self.menu_bar = menu_bar
 
+        # External windows
         self.EconomicIndexerWindow = None
         self.ValuationWindow = None
+        self.BalancingWindow = None
 
-        self.indexers = MenuInterface(
+        self.indexers = self.__createSubMenu(
             "&Indicadores Econômicos",
-            menu_bar,
-            self.indexer,
+            self.indexerFunction,
         )
-        self.addAction(self.indexers.getAction())
 
-        self.valuation = MenuInterface(
+        self.valuation = self.__createSubMenu(
             "&Indicadores Fundamentalistas",
-            menu_bar,
-            self.valuation,
+            self.valuationFunction,
         )
-        self.addAction(self.valuation.getAction())
 
-    def indexer(self):
+        self.balancing = self.__createSubMenu(
+            "&Balanceamento de Carteira",
+            self.balancingFunction,
+        )
+
+    def __createSubMenu(self, submenu_title, submenu_function):
+        sub_menu = MenuInterface(
+            submenu_title,
+            self.menu_bar,
+            submenu_function,
+        )
+        self.addAction(sub_menu.getAction())
+        return sub_menu
+
+    def indexerFunction(self):
         """Launch the EconomicIndexer app."""
         self.EconomicIndexerWindow = EconomicIndexerWindow()
 
-    def valuation(self):
+    def valuationFunction(self):
         """Launch the Valuation app."""
         self.ValuationWindow = ValuationWindow()
+
+    def balancingFunction(self):
+        """Launch the Portfolio Balancing app."""
+        self.BalancingWindow = BalancingWindow()
 
 
 class LinksMenu(QtWidgets.QMenu):
@@ -193,13 +212,13 @@ class MainWindow(QtWidgets.QWidget):
         self.statusBar.showMessage(file)
 
         # Add menu bar
-        self._createMenuBar()
+        self._createMenuBar(file)
 
         # Show the window
         if auto_show:
             self.showMaximized()
 
-    def _createMenuBar(self):
+    def _createMenuBar(self, file):
         # Menu bar
         self.menuBar = QtWidgets.QMenuBar()
         self.grid.setMenuBar(self.menuBar)

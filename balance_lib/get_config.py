@@ -156,3 +156,22 @@ class InvestmentConfigManager:
     def getConfigFile(self):
         """Return the string related to the configuration file address."""
         return self.config_file
+
+
+class EnvironmentConfiguration:
+    """Class used to handle with environment variables."""
+
+    def __init__(self):
+        """Create the EnvironmentConfiguration object."""
+        pass
+
+    def setExtratoPath(self, file):
+        """Set the extrato sheet path."""
+        if os.path.isfile(file):
+            os.environ["EXTRATO_SHEET_PATH"] = os.path.dirname(file)
+        elif os.path.isdir(file):
+            os.environ["EXTRATO_SHEET_PATH"] = file
+
+    def getExtratoPath(self):
+        """Get the extrato sheet path."""
+        return os.environ["EXTRATO_SHEET_PATH"]

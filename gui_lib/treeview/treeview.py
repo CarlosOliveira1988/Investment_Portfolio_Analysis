@@ -17,6 +17,7 @@ class TreeviewInterface(QtWidgets.QTreeView):
         self,
         CentralWidget=None,
         columns_title_list=[],
+        split_big_title=True,
     ):
         """
         Create a Treeview table object from "QtWidgets.QTreeView".
@@ -25,6 +26,7 @@ class TreeviewInterface(QtWidgets.QTreeView):
         - CentralWidget: the widget where the table will be placed
         - columns_title_list: a list of columns titles
         """
+        self.split_big_title = split_big_title
         if CentralWidget:
             super().__init__(CentralWidget)
         else:
@@ -34,7 +36,10 @@ class TreeviewInterface(QtWidgets.QTreeView):
         self.setModel(self.TreeViewModel)
 
     def __splitBigTitle(self, title):
-        return title.replace(" ", "\n")
+        if self.split_big_title:
+            return title.replace(" ", "\n")
+        else:
+            return title
 
     def __createTreeViewModel(self, columns_title_list):
         self.TreeViewModel = QStandardItemModel(
@@ -143,6 +148,7 @@ class Treeview(TreeviewInterface):
         coordinate_Y=TreeviewInterface.EMPTY_SPACE,
         width=TreeviewInterface.DEFAULT_WIDTH,
         height=TreeviewInterface.DEFAULT_HEIGHT,
+        split_big_title=True,
     ):
         """Create a Treeview table object from "QtWidgets.QTreeView".
 
@@ -159,6 +165,7 @@ class Treeview(TreeviewInterface):
         super().__init__(
             CentralWidget=CentralWidget,
             columns_title_list=columns_title_list,
+            split_big_title=split_big_title,
         )
         self.setGeometry(
             QtCore.QRect(
@@ -173,7 +180,7 @@ class Treeview(TreeviewInterface):
 class ResizableTreeview(TreeviewInterface):
     """Class used to create a Treeview table with "QtWidgets.QTreeView"."""
 
-    def __init__(self, columns_title_list):
+    def __init__(self, columns_title_list, split_big_title=True):
         """
         Create a Treeview table object from "QtWidgets.QTreeView".
 
@@ -185,4 +192,5 @@ class ResizableTreeview(TreeviewInterface):
         super().__init__(
             CentralWidget=None,
             columns_title_list=columns_title_list,
+            split_big_title=split_big_title,
         )
