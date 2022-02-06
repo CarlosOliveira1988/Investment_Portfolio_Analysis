@@ -910,3 +910,11 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         for tab_interface in self.TabInterfaceList:
             if index == tab_interface.getTabIndex():
                 tab_interface.onChangeAction()
+
+    def getPortfolioInvestmentObject(self):
+        """Return the Portfolio Investment Object to handle extrato sheet."""
+        return self.investment
+
+    def getExtratoPath(self):
+        """Get the extrato sheet path."""
+        return self.investment.getExtratoPath()

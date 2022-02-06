@@ -1,12 +1,12 @@
 """This file has a set of methods related to Portfolio/Extrato."""
 
+import os
 import re
 import sys
 
 import pandas as pd
 import requests
 import yfinance as yf
-from balance_lib.get_config import EnvironmentConfiguration
 from bs4 import BeautifulSoup
 from indexer_lib.fixed_income import FixedIncomeCalculation
 
@@ -52,8 +52,13 @@ class PortfolioInvestment:
     def setFile(self, fileOperations):
         """Set the excel file related to the porfolio."""
         self.fileOperations = fileOperations
-        env_config = EnvironmentConfiguration()
-        env_config.setExtratoPath(self.fileOperations)
+
+    def getExtratoPath(self):
+        """Get the extrato sheet path."""
+        if os.path.isfile(self.fileOperations):
+            return os.path.dirname(self.fileOperations)
+        elif os.path.isdir(self.fileOperations):
+            return self.fileOperations
 
     def isValidFile(self):
         """Return if the excel portfolio file is valid or not."""

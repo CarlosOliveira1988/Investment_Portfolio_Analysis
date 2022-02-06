@@ -7,12 +7,15 @@ import os
 class InvestmentConfig:
     """Class used to get configurations related to investment types."""
 
-    def __init__(self, main_tag, main_title, subtags, subtitles, config_file):
+    def __init__(
+        self, main_tag, main_title, subtags, subtitles, filter_column, config_file
+    ):
         """Create the InvestmentConfig object."""
         self.main_tag = main_tag
         self.main_title = main_title
         self.subtags = subtags
         self.subtitles = subtitles
+        self.filter_column = filter_column
         self.config_file = config_file
         self.parser = configparser.ConfigParser()
         if config_file:
@@ -27,6 +30,7 @@ class InvestmentConfig:
         for subtag in self.subtags:
             try:
                 configuration = self.parser.getfloat(self.main_tag, subtag)
+                configuration /= 100.0
             except ValueError:
                 configuration = 0.0
             except configparser.NoOptionError:
@@ -57,6 +61,10 @@ class InvestmentConfig:
         """Return the target list."""
         return self.target_list
 
+    def getFilterColumn(self):
+        """Return the column name related to the sub titles/tags."""
+        return self.filter_column
+
 
 class ClasseDeInvestimento(InvestmentConfig):
     """Handle the 'ClasseDeInvestimento' tag in configuration file."""
@@ -67,7 +75,15 @@ class ClasseDeInvestimento(InvestmentConfig):
         main_title = "Classe de Investimento"
         subtags = ["RendaVariavel", "RendaFixa", "TesouroDireto"]
         subtitles = ["Renda Variável", "Renda Fixa", "Tesouro Direto"]
-        super().__init__(main_tag, main_title, subtags, subtitles, config_file)
+        filter_column = "Mercado"
+        super().__init__(
+            main_tag,
+            main_title,
+            subtags,
+            subtitles,
+            filter_column,
+            config_file,
+        )
 
 
 class RendaVariavel(InvestmentConfig):
@@ -79,7 +95,15 @@ class RendaVariavel(InvestmentConfig):
         main_title = "Renda Variável"
         subtags = ["Acoes", "BDR", "FII", "ETF"]
         subtitles = ["Ações", "BDR", "FII", "ETF"]
-        super().__init__(main_tag, main_title, subtags, subtitles, config_file)
+        filter_column = "Mercado"
+        super().__init__(
+            main_tag,
+            main_title,
+            subtags,
+            subtitles,
+            filter_column,
+            config_file,
+        )
 
 
 class RendaFixa(InvestmentConfig):
@@ -91,7 +115,15 @@ class RendaFixa(InvestmentConfig):
         main_title = "Renda Fixa"
         subtags = ["PREFIXADO", "CDI", "IPCA"]
         subtitles = ["PREFIXADO", "CDI", "IPCA"]
-        super().__init__(main_tag, main_title, subtags, subtitles, config_file)
+        filter_column = "Indexador"
+        super().__init__(
+            main_tag,
+            main_title,
+            subtags,
+            subtitles,
+            filter_column,
+            config_file,
+        )
 
 
 class TesouroDireto(InvestmentConfig):
@@ -103,7 +135,15 @@ class TesouroDireto(InvestmentConfig):
         main_title = "Tesouro Direto"
         subtags = ["PREFIXADO", "SELIC", "IPCA"]
         subtitles = ["PREFIXADO", "SELIC", "IPCA"]
-        super().__init__(main_tag, main_title, subtags, subtitles, config_file)
+        filter_column = "Indexador"
+        super().__init__(
+            main_tag,
+            main_title,
+            subtags,
+            subtitles,
+            filter_column,
+            config_file,
+        )
 
 
 class InvestmentConfigManager:
@@ -113,10 +153,12 @@ class InvestmentConfigManager:
         """Create the InvestmentConfigManager object."""
         self.config_dir = config_dir
         self.config_file = os.path.join(self.config_dir, "investimentos.ini")
+        self.default_config_file = False
         if self.__configFileExists():
             pass
         else:
             self.__createDefaultConfigFile()
+            self.default_config_file = True
 
     def __configFileExists(self):
         return os.path.isfile(self.config_file)
@@ -157,21 +199,6 @@ class InvestmentConfigManager:
         """Return the string related to the configuration file address."""
         return self.config_file
 
-
-class EnvironmentConfiguration:
-    """Class used to handle with environment variables."""
-
-    def __init__(self):
-        """Create the EnvironmentConfiguration object."""
-        pass
-
-    def setExtratoPath(self, file):
-        """Set the extrato sheet path."""
-        if os.path.isfile(file):
-            os.environ["EXTRATO_SHEET_PATH"] = os.path.dirname(file)
-        elif os.path.isdir(file):
-            os.environ["EXTRATO_SHEET_PATH"] = file
-
-    def getExtratoPath(self):
-        """Get the extrato sheet path."""
-        return os.environ["EXTRATO_SHEET_PATH"]
+    def isDefaultConfigFile(self):
+        """Return if the default configuration file was generated."""
+        return self.default_config_file

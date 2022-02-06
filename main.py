@@ -102,10 +102,11 @@ class FileMenu(QtWidgets.QMenu):
 class ToolsMenu(QtWidgets.QMenu):
     """ToolsMenu class."""
 
-    def __init__(self, menu_bar):
+    def __init__(self, menu_bar, PortfolioViewerWidget):
         """Create the ToolsMenu object."""
         super().__init__("&Ferramentas", menu_bar)
         self.menu_bar = menu_bar
+        self.PortfolioViewerWidget = PortfolioViewerWidget
 
         # External windows
         self.EconomicIndexerWindow = None
@@ -146,7 +147,14 @@ class ToolsMenu(QtWidgets.QMenu):
 
     def balancingFunction(self):
         """Launch the Portfolio Balancing app."""
-        self.BalancingWindow = BalancingWindow()
+        investment = self.PortfolioViewerWidget.getPortfolioInvestmentObject()
+        extrato_path = self.PortfolioViewerWidget.getExtratoPath()
+        self.BalancingWindow = BalancingWindow(
+            investment.currentPortfolio(),
+            investment.currentRendaFixa(),
+            investment.currentTesouroDireto(),
+            extrato_path,
+        )
 
 
 class LinksMenu(QtWidgets.QMenu):
@@ -212,13 +220,13 @@ class MainWindow(QtWidgets.QWidget):
         self.statusBar.showMessage(file)
 
         # Add menu bar
-        self._createMenuBar(file)
+        self._createMenuBar()
 
         # Show the window
         if auto_show:
             self.showMaximized()
 
-    def _createMenuBar(self, file):
+    def _createMenuBar(self):
         # Menu bar
         self.menuBar = QtWidgets.QMenuBar()
         self.grid.setMenuBar(self.menuBar)
@@ -234,6 +242,7 @@ class MainWindow(QtWidgets.QWidget):
         # Tools menu
         self.toolsMenu = ToolsMenu(
             self.menuBar,
+            self.PortfolioViewerWidget,
         )
         self.menuBar.addMenu(self.toolsMenu)
 

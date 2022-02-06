@@ -78,7 +78,10 @@ class InvestmentBox:
     def __calculateDFRelatedValues(self):
         # Calculate the columns
         self.df["Meta(R$)"] = self.df["Meta(%)"] * self.current_total
-        self.df["Atual(%)"] = self.df["Atual(R$)"] / self.current_total
+        try:
+            self.df["Atual(%)"] = self.df["Atual(R$)"] / self.current_total
+        except ZeroDivisionError:
+            self.df["Atual(%)"] = 0.0
 
     def __setTotalLine(self):
         # Create the total line

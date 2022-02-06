@@ -35,6 +35,7 @@ class Test_InvestmentConfigManager:
         subtag_list = ["RendaVariavel", "RendaFixa", "TesouroDireto"]
         subtitle_list = ["Renda Variável", "Renda Fixa", "Tesouro Direto"]
         target_list = [100 / len(subtag_list)] * len(subtag_list)
+        target_list = [x / 100.0 for x in target_list]
         cfg = ClasseDeInvestimento(file)
         assert cfg.getMainTag() == main_tag
         assert cfg.getSubTagList() == subtag_list
@@ -50,6 +51,7 @@ class Test_InvestmentConfigManager:
         subtag_list = ["Acoes", "BDR", "FII", "ETF"]
         subtitle_list = ["Ações", "BDR", "FII", "ETF"]
         target_list = [100 / len(subtag_list)] * len(subtag_list)
+        target_list = [x / 100.0 for x in target_list]
         cfg = RendaVariavel(file)
         assert cfg.getMainTag() == main_tag
         assert cfg.getSubTagList() == subtag_list
@@ -65,6 +67,7 @@ class Test_InvestmentConfigManager:
         subtag_list = ["PREFIXADO", "CDI", "IPCA"]
         subtitle_list = ["PREFIXADO", "CDI", "IPCA"]
         target_list = [100 / len(subtag_list)] * len(subtag_list)
+        target_list = [x / 100.0 for x in target_list]
         cfg = RendaFixa(file)
         assert cfg.getMainTag() == main_tag
         assert cfg.getSubTagList() == subtag_list
@@ -80,6 +83,7 @@ class Test_InvestmentConfigManager:
         subtag_list = ["PREFIXADO", "SELIC", "IPCA"]
         subtitle_list = ["PREFIXADO", "SELIC", "IPCA"]
         target_list = [100 / len(subtag_list)] * len(subtag_list)
+        target_list = [x / 100.0 for x in target_list]
         cfg = TesouroDireto(file)
         assert cfg.getMainTag() == main_tag
         assert cfg.getSubTagList() == subtag_list
