@@ -799,28 +799,18 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
 
     def __updateMainDataframes(self):
         try:
+            self.investment.run()
+            self.extrato = self.investment.getExtrato()
+            self.variable_income = self.investment.currentPortfolio()
+            self.fixed_income = self.investment.currentRendaFixa()
+            self.treasuries = self.investment.currentTesouroDireto()
+            self.short_summary = self.extrato.copy()
             if self.investment.isValidFile():
-                self.investment.run()
-                self.extrato = self.investment.getExtrato()
-                self.variable_income = self.investment.currentPortfolio()
-                self.fixed_income = self.investment.currentRendaFixa()
-                self.treasuries = self.investment.currentTesouroDireto()
-                self.short_summary = self.extrato.copy()
                 return True
             else:
-                self.extrato = None
-                self.variable_income = None
-                self.fixed_income = None
-                self.treasuries = None
-                self.short_summary = None
                 self.__showColumnsErrorMessage()
                 return False
         except XLRDError:
-            self.extrato = None
-            self.variable_income = None
-            self.fixed_income = None
-            self.treasuries = None
-            self.short_summary = None
             self.__showXLRDErrorMessage()
             return False
 

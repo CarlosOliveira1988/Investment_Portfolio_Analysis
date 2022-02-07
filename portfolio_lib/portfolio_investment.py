@@ -102,7 +102,7 @@ class PortfolioInvestment:
         extrato = pd.read_excel(self.fileOperations)
 
         # Excel file has title and data lines
-        if len(extrato):
+        if self.isValidFile():
             return extrato
 
         # Excel file has ONLY the title line

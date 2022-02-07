@@ -8,7 +8,13 @@ class InvestmentConfig:
     """Class used to get configurations related to investment types."""
 
     def __init__(
-        self, main_tag, main_title, subtags, subtitles, filter_column, config_file
+        self,
+        main_tag,
+        main_title,
+        subtags,
+        subtitles,
+        filter_column,
+        config_file,
     ):
         """Create the InvestmentConfig object."""
         self.main_tag = main_tag
