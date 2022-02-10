@@ -77,17 +77,12 @@ class ClasseDeInvestimento(InvestmentConfig):
 
     def __init__(self, config_file):
         """Create the ClasseDeInvestimento object."""
-        main_tag = "ClasseDeInvestimento"
-        main_title = "Classe de Investimento"
-        subtags = ["RendaVariavel", "RendaFixa", "TesouroDireto"]
-        subtitles = ["Renda Variável", "Renda Fixa", "Tesouro Direto"]
-        filter_column = "Mercado"
         super().__init__(
-            main_tag,
-            main_title,
-            subtags,
-            subtitles,
-            filter_column,
+            "ClasseDeInvestimento",
+            "Classe de Investimento",
+            ["RendaVariavel", "RendaFixa", "TesouroDireto"],
+            ["Renda Variável", "Renda Fixa", "Tesouro Direto"],
+            "Mercado",
             config_file,
         )
 
@@ -97,17 +92,12 @@ class RendaVariavel(InvestmentConfig):
 
     def __init__(self, config_file):
         """Create the RendaVariavel object."""
-        main_tag = "RendaVariavel"
-        main_title = "Renda Variável"
-        subtags = ["Acoes", "BDR", "FII", "ETF"]
-        subtitles = ["Ações", "BDR", "FII", "ETF"]
-        filter_column = "Mercado"
         super().__init__(
-            main_tag,
-            main_title,
-            subtags,
-            subtitles,
-            filter_column,
+            "RendaVariavel",
+            "Renda Variável",
+            ["Acoes", "BDR", "FII", "ETF"],
+            ["Ações", "BDR", "FII", "ETF"],
+            "Mercado",
             config_file,
         )
 
@@ -117,17 +107,12 @@ class RendaFixa(InvestmentConfig):
 
     def __init__(self, config_file):
         """Create the RendaFixa object."""
-        main_tag = "RendaFixa"
-        main_title = "Renda Fixa"
-        subtags = ["PREFIXADO", "CDI", "IPCA"]
-        subtitles = ["PREFIXADO", "CDI", "IPCA"]
-        filter_column = "Indexador"
         super().__init__(
-            main_tag,
-            main_title,
-            subtags,
-            subtitles,
-            filter_column,
+            "RendaFixa",
+            "Renda Fixa",
+            ["PREFIXADO", "CDI", "IPCA"],
+            ["PREFIXADO", "CDI", "IPCA"],
+            "Indexador",
             config_file,
         )
 
@@ -137,17 +122,12 @@ class TesouroDireto(InvestmentConfig):
 
     def __init__(self, config_file):
         """Create the TesouroDireto object."""
-        main_tag = "TesouroDireto"
-        main_title = "Tesouro Direto"
-        subtags = ["PREFIXADO", "SELIC", "IPCA"]
-        subtitles = ["PREFIXADO", "SELIC", "IPCA"]
-        filter_column = "Indexador"
         super().__init__(
-            main_tag,
-            main_title,
-            subtags,
-            subtitles,
-            filter_column,
+            "TesouroDireto",
+            "Tesouro Direto",
+            ["PREFIXADO", "SELIC", "IPCA"],
+            ["PREFIXADO", "SELIC", "IPCA"],
+            "Indexador",
             config_file,
         )
 

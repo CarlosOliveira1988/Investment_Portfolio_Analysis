@@ -524,7 +524,8 @@ class PortfolioInvestment:
 
         # Create a Pandas Excel writer using XlsxWriter as the engine
         file_name = "carteiraGoogleDrive.xlsx"
-        writer = pd.ExcelWriter(file_name, engine="xlsxwriter")
+        file = os.path.join(self.getExtratoPath(), "carteiraGoogleDrive.xlsx")
+        writer = pd.ExcelWriter(file, engine="xlsxwriter")
 
         # Convert the dataframe to an XlsxWriter Excel object.
         dataframe.to_excel(writer, sheet_name="Sheet1", index=False)

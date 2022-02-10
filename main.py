@@ -64,7 +64,7 @@ class FileMenu(MenuInterface):
             self.openFile,
         )
         self.exportGD = self.addSubmenu(
-            "&Exportar GD",
+            "&Exportar Planilha Google Drive",
             self.exportGDFile,
         )
         self.exit = self.addSubmenu(
@@ -266,23 +266,20 @@ class MainWindow(QtWidgets.QWidget):
 
 if __name__ == "__main__":
 
-    import sys
-
-    SOURCE_FILE_DIRECTORY = sys.path[0] + "\\portfolio_lib"
-    FILE_NAME = r"\PORTFOLIO_TEMPLATE_EMPTY.xlsx"
-    FILE = SOURCE_FILE_DIRECTORY + FILE_NAME
-
-    # Create the application
+    import os
     import sys
 
     from PyQt5 import QtWidgets
 
+    # Create the application
     app = QtWidgets.QApplication(sys.argv)
 
-    # File directory
-    source_file_directory = sys.path[0]
+    # Main directory
+    SOURCE_FILE_DIRECTORY = os.path.join(os.path.curdir, "portfolio_lib")
+    FILE_NAME = "PORTFOLIO_TEMPLATE_EMPTY.xlsx"
+    FILE = os.path.join(SOURCE_FILE_DIRECTORY, FILE_NAME)
 
-    # Create and shows the "MainWindow" object
+    # Create and show the "MainWindow" object
     main = MainWindow(FILE)
 
     # End the application when everything is closed

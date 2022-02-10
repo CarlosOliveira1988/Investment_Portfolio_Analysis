@@ -5,6 +5,7 @@ from gui_lib.treeview.treeview_pandas import ResizableTreeviewPandas
 from gui_lib.window import Window
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
+from widget_lib.tab_viewer import TabViewerWidget
 
 from balance_lib.balance import BalancingBox
 from balance_lib.get_config import (
@@ -19,9 +20,9 @@ from balance_lib.get_config import (
 class BalancingBoxTreeview:
     """Class used to create special treeview related to BalancingBox."""
 
-    def __init__(self, config_file, InvestmentConfigClass, dataframe):
+    def __init__(self, InvestmentConfigObject, dataframe):
         """Create the BalancingBoxTreeview object."""
-        self.investment = InvestmentConfigClass(config_file)
+        self.investment = InvestmentConfigObject
 
         # BalancingBox
         filter_column = self.investment.getFilterColumn()
@@ -76,12 +77,9 @@ class GeneralDataframes:
         CI_df = pd.concat([RV_df, RF_df, TD_df], ignore_index=True, sort=False)
 
         # Replace some column values
-        replace_dict = {
-            "Ações": "Renda Variável",
-            "BDR": "Renda Variável",
-            "FII": "Renda Variável",
-            "ETF": "Renda Variável",
-        }
+        replace_dict = {}
+        for subtitle in RendaVariavel(None).getSubTitlesList():
+            replace_dict[subtitle] = "Renda Variável"
         return CI_df.replace(to_replace=replace_dict, value=None)
 
     """Public methods."""
@@ -103,49 +101,7 @@ class GeneralDataframes:
         return self.TesouroDireto_df.copy()
 
 
-class TabWidget:
-    """Class used to show general tabs."""
-
-    def __init__(self, tab_title, special_widget_list):
-        """Create the TabWidget object."""
-        self.tab_title = tab_title
-        self.tab = QtWidgets.QWidget()
-        self.grid_tab = QtWidgets.QGridLayout()
-        self.grid_tab.setContentsMargins(
-            Window.DEFAULT_BORDER_SIZE,
-            Window.DEFAULT_BORDER_SIZE,
-            Window.DEFAULT_BORDER_SIZE,
-            Window.DEFAULT_BORDER_SIZE,
-        )
-        self.grid_tab.setSpacing(Window.DEFAULT_BORDER_SIZE)
-        for special_widget in special_widget_list:
-            self.grid_tab.addWidget(special_widget)
-        self.tab.setLayout(self.grid_tab)
-
-    """Public methods."""
-
-    def getTab(self):
-        """Return the 'Tab' object."""
-        return self.tab
-
-    def getGridTab(self):
-        """Return the 'GridTab' object."""
-        return self.grid_tab
-
-    def getTabTitle(self):
-        """Return the 'Tab' title."""
-        return self.tab_title
-
-    def setTabIndex(self, tab_index):
-        """Set the tab index."""
-        self.tab_index = tab_index
-
-    def getTabIndex(self):
-        """Return the tab index."""
-        return self.tab_index
-
-
-class GeneralTabPanel(TabWidget):
+class GeneralTabPanel(TabViewerWidget):
     """Class used to create the 'Geral' tab."""
 
     def __init__(
@@ -164,36 +120,31 @@ class GeneralTabPanel(TabWidget):
         )
 
         # Investment boxes
-        self.config_file = config_file
         self.tree_list = []
         self.ClasseDeInvestimento = self.__createBoxTree(
-            ClasseDeInvestimento,
+            ClasseDeInvestimento(config_file),
             self.GeneralDataframes.getClasseDeInvestimentoDF(),
         )
         self.RendaVariavel = self.__createBoxTree(
-            RendaVariavel,
+            RendaVariavel(config_file),
             self.GeneralDataframes.getRendaVariavelDF(),
         )
         self.RendaFixa = self.__createBoxTree(
-            RendaFixa,
+            RendaFixa(config_file),
             self.GeneralDataframes.getRendaFixaDF(),
         )
         self.TesouroDireto = self.__createBoxTree(
-            TesouroDireto,
+            TesouroDireto(config_file),
             self.GeneralDataframes.getTesouroDiretoDF(),
         )
 
         # 'Geral' tab widget
-        super().__init__("Geral", self.tree_list)
+        super().__init__(self.tree_list, "Geral", Window.DEFAULT_BORDER_SIZE)
 
     """Private methods."""
 
     def __createBoxTree(self, InvestmentConfigObj, dataframe=None):
-        boxtree = BalancingBoxTreeview(
-            self.config_file,
-            InvestmentConfigObj,
-            dataframe,
-        )
+        boxtree = BalancingBoxTreeview(InvestmentConfigObj, dataframe)
         self.tree_list.append(boxtree.getTree())
         return boxtree
 
@@ -281,12 +232,13 @@ class BalancingWindow(QtWidgets.QWidget):
     """Private methods."""
 
     def __setWindowProperties(self):
-        spacing = Window.DEFAULT_BORDER_SIZE
+        spacing = Window.DEFAULT_BORDER_SIZE / 2
+        internal_spacing = Window.DEFAULT_BORDER_SIZE
 
         # Create the grid object
         self.grid = QtWidgets.QGridLayout()
         self.grid.setContentsMargins(spacing, spacing, spacing, spacing)
-        self.grid.setSpacing(spacing)
+        self.grid.setSpacing(internal_spacing)
         self.grid.addWidget(self.TabGroup)
 
         # Set the grid layout
