@@ -3,6 +3,8 @@
 import configparser
 import os
 
+from PyQt5.QtWidgets import QMessageBox
+
 
 class InvestmentConfig:
     """Class used to get configurations related to investment types."""
@@ -74,6 +76,12 @@ class InvestmentConfig:
     def getConfigFile(self):
         """Return the string related to the configuration file address."""
         return self.config_file
+
+    def setDynamicValues(self, subtags, subtitles, target_list):
+        """Set the main dynamic values: subtags, subtitles, target_list."""
+        self.subtags = subtags
+        self.subtitles = subtitles
+        self.target_list = target_list
 
 
 class SubInvestmentConfig:
@@ -147,7 +155,7 @@ class SubInvestmentConfig:
 
     def getConfigurationDict(self):
         """Return a dictionary with the configuration objects.
-        
+
         See the '__getSubConfigDict()' for more information.
         """
         return self.sub_config_dict.copy()
@@ -168,7 +176,35 @@ class ClasseDeInvestimento(InvestmentConfig):
         )
 
 
-class RendaVariavel(InvestmentConfig):
+class InvestmentConfigInterface(InvestmentConfig):
+    """Handle the investment type tags in configuration file."""
+
+    def __init__(
+        self,
+        main_tag,
+        main_title,
+        subtags,
+        subtitles,
+        filter_column,
+        config_file,
+    ):
+        """Create the InvestmentConfigInterface object."""
+        super().__init__(
+            main_tag,
+            main_title,
+            subtags,
+            subtitles,
+            filter_column,
+            config_file,
+        )
+        self.sub_config = SubInvestmentConfig(self)
+
+    def getSubConfigurationDict(self):
+        """Return a dictionary with the configuration objects."""
+        return self.sub_config.getConfigurationDict()
+
+
+class RendaVariavel(InvestmentConfigInterface):
     """Handle the 'RendaVariavel' tag in configuration file."""
 
     def __init__(self, config_file):
@@ -183,7 +219,7 @@ class RendaVariavel(InvestmentConfig):
         )
 
 
-class RendaFixa(InvestmentConfig):
+class RendaFixa(InvestmentConfigInterface):
     """Handle the 'RendaFixa' tag in configuration file."""
 
     def __init__(self, config_file):
@@ -198,7 +234,7 @@ class RendaFixa(InvestmentConfig):
         )
 
 
-class TesouroDireto(InvestmentConfig):
+class TesouroDireto(InvestmentConfigInterface):
     """Handle the 'TesouroDireto' tag in configuration file."""
 
     def __init__(self, config_file):
@@ -229,34 +265,64 @@ class InvestmentConfigManager:
         self.RendaFixa = RendaFixa(self.config_file)
         self.TesouroDireto = TesouroDireto(self.config_file)
 
+    """Private methods."""
+
     def __configFileExists(self):
         return os.path.isfile(self.config_file)
 
-    def __createDefaultConfig(self, InvestmentConfig_class, parser):
-        invest = InvestmentConfig_class(None)
+    def __createDefaultConfig(self, InvestmentConfigObj, parser):
+        invest = InvestmentConfigObj
         main_tag = invest.getMainTag()
         subtags = invest.getSubTagsList()
         config_dict = {}
-        default_value = float(100 / len(subtags))
+        # When creating the default configuration file, it is not possible
+        # to know which are the assets in the extrato spreadsheet file
+        # because here we don't have access to it.
+        # Then, 'subtags' is usually an empty list for this case.
+        try:
+            default_value = float(100 / len(subtags))
+        except ZeroDivisionError:
+            default_value = 0.0
         for subtag in subtags:
             config_dict[subtag] = default_value
         parser[main_tag] = config_dict
+
+    def __createDefaultSubConfig(self, InvestmentConfigObj, parser):
+        invest = InvestmentConfigObj
+        sub_config = SubInvestmentConfig(invest)
+        sub_config_dict = sub_config.getConfigurationDict()
+        for config in sub_config_dict.values():
+            self.__createDefaultConfig(config, parser)
 
     def __createDefaultConfigFile(self):
         # ConfigParser
         parser = configparser.ConfigParser()
 
-        # [ClasseDeInvestimento]
-        self.__createDefaultConfig(ClasseDeInvestimento, parser)
+        # Default configuration: main tags
+        default_config_dict = {
+            "[ClasseDeInvestimento]": ClasseDeInvestimento(None),
+            "[RendaVariavel]": RendaVariavel(None),
+            "[RendaFixa]": RendaFixa(None),
+            "[TesouroDireto]": TesouroDireto(None),
+        }
+        for default_config in default_config_dict.values():
+            self.__createDefaultConfig(default_config, parser)
 
-        # [RendaVariavel]
-        self.__createDefaultConfig(RendaVariavel, parser)
-
-        # [RendaFixa]
-        self.__createDefaultConfig(RendaFixa, parser)
-
-        # [TesouroDireto]
-        self.__createDefaultConfig(TesouroDireto, parser)
+        # Default configuration: 2nd level tags
+        default_sub_config_dict = {
+            "[RV_ACOES]": RendaVariavel(None),
+            "[RV_BDR]": RendaVariavel(None),
+            "[RV_FII]": RendaVariavel(None),
+            "[RV_ETF]": RendaVariavel(None),
+            "[RF_PREFIXADO]": RendaFixa(None),
+            "[RF_CDI]": RendaFixa(None),
+            "[RF_IPCA]": RendaFixa(None),
+            "[TD_PREFIXADO]": TesouroDireto(None),
+            "[TD_SELIC]": TesouroDireto(None),
+            "[TD_IPCA]": TesouroDireto(None),
+        }
+        for default_sub_config in default_sub_config_dict.values():
+            self.__createDefaultSubConfig(default_sub_config, parser)
 
         # Create the default configuration file
         with open(self.config_file, "w") as configfile:
@@ -275,3 +341,27 @@ class InvestmentConfigManager:
     def isDefaultConfigFile(self):
         """Return if the default configuration file was generated."""
         return self.default_config_file
+
+
+class ConfigurationManager(InvestmentConfigManager):
+    """Class used to handle with configurations."""
+
+    def __init__(self, extrato_path):
+        """Create the ConfigurationManager object."""
+        super().__init__(extrato_path)
+        if self.isDefaultConfigFile():
+            self.showDefatultConfigurationMsg()
+
+    """Public methods."""
+
+    def showDefatultConfigurationMsg(self):
+        """Show the message related to default configuration file."""
+        msg = "Um arquivo de configurações 'investimentos.ini' foi criado "
+        msg += "no seguinte diretório:\n\n" + self.getConfigFileDir()
+        msg += "\n\nConsidere editar esse arquivo conforme necessário."
+        QMessageBox.information(
+            self,
+            "Análise de Portfólio",
+            msg,
+            QMessageBox.Ok,
+        )

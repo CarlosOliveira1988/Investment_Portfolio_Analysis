@@ -1,0 +1,80 @@
+"""This file is useful to handle special tab panels portfolio balancing."""
+
+from PyQt5 import QtWidgets
+
+from balance_lib.balance_panels import AssetsTabPanel, GeneralTabPanel
+
+
+class BalancingWindowTabs(QtWidgets.QTabWidget):
+    """Class used to create special tabs."""
+
+    def __init__(
+        self,
+        RendaVariavel_df,
+        RendaFixa_df,
+        TesouroDireto_df,
+        ConfigurationManagerObj,
+    ):
+        """Create the BalancingWindowTabs object."""
+        super().__init__()
+
+        # Control variable
+        self.tab_list = []
+
+        # General tab
+        self.GeneralTabPanel, self.GeneralTabIndex = self.__addGeneralTab(
+            RendaVariavel_df,
+            RendaFixa_df,
+            TesouroDireto_df,
+            ConfigurationManagerObj,
+        )
+
+        # Assets tabs
+        self.RVTabPanel, self.RVTabIndex = self.__addAssetsTab(
+            RendaVariavel_df,
+            ConfigurationManagerObj.RendaVariavel,
+        )
+        self.RFTabPanel, self.RFTabIndex = self.__addAssetsTab(
+            RendaFixa_df,
+            ConfigurationManagerObj.RendaFixa,
+        )
+        self.TDTabPanel, self.TDTabIndex = self.__addAssetsTab(
+            TesouroDireto_df,
+            ConfigurationManagerObj.TesouroDireto,
+        )
+
+        # Connect tab event
+        self.currentChanged.connect(self.onChange)
+
+    """Private methods."""
+
+    def __addGeneralTab(
+        self,
+        RendaVariavel_df,
+        RendaFixa_df,
+        TesouroDireto_df,
+        InvestmentConfigObj,
+    ):
+        tab_panel = GeneralTabPanel(
+            RendaVariavel_df.copy(),
+            RendaFixa_df.copy(),
+            TesouroDireto_df.copy(),
+            InvestmentConfigObj,
+        )
+        return self.__getTabPanelAndIndex(tab_panel)
+
+    def __addAssetsTab(self, assets_df, InvestmentConfigObj):
+        tab_panel = AssetsTabPanel(assets_df.copy(), InvestmentConfigObj)
+        return self.__getTabPanelAndIndex(tab_panel)
+
+    def __getTabPanelAndIndex(self, tab_panel):
+        tab_index = self.addTab(tab_panel.getTab(), tab_panel.getTabTitle())
+        self.tab_list.append(tab_panel)
+        return tab_panel, tab_index
+
+    """Public methods."""
+
+    def onChange(self, index):
+        """Onchange tab method to render the table columns."""
+        for tab in self.tab_list:
+            tab.resize()
