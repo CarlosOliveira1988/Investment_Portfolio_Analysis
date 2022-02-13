@@ -14,6 +14,7 @@ class TabViewerWidget:
 
         The 'tab_title' is the text on the tab.
         """
+        self.tab_index = None
         self.tab_title = tab_title
         self.tab = QtWidgets.QWidget()
         self.grid_tab = QtWidgets.QGridLayout()

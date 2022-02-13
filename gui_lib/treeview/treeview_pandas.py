@@ -83,6 +83,8 @@ class ResizableTreeviewPandas(ResTreeview):
             self.insertParentLine(items_list)
         if resize_per_contents:
             self.resizeColumnsToContents()
+        else:
+            self.resizeColumnsToTreeViewWidth()
 
     def setDataframe(self, dataframe):
         """Set the dataframe."""

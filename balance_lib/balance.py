@@ -37,16 +37,7 @@ class InvestmentBox:
         value_len = len(value_list)
         type_len = len(type_list)
         sum_len = target_len + value_len + type_len
-        if target_len == 0:
-            msg = "The 'target_list' length is zero."
-            raise ValueError(msg)
-        elif value_len == 0:
-            msg = "The 'value_list' length is zero."
-            raise ValueError(msg)
-        elif type_len == 0:
-            msg = "The 'type_list' length is zero."
-            raise ValueError(msg)
-        elif (3 * target_len) != sum_len:
+        if (3 * target_len) != sum_len:
             msg = "All lists must have the same length."
             raise ValueError(msg)
 

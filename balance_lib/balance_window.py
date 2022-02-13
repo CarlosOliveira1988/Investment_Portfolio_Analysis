@@ -9,11 +9,9 @@ from widget_lib.tab_viewer import TabViewerWidget
 
 from balance_lib.balance import BalancingBox
 from balance_lib.get_config import (
-    ClasseDeInvestimento,
     InvestmentConfigManager,
-    RendaFixa,
     RendaVariavel,
-    TesouroDireto,
+    SubInvestmentConfig,
 )
 
 
@@ -38,6 +36,7 @@ class BalancingBoxTreeview:
             split_big_title=False,
         )
         self.tree.showPandas()
+        self.resize()
 
     """Private methods."""
 
@@ -54,6 +53,10 @@ class BalancingBoxTreeview:
     def getTree(self):
         """Return the Tree object."""
         return self.tree
+
+    def resize(self):
+        """Resize the treeview."""
+        self.tree.resizeColumnsToTreeViewWidth()
 
 
 class GeneralDataframes:
@@ -109,7 +112,7 @@ class GeneralTabPanel(TabViewerWidget):
         RendaVariavel_df,
         RendaFixa_df,
         TesouroDireto_df,
-        config_file,
+        ConfigurationManagerObj,
     ):
         """Create the GeneralTabPanel object."""
         # Dataframes
@@ -120,21 +123,23 @@ class GeneralTabPanel(TabViewerWidget):
         )
 
         # Investment boxes
+        self.config = ConfigurationManagerObj
         self.tree_list = []
+        self.box_list = []
         self.ClasseDeInvestimento = self.__createBoxTree(
-            ClasseDeInvestimento(config_file),
+            self.config.ClasseDeInvestimento,
             self.GeneralDataframes.getClasseDeInvestimentoDF(),
         )
         self.RendaVariavel = self.__createBoxTree(
-            RendaVariavel(config_file),
+            self.config.RendaVariavel,
             self.GeneralDataframes.getRendaVariavelDF(),
         )
         self.RendaFixa = self.__createBoxTree(
-            RendaFixa(config_file),
+            self.config.RendaFixa,
             self.GeneralDataframes.getRendaFixaDF(),
         )
         self.TesouroDireto = self.__createBoxTree(
-            TesouroDireto(config_file),
+            self.config.TesouroDireto,
             self.GeneralDataframes.getTesouroDiretoDF(),
         )
 
@@ -146,24 +151,73 @@ class GeneralTabPanel(TabViewerWidget):
     def __createBoxTree(self, InvestmentConfigObj, dataframe=None):
         boxtree = BalancingBoxTreeview(InvestmentConfigObj, dataframe)
         self.tree_list.append(boxtree.getTree())
+        self.box_list.append(boxtree)
         return boxtree
 
     """Public methods."""
 
     def resize(self):
-        """Resize the treeviews."""
-        for tree in self.tree_list:
-            tree.resizeColumnsToTreeViewWidth()
+        """Resize the treeview."""
+        for box in self.box_list:
+            box.resize()
 
 
-class ConfigurationManager:
+class AssetsTabPanel(TabViewerWidget):
+    """Class used to create the 'Assets' tabs.
+
+    The 'AssetsTabPanel' is useful to create the special tabs, with several
+    treeview objects as follows:
+    - Renda Variável
+    - Renda Fixa
+    - Tesouro Direto
+    """
+
+    def __init__(self, assets_df, InvestmentConfigObj):
+        """Create the AssetsTabPanel object.
+
+        Arguments:
+        - assets_df: the filtered dataframe per investment type (Renda
+        Variável, Renda Fixa, Tesouro Direto)
+        - InvestmentConfigObj: the InvestmentConfig object type, related
+        to the 'assets_df' variable.
+        """
+        self.assets_df = assets_df
+        self.config = InvestmentConfigObj
+        self.sub_config = SubInvestmentConfig(self.config)
+        self.box_list = []
+        self.tree_list = self.__getBalancingBoxTreeviewList()
+        super().__init__(
+            self.tree_list,
+            self.config.getMainTitle(),
+            Window.DEFAULT_BORDER_SIZE,
+        )
+
+    """Private methods."""
+
+    def __getBalancingBoxTreeviewList(self):
+        tree_list = []
+        sub_config_dict = self.sub_config.getConfigurationDict()
+        for sub_config in sub_config_dict.values():
+            box = BalancingBoxTreeview(sub_config, self.assets_df)
+            tree_list.append(box.getTree())
+            self.box_list.append(box)
+        return tree_list
+
+    """Public methods."""
+
+    def resize(self):
+        """Resize the treeview."""
+        for box in self.box_list:
+            box.resize()
+
+
+class ConfigurationManager(InvestmentConfigManager):
     """Class used to handle with configurations."""
 
     def __init__(self, extrato_path):
         """Create the ConfigurationManager object."""
-        self.extrato_path = extrato_path
-        self.config = InvestmentConfigManager(extrato_path)
-        if self.config.isDefaultConfigFile():
+        super().__init__(extrato_path)
+        if self.isDefaultConfigFile():
             self.showDefatultConfigurationMsg()
 
     """Public methods."""
@@ -171,7 +225,7 @@ class ConfigurationManager:
     def showDefatultConfigurationMsg(self):
         """Show the message related to default configuration file."""
         msg = "Um arquivo de configurações 'investimentos.ini' foi criado "
-        msg += "no seguinte diretório:\n\n" + self.extrato_path
+        msg += "no seguinte diretório:\n\n" + self.getConfigFileDir()
         msg += "\n\nConsidere editar esse arquivo conforme necessário."
         QMessageBox.information(
             self,
@@ -180,9 +234,81 @@ class ConfigurationManager:
             QMessageBox.Ok,
         )
 
-    def getConfigFile(self):
-        """Return the configuration file."""
-        return self.config.getConfigFile()
+
+class BalancingWindowTabs(QtWidgets.QTabWidget):
+    """Class used to create special tabs."""
+
+    def __init__(
+        self,
+        RendaVariavel_df,
+        RendaFixa_df,
+        TesouroDireto_df,
+        ConfigurationManagerObj,
+    ):
+        """Create the BalancingWindowTabs object."""
+        super().__init__()
+
+        # Control variable
+        self.tab_list = []
+
+        # General tab
+        self.GeneralTabPanel = self.__addGeneralTab(
+            RendaVariavel_df,
+            RendaFixa_df,
+            TesouroDireto_df,
+            ConfigurationManagerObj,
+        )
+
+        # Assets tabs
+        self.RendaVariavelTabPanel = self.__addAssetsTab(
+            RendaVariavel_df,
+            ConfigurationManagerObj.RendaVariavel,
+        )
+        self.RendaFixaTabPanel = self.__addAssetsTab(
+            RendaFixa_df,
+            ConfigurationManagerObj.RendaFixa,
+        )
+        self.TesouroDiretoTabPanel = self.__addAssetsTab(
+            TesouroDireto_df,
+            ConfigurationManagerObj.TesouroDireto,
+        )
+
+        # Connect tab event
+        self.currentChanged.connect(self.onChange)
+
+    """Private methods."""
+
+    def __getTabPanelAndIndex(self, tab_panel):
+        tab_index = self.addTab(tab_panel.getTab(), tab_panel.getTabTitle())
+        self.tab_list.append(tab_panel)
+        return tab_panel, tab_index
+
+    def __addGeneralTab(
+        self,
+        RendaVariavel_df,
+        RendaFixa_df,
+        TesouroDireto_df,
+        InvestmentConfigObj,
+    ):
+        tab_panel = GeneralTabPanel(
+            RendaVariavel_df,
+            RendaFixa_df,
+            TesouroDireto_df,
+            InvestmentConfigObj,
+        )
+        return self.__getTabPanelAndIndex(tab_panel)
+
+    def __addAssetsTab(self, assets_df, InvestmentConfigObj):
+        tab_panel = AssetsTabPanel(assets_df, InvestmentConfigObj)
+        return self.__getTabPanelAndIndex(tab_panel)
+
+    """Public methods."""
+
+    def onChange(self, index):
+        """Onchange tab method to render the table columns."""
+        for tab in self.tab_list:
+            # if index == tab.getTabIndex():
+            tab.resize()
 
 
 class BalancingWindow(QtWidgets.QWidget):
@@ -206,19 +332,14 @@ class BalancingWindow(QtWidgets.QWidget):
         super().__init__()
 
         # Configuration manager
-        self.ConfigurationManager = ConfigurationManager(extrato_path)
+        self.config = ConfigurationManager(extrato_path)
 
-        # Tabs
-        self.TabGroup = QtWidgets.QTabWidget()
-        self.GeneralTabPanel = GeneralTabPanel(
+        # Tab group
+        self.TabGroup = BalancingWindowTabs(
             RendaVariavel_df,
             RendaFixa_df,
             TesouroDireto_df,
-            self.ConfigurationManager.getConfigFile(),
-        )
-        self.TabGroup.addTab(
-            self.GeneralTabPanel.getTab(),
-            self.GeneralTabPanel.getTabTitle(),
+            self.config,
         )
 
         # Set the window properties
@@ -227,7 +348,6 @@ class BalancingWindow(QtWidgets.QWidget):
         # Show the window
         if auto_show:
             self.showMaximized()
-            self.__resizeEvent()
 
     """Private methods."""
 
@@ -246,12 +366,3 @@ class BalancingWindow(QtWidgets.QWidget):
 
         # Set the title
         self.setWindowTitle("Balanceamento de Carteira")
-
-    def __resizeEvent(self):
-        self.GeneralTabPanel.resize()
-
-    """Public methods."""
-
-    def resizeEvent(self, event):
-        """Overide the resizeEvent from QtWidgets.QWidget."""
-        self.__resizeEvent()

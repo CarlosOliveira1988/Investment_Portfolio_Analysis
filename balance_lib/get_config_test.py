@@ -6,9 +6,11 @@ import pytest
 
 from get_config import (
     ClasseDeInvestimento,
+    InvestmentConfig,
     InvestmentConfigManager,
     RendaFixa,
     RendaVariavel,
+    SubInvestmentConfig,
     TesouroDireto,
 )
 
@@ -38,7 +40,7 @@ class Test_InvestmentConfigManager:
         target_list = [x / 100.0 for x in target_list]
         cfg = ClasseDeInvestimento(file)
         assert cfg.getMainTag() == main_tag
-        assert cfg.getSubTagList() == subtag_list
+        assert cfg.getSubTagsList() == subtag_list
         assert cfg.getSubTitlesList() == subtitle_list
         assert cfg.getMainTitle() == title
         assert cfg.getTargetList()[0] == pytest.approx(target_list[0], 0.001)
@@ -54,7 +56,7 @@ class Test_InvestmentConfigManager:
         target_list = [x / 100.0 for x in target_list]
         cfg = RendaVariavel(file)
         assert cfg.getMainTag() == main_tag
-        assert cfg.getSubTagList() == subtag_list
+        assert cfg.getSubTagsList() == subtag_list
         assert cfg.getSubTitlesList() == subtitle_list
         assert cfg.getMainTitle() == title
         assert cfg.getTargetList()[0] == pytest.approx(target_list[0], 0.001)
@@ -70,7 +72,7 @@ class Test_InvestmentConfigManager:
         target_list = [x / 100.0 for x in target_list]
         cfg = RendaFixa(file)
         assert cfg.getMainTag() == main_tag
-        assert cfg.getSubTagList() == subtag_list
+        assert cfg.getSubTagsList() == subtag_list
         assert cfg.getSubTitlesList() == subtitle_list
         assert cfg.getMainTitle() == title
         assert cfg.getTargetList()[0] == pytest.approx(target_list[0], 0.001)
@@ -86,7 +88,19 @@ class Test_InvestmentConfigManager:
         target_list = [x / 100.0 for x in target_list]
         cfg = TesouroDireto(file)
         assert cfg.getMainTag() == main_tag
-        assert cfg.getSubTagList() == subtag_list
+        assert cfg.getSubTagsList() == subtag_list
         assert cfg.getSubTitlesList() == subtitle_list
         assert cfg.getMainTitle() == title
         assert cfg.getTargetList()[0] == pytest.approx(target_list[0], 0.001)
+
+    def test_SubInvestmentConfig(self):
+        """Test the 'SubInvestmentConfig' class."""
+        file = Test_InvestmentConfigManager.file
+        cfg = RendaVariavel(file)
+        sub_cfg = SubInvestmentConfig(cfg)
+        sub_cfg_dict = sub_cfg.getConfigurationDict()
+        sub_cfg_dict_list = list(sub_cfg_dict)
+        expected_dict_list = ["RV_ACOES", "RV_BDR", "RV_FII", "RV_ETF"]
+        for sub_tag in expected_dict_list:
+            assert isinstance(sub_cfg_dict[sub_tag], InvestmentConfig) is True
+        assert sub_cfg_dict_list.sort() == expected_dict_list.sort()
