@@ -16,15 +16,17 @@ class BalancingBoxTreeview:
         filter_column = self.investment.getFilterColumn()
         target_list = self.investment.getTargetList()
         type_list = self.investment.getSubTitlesList()
+        main_title = self.investment.getMainTitle()
         value_list = self.__getValueList(type_list, dataframe, filter_column)
-        self.box = BalancingBox(self.investment.getMainTitle())
+        self.box = BalancingBox(main_title)
         self.box.setValues(target_list, value_list, type_list)
 
         # Treeview
-        self.tree = ResizableTreeviewPandas(
-            self.box.getFormattedDataframe(),
-            split_big_title=False,
-        )
+        format_df = self.box.getFormattedDataframe()
+        filter_list = dataframe[filter_column].tolist()
+        filter_list.extend(["TOTAL"])
+        format_df = format_df[format_df[main_title].isin(filter_list)]
+        self.tree = ResizableTreeviewPandas(format_df, split_big_title=False)
         self.tree.showPandas()
         self.resize()
 
