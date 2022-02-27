@@ -115,7 +115,7 @@ class AssetsTabPanel(TabViewerWidget):
     """Class used to create the 'Assets' tabs.
 
     The 'AssetsTabPanel' is useful to create the special tabs, with several
-    treeview objects as follows:
+    treeview objects, related to:
     - Renda Variável
     - Renda Fixa
     - Tesouro Direto
@@ -127,8 +127,9 @@ class AssetsTabPanel(TabViewerWidget):
         Arguments:
         - assets_df: the filtered dataframe per investment type (Renda
         Variável, Renda Fixa, Tesouro Direto)
-        - InvestmentConfigObj: the InvestmentConfig object type, related
-        to the 'assets_df' variable.
+        - InvestmentConfigObj: the configuration object type, related
+        to the 'assets_df' variable, that is inherited from the
+        'InvestmentConfigInterface' class.
         """
         self.assets_df = assets_df
         self.config = InvestmentConfigObj
@@ -144,45 +145,87 @@ class AssetsTabPanel(TabViewerWidget):
     """Private methods."""
 
     def __getMergedSubTags(self, sub_config):
+        sub_titles = self.__getMergedSubTitles(sub_config)
+        sub_tags = [title.lower() for title in sub_titles]
+        return sub_tags
+
+    def __getMergedSubTitles(self, sub_config):
         # From config file/object
-        sub_tags = sub_config.getSubTagsList()
+        sub_titles = sub_config.getSubTitlesList().copy()
         filter_column = sub_config.getFilterColumn()
 
         # In this point, dataframe will have unique 'ticker' lines
         df = self.assets_df.copy()
-        sub_tags_dataframe = df[filter_column].tolist()
+        sub_titles_dataframe = df[filter_column].tolist().copy()
 
-        sub_tags.extend(sub_tags_dataframe)
-        return sub_tags
+        # Return an union of the lists, including the config lists at first
+        sub_titles.extend(sub_titles_dataframe)
+        return sub_titles
 
     def __getMergedTargets(self, sub_config, merged_sub_tags):
-        # From config file/object
         # It is expected 'sub_targets' and 'sub_tags' will have the same length
+        # because both come from the configuration file.
+        #
+        # Also, it is expected that the length of 'merged_sub_tags' is equal
+        # or greater than the length of 'sub_tags', because it is an union of
+        # data from configuration file and data from the extrato spreadsheet
         sub_targets = sub_config.getTargetList()
         sub_tags = sub_config.getSubTagsList()
 
         # Merge the target list
         target_list = []
         for merged_sub_tag in merged_sub_tags:
-            index = sub_tags.index(merged_sub_tag)
             try:
+                index = sub_tags.index(merged_sub_tag.lower())
                 target_list.append(sub_targets[index])
             except IndexError:
+                target_list.append(0.0)
+            except ValueError:
                 target_list.append(0.0)
 
         return target_list
 
+    def __removeDuplicates(self, msub_tags, msub_titles, msub_targets):
+        sub_tags = []
+        sub_titles = []
+        sub_targets = []
+        # The 'tags' in configuration file is handled as 'lower characters'
+        # but in the extrato spreadsheet as case sensitive.
+        #
+        # Since the configuration data is present at the beggining of the
+        # lists, then it is preferable to invert the lists before the 'loop'
+        low_mgd_sub_tags = [tag.lower() for tag in msub_tags]
+        low_mgd_sub_tags.reverse()
+        msub_tags.reverse()
+        msub_titles.reverse()
+        msub_targets.reverse()
+        # Remove the duplicates
+        for index, tag in enumerate(low_mgd_sub_tags):
+            if tag in sub_tags:
+                pass
+            else:
+                sub_tags.append(msub_tags[index])
+                sub_titles.append(msub_titles[index])
+                sub_targets.append(msub_targets[index])
+        return sub_tags, sub_titles, sub_targets
+
     def __mergeConfigurations(self, sub_config):
         # Merge configuration that will be used in the BalancingBox object
-        mgd_sub_tags = self.__getMergedSubTags(sub_config)
-        mgd_sub_titles = mgd_sub_tags.copy()
-        mgd_sub_targets = self.__getMergedTargets(sub_config, mgd_sub_tags)
-        sub_config.setDynamicValues(
-            mgd_sub_tags,
-            mgd_sub_titles,
-            mgd_sub_targets,
+        mgdsub_tags = self.__getMergedSubTags(sub_config)
+        mgdsub_titles = self.__getMergedSubTitles(sub_config)
+        mgdsub_targets = self.__getMergedTargets(sub_config, mgdsub_tags)
+        if sub_config.getMainTag() == "RV_ACOES":
+            print(mgdsub_tags, mgdsub_titles, mgdsub_targets)
+        mgdsub_tags, mgdsub_titles, mgdsub_targets = self.__removeDuplicates(
+            mgdsub_tags, mgdsub_titles, mgdsub_targets
         )
-        return sub_config
+        sub_config.setDynamicValues(
+            mgdsub_tags,
+            mgdsub_titles,
+            mgdsub_targets,
+        )
+        if sub_config.getMainTag() == "RV_ACOES":
+            print(mgdsub_tags, mgdsub_titles, mgdsub_targets)
 
     def __getFilteredDataframe(self, sub_config):
         # Filter the dataframe
@@ -198,7 +241,7 @@ class AssetsTabPanel(TabViewerWidget):
             # Before creating the BalancingBoxTreeview, we need to merge
             # the configuration lists related to the config file and to the
             # assets dataframe
-            sub_config = self.__mergeConfigurations(sub_config)
+            self.__mergeConfigurations(sub_config)
             fassets_df = self.__getFilteredDataframe(sub_config)
             balancing_box = BalancingBoxTreeview(sub_config, fassets_df)
             self.treeview_list.append(balancing_box.getTree())

@@ -18,7 +18,14 @@ class InvestmentConfig:
         filter_column,
         config_file,
     ):
-        """Create the InvestmentConfig object."""
+        """Create the InvestmentConfig object.
+
+        Given some special strings (main_tag, main_title, subtags, subtitles,
+        filter_column), we may get the 'percentage target' per investment
+        type.
+
+        The main output of this class is the 'self.target_list' variable.
+        """
         self.main_tag = main_tag
         self.main_title = main_title
         self.subtags = subtags
@@ -26,26 +33,33 @@ class InvestmentConfig:
         self.filter_column = filter_column
         self.config_file = config_file
         self.parser = configparser.ConfigParser()
-        if config_file:
-            self.__readConfigFile()
-            self.__getConfigurations()
+        self.__readConfigFile()
+        self.__getConfigurations()
 
     def __readConfigFile(self):
-        self.parser.read(self.config_file)
+        if self.config_file:
+            self.parser.read(self.config_file)
+
+    def __getUpdatedSubtags(self):
+        if self.config_file:
+            return self.parser.options(self.main_tag)
+        else:
+            return []
 
     def __getConfigurations(self):
         self.target_list = []
-        for subtag in self.subtags:
-            try:
-                configuration = self.parser.getfloat(self.main_tag, subtag)
-                configuration /= 100.0
-            except ValueError:
-                configuration = 0.0
-            except configparser.NoOptionError:
-                configuration = 0.0
-            except configparser.NoSectionError:
-                configuration = 0.0
-            self.target_list.append(configuration)
+        if self.config_file:
+            for subtag in self.subtags:
+                try:
+                    configuration = self.parser.getfloat(self.main_tag, subtag)
+                    configuration /= 100.0
+                except ValueError:
+                    configuration = 0.0
+                except configparser.NoOptionError:
+                    configuration = 0.0
+                except configparser.NoSectionError:
+                    configuration = 0.0
+                self.target_list.append(configuration)
 
     """Public methods."""
 
@@ -77,8 +91,18 @@ class InvestmentConfig:
         """Return the string related to the configuration file address."""
         return self.config_file
 
+    def updateDynamicValuesFromFile(self):
+        """Set the main dynamic values (subtags, subtitles, target_list).
+
+        Read the configuration file again and update the related variables.
+        """
+        self.__readConfigFile()
+        self.subtags = self.__getUpdatedSubtags()
+        self.subtitles = self.subtags.copy()
+        self.__getConfigurations()
+
     def setDynamicValues(self, subtags, subtitles, target_list):
-        """Set the main dynamic values: subtags, subtitles, target_list."""
+        """Set the main dynamic values (subtags, subtitles, target_list)."""
         self.subtags = subtags
         self.subtitles = subtitles
         self.target_list = target_list
@@ -148,6 +172,7 @@ class SubInvestmentConfig:
                 "Ticker",
                 self.config_file,
             )
+            sub_config.updateDynamicValuesFromFile()
             sub_config_dict[sub_main_tag] = sub_config
         return sub_config_dict
 

@@ -1,9 +1,7 @@
-# """This file has a class to show Economic Indexers."""
-
-# import sys
+"""This file has a class to show Economic Indexers."""
 
 from gui_lib.window import Window
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore
 
 from indexer_lib.economic_indexers_widget import EconomicIndexerWidget
 
