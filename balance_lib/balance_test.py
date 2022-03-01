@@ -1,9 +1,20 @@
 """This file is used to test the 'balance.py'."""
 
+import os
+import sys
+
 import pandas as pd
 import pytest
 
-from balance import BalancingBox, ContributionBox, InvestmentBox, NewContributionBox
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+from balance_lib.balance import (
+    BalancingBox,
+    ContributionBox,
+    InvestmentBox,
+    NewContributionBox,
+)
 
 
 class Test_InvestmentBox:

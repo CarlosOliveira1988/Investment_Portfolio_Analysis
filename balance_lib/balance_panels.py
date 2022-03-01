@@ -5,7 +5,7 @@ from gui_lib.window import Window
 from widget_lib.tab_viewer import TabViewerWidget
 
 from balance_lib.balance_treeview import BalancingBoxTreeview
-from balance_lib.get_config import RendaVariavel
+from balance_lib.get_main_config import RendaVariavel
 
 
 class GeneralDataframes:
@@ -121,7 +121,7 @@ class AssetsTabPanel(TabViewerWidget):
     - Tesouro Direto
     """
 
-    def __init__(self, assets_df, InvestmentConfigObj):
+    def __init__(self, assets_df, InvestmentConfigObj, is_default_config):
         """Create the AssetsTabPanel object.
 
         Arguments:
@@ -129,12 +129,13 @@ class AssetsTabPanel(TabViewerWidget):
         Variável, Renda Fixa, Tesouro Direto)
         - InvestmentConfigObj: the configuration object type, related
         to the 'assets_df' variable, that is inherited from the
-        'InvestmentConfigInterface' class.
+        'InvestmentConfigInterface' class
+        - is_default_config: flag to indicate if the configuration file
+        is on its default state or not
         """
         self.assets_df = assets_df
         self.config = InvestmentConfigObj
-        self.balancing_box_list = []
-        self.treeview_list = []
+        self.is_default = is_default_config
         self.__createBalancingBoxTreeview()
         super().__init__(
             self.treeview_list,
@@ -155,7 +156,7 @@ class AssetsTabPanel(TabViewerWidget):
         filter_column = sub_config.getFilterColumn()
 
         # In this point, dataframe will have unique 'ticker' lines
-        df = self.assets_df.copy()
+        df = self.__getFilteredDataframe(sub_config)
         sub_titles_dataframe = df[filter_column].tolist().copy()
 
         # Return an union of the lists, including the config lists at first
@@ -211,11 +212,10 @@ class AssetsTabPanel(TabViewerWidget):
 
     def __mergeConfigurations(self, sub_config):
         # Merge configuration that will be used in the BalancingBox object
+        sub_config.updateDynamicValuesFromFile()
         mgdsub_tags = self.__getMergedSubTags(sub_config)
         mgdsub_titles = self.__getMergedSubTitles(sub_config)
         mgdsub_targets = self.__getMergedTargets(sub_config, mgdsub_tags)
-        if sub_config.getMainTag() == "RV_ACOES":
-            print(mgdsub_tags, mgdsub_titles, mgdsub_targets)
         mgdsub_tags, mgdsub_titles, mgdsub_targets = self.__removeDuplicates(
             mgdsub_tags, mgdsub_titles, mgdsub_targets
         )
@@ -224,8 +224,6 @@ class AssetsTabPanel(TabViewerWidget):
             mgdsub_titles,
             mgdsub_targets,
         )
-        if sub_config.getMainTag() == "RV_ACOES":
-            print(mgdsub_tags, mgdsub_titles, mgdsub_targets)
 
     def __getFilteredDataframe(self, sub_config):
         # Filter the dataframe
@@ -236,6 +234,8 @@ class AssetsTabPanel(TabViewerWidget):
         return df.reset_index(drop=True)
 
     def __createBalancingBoxTreeview(self):
+        self.balancing_box_list = []
+        self.treeview_list = []
         sub_config_dict = self.config.getSubConfigurationDict()
         for sub_config in sub_config_dict.values():
             # Before creating the BalancingBoxTreeview, we need to merge

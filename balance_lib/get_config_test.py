@@ -1,18 +1,22 @@
 """This file is used to test the 'get_config.py'."""
 
 import os
+import sys
 
 import pytest
 
-from get_config import (
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+from balance_lib.get_config import InvestmentConfigManager
+from balance_lib.get_config_interfaces import InvestmentConfig
+from balance_lib.get_main_config import (
     ClasseDeInvestimento,
-    InvestmentConfig,
-    InvestmentConfigManager,
     RendaFixa,
     RendaVariavel,
-    SubInvestmentConfig,
     TesouroDireto,
 )
+from balance_lib.get_sub_config import SubInvestmentConfig
 
 
 class Test_InvestmentConfigManager:
@@ -97,7 +101,12 @@ class Test_InvestmentConfigManager:
         """Test the 'SubInvestmentConfig' class."""
         file = Test_InvestmentConfigManager.file
         cfg = RendaVariavel(file)
-        sub_cfg = SubInvestmentConfig(cfg)
+        sub_cfg = SubInvestmentConfig(
+            cfg.getMainTag(),
+            cfg.getSubTagsList(),
+            cfg.getSubTitlesList(),
+            cfg.getConfigFile(),
+        )
         sub_cfg_dict = sub_cfg.getConfigurationDict()
         sub_cfg_dict_list = list(sub_cfg_dict)
         expected_dict_list = ["RV_ACOES", "RV_BDR", "RV_FII", "RV_ETF"]

@@ -17,6 +17,7 @@ class BalancingWindowTabs(QtWidgets.QTabWidget):
     ):
         """Create the BalancingWindowTabs object."""
         super().__init__()
+        self.config = ConfigurationManagerObj
 
         # Control variable
         self.tab_list = []
@@ -26,21 +27,20 @@ class BalancingWindowTabs(QtWidgets.QTabWidget):
             RendaVariavel_df,
             RendaFixa_df,
             TesouroDireto_df,
-            ConfigurationManagerObj,
         )
 
         # Assets tabs
         self.RVTabPanel, self.RVTabIndex = self.__addAssetsTab(
             RendaVariavel_df,
-            ConfigurationManagerObj.RendaVariavel,
+            self.config.RendaVariavel,
         )
         self.RFTabPanel, self.RFTabIndex = self.__addAssetsTab(
             RendaFixa_df,
-            ConfigurationManagerObj.RendaFixa,
+            self.config.RendaFixa,
         )
         self.TDTabPanel, self.TDTabIndex = self.__addAssetsTab(
             TesouroDireto_df,
-            ConfigurationManagerObj.TesouroDireto,
+            self.config.TesouroDireto,
         )
 
         # Connect tab event
@@ -53,18 +53,21 @@ class BalancingWindowTabs(QtWidgets.QTabWidget):
         RendaVariavel_df,
         RendaFixa_df,
         TesouroDireto_df,
-        InvestmentConfigObj,
     ):
         tab_panel = GeneralTabPanel(
             RendaVariavel_df.copy(),
             RendaFixa_df.copy(),
             TesouroDireto_df.copy(),
-            InvestmentConfigObj,
+            self.config,
         )
         return self.__getTabPanelAndIndex(tab_panel)
 
     def __addAssetsTab(self, assets_df, InvestmentConfigObj):
-        tab_panel = AssetsTabPanel(assets_df.copy(), InvestmentConfigObj)
+        tab_panel = AssetsTabPanel(
+            assets_df.copy(),
+            InvestmentConfigObj,
+            self.config.isDefaultConfigFile(),
+        )
         return self.__getTabPanelAndIndex(tab_panel)
 
     def __getTabPanelAndIndex(self, tab_panel):
