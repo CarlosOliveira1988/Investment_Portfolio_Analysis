@@ -1,5 +1,6 @@
 """This file has a set of methods related to Portfolio/Extrato."""
 
+import os
 import re
 import sys
 
@@ -7,9 +8,22 @@ import pandas as pd
 import requests
 import yfinance as yf
 from bs4 import BeautifulSoup
-from indexer_lib.fixed_income import FixedIncomeCalculation
 
-from portfolio_lib.portfolio_history import OperationsHistory as OpInfo
+try:
+    from indexer_lib.fixed_income import FixedIncomeCalculation
+
+    from portfolio_lib.portfolio_history import OperationsHistory as OpInfo
+
+except ModuleNotFoundError:
+
+    # Change the directory
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+    # Run the import statements
+    from indexer_lib.fixed_income import FixedIncomeCalculation
+
+    from portfolio_lib.portfolio_history import OperationsHistory as OpInfo
 
 
 class PortfolioInvestment:
@@ -864,19 +878,25 @@ class PortfolioInvestment:
 
 if __name__ == "__main__":
 
-    SOURCE_FILE_DIRECTORY = sys.path[0]
-    FILE_NAME = r"\PORTFOLIO_TEMPLATE2.xlsx"
+    import os
 
-    file = SOURCE_FILE_DIRECTORY + FILE_NAME
+    # Main directory
+    SOURCE_FILE_DIRECTORY = os.path.join(os.path.curdir, "portfolio_lib")
+    FILE_NAME = "PORTFOLIO_TEMPLATE.xlsx"
+    FILE = os.path.join(SOURCE_FILE_DIRECTORY, FILE_NAME)
 
     # Example:
     portfolio = PortfolioInvestment()
-    portfolio.setFile(file)
+    portfolio.setFile(FILE)
     if portfolio.isValidFile():
         portfolio.run()
         carteiraGD = portfolio.currentPortfolioGoogleDrive()
-        carteira = portfolio.currentPortfolio()
+        carteiraRV = portfolio.currentPortfolio()
+        carteiraRF = portfolio.currentRendaFixa()
         tesouro = portfolio.currentTesouroDireto()
+        print("\nCarteira Renda Variável:", carteiraRV)
+        print("\nCarteira Renda Fixa:", carteiraRF)
+        print("\nCarteira Tesouro Direto:", tesouro)
     else:
         print("\nThe selected Portfolio file is not in the expected format.")
         print("\nPlease, check the following expected column names:")
