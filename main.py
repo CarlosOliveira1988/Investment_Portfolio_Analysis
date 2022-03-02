@@ -235,7 +235,7 @@ if __name__ == "__main__":
     import sys
 
     SOURCE_FILE_DIRECTORY = sys.path[0] + "\\portfolio_lib"
-    FILE_NAME = r"\PORTFOLIO_TEMPLATE.xlsx"
+    FILE_NAME = r"\PORTFOLIO_TEMPLATE_EMPTY.xlsx"
     FILE = SOURCE_FILE_DIRECTORY + FILE_NAME
 
     # Create the application
