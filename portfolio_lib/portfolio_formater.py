@@ -143,8 +143,10 @@ class VariableIncomesFormater:
         self.MarketPrice = CurencyColumnType("Preço mercado")
         self.DeltaPrice = CurencyColumnType("Preço mercado-pago")
         self.RentDelta = PercentageColumnType("Rentabilidade mercado-pago")
-        self.Dividend = CurencyColumnType("Proventos")
-        self.Costs = CurencyColumnType("Custos")
+        self.Fees = CurencyColumnType("Taxas")
+        self.IncomeTax = CurencyColumnType("IR")
+        self.Divided = CurencyColumnType("Dividendos")
+        self.Jcp = CurencyColumnType("JCP")
         self.NetValue = CurencyColumnType("Resultado liquido")
         self.RentNetValue = PercentageColumnType("Rentabilidade liquida")
         self.WalletPercentage = PercentageColumnType("Porcentagem carteira")
@@ -161,8 +163,10 @@ class VariableIncomesFormater:
         self.ColumnsVariableList.append("MarketPrice")
         self.ColumnsVariableList.append("DeltaPrice")
         self.ColumnsVariableList.append("RentDelta")
-        self.ColumnsVariableList.append("Dividend")
-        self.ColumnsVariableList.append("Costs")
+        self.ColumnsVariableList.append("Fees")
+        self.ColumnsVariableList.append("IncomeTax")
+        self.ColumnsVariableList.append("Divided")
+        self.ColumnsVariableList.append("Jcp")
         self.ColumnsVariableList.append("NetValue")
         self.ColumnsVariableList.append("RentNetValue")
         self.ColumnsVariableList.append("WalletPercentage")
@@ -237,8 +241,10 @@ class TreasuriesFormater:
         self.MarketPrice = CurencyColumnType("Preço mercado")
         self.DeltaPrice = CurencyColumnType("Preço mercado-pago")
         self.RentDelta = PercentageColumnType("Rentabilidade mercado-pago")
-        self.Dividend = CurencyColumnType("Proventos")
-        self.Costs = CurencyColumnType("Custos")
+        self.Fees = CurencyColumnType("Taxas")
+        self.IncomeTax = CurencyColumnType("IR")
+        self.Divided = CurencyColumnType("Dividendos")
+        self.Jcp = CurencyColumnType("JCP")
         self.NetValue = CurencyColumnType("Resultado liquido")
         self.RentNetValue = PercentageColumnType("Rentabilidade liquida")
         self.WalletPercentage = PercentageColumnType("Porcentagem carteira")
@@ -256,8 +262,10 @@ class TreasuriesFormater:
         self.ColumnsVariableList.append("MarketPrice")
         self.ColumnsVariableList.append("DeltaPrice")
         self.ColumnsVariableList.append("RentDelta")
-        self.ColumnsVariableList.append("Dividend")
-        self.ColumnsVariableList.append("Costs")
+        self.ColumnsVariableList.append("Fees")
+        self.ColumnsVariableList.append("IncomeTax")
+        self.ColumnsVariableList.append("Divided")
+        self.ColumnsVariableList.append("Jcp")
         self.ColumnsVariableList.append("NetValue")
         self.ColumnsVariableList.append("RentNetValue")
         self.ColumnsVariableList.append("WalletPercentage")
@@ -313,8 +321,10 @@ class FixedIncomesFormater:
         self.formatter.setDataframe(portfolio_data_frame)
         self.formatter.setCurrencyType(
             [
-                "Proventos",
-                "Custos",
+                "Taxas",
+                "IR",
+                "Dividendos",
+                "JCP",
                 "Resultado liquido",
                 "Preço médio",
                 "Cotação",
@@ -352,8 +362,10 @@ class FixedIncomesFormater:
                 "Preço mercado",
                 "Preço mercado-pago",
                 "Rentabilidade mercado-pago",
-                "Proventos",
-                "Custos",
+                "Taxas",
+                "IR",
+                "Dividendos",
+                "JCP",
                 "Resultado liquido",
                 "Rentabilidade liquida",
                 "Porcentagem carteira",

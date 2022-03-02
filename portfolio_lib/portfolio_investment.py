@@ -380,6 +380,22 @@ class PortfolioInvestment:
 
         # 'Extrato' dataframe has title and data lines
         if len(df):
+
+            def __getQuantidade(df):
+                return df["Quantidade Compra"] - df["Quantidade Venda"]
+
+            def __getPrecoMedio(df):
+                priceBuy = df["Preço-médio Compra"]
+                priceSell = df["Preço-médio Venda"]
+                qtdBuy = df["Quantidade Compra"]
+                qtdSell = df["Quantidade Venda"]
+                total_price = qtdBuy * priceBuy - qtdSell * priceSell
+                total_qtd = qtdBuy - qtdSell
+                return total_price / total_qtd
+
+            def __getPrecoPago(wallet):
+                return wallet["Quantidade"] * wallet["Preço médio"]
+
             # Wallet default dataframe with all empty columns
             wallet = self.__getDefaultDataframe()
 
@@ -395,11 +411,15 @@ class PortfolioInvestment:
             wallet["Rentabilidade-média Contratada"] = df["Taxa Contratada"]
             wallet["Data Inicial"] = df["Data Inicial"]
             wallet["Data Final"] = df["Data Final"]
-            wallet["Quantidade"] = df["Quantidade Compra"]
-            wallet["Preço médio"] = df["Preço-médio Compra"]
-            wallet["Preço pago"] = df["Preço-total Compra"]
+            wallet["Quantidade"] = __getQuantidade(df)
+            wallet["Preço médio"] = __getPrecoMedio(df)
+            wallet["Preço pago"] = __getPrecoPago(wallet)
             wallet["Proventos"] = df["Dividendos"] + df["JCP"]
             wallet["Custos"] = df["Taxas"] + df["IR"]
+            wallet["Taxas"] = df["Taxas"]
+            wallet["IR"] = df["IR"]
+            wallet["Dividendos"] = df["Dividendos"]
+            wallet["JCP"] = df["JCP"]
 
             # Sort the data by market and ticker
             wallet = wallet.sort_values(by=["Mercado", "Ticker"])
