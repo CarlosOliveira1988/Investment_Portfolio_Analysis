@@ -360,6 +360,7 @@ class PortfolioInvestment:
             "Data Final",
             "Quantidade",
             "Preço médio",
+            "Preço médio+taxas",
             "Preço pago",
             "Proventos",
             "Custos",
@@ -397,6 +398,10 @@ class PortfolioInvestment:
                 total_qtd = qtdBuy - qtdSell
                 return total_price / total_qtd
 
+            def __getPrecoMedioTaxas(wallet):
+                mean_fee = wallet["Taxas"] / wallet["Quantidade"]
+                return mean_fee + wallet["Preço médio"]
+
             def __getPrecoPago(wallet):
                 return wallet["Quantidade"] * wallet["Preço médio"]
 
@@ -408,22 +413,22 @@ class PortfolioInvestment:
             df.drop_duplicates(subset="Ticker", keep="first", inplace=True)
 
             # Copy the useful data to the 'wallet'
-            # wallet = pd.DataFrame()
             wallet["Ticker"] = df["Ticker"]
             wallet["Mercado"] = df["Mercado"]
             wallet["Indexador"] = df["Indexador"]
             wallet["Rentabilidade-média Contratada"] = df["Taxa Contratada"]
             wallet["Data Inicial"] = df["Data Inicial"]
             wallet["Data Final"] = df["Data Final"]
-            wallet["Quantidade"] = __getQuantidade(df)
-            wallet["Preço médio"] = __getPrecoMedio(df)
-            wallet["Preço pago"] = __getPrecoPago(wallet)
             wallet["Proventos"] = df["Dividendos"] + df["JCP"]
             wallet["Custos"] = df["Taxas"] + df["IR"]
             wallet["Taxas"] = df["Taxas"]
             wallet["IR"] = df["IR"]
             wallet["Dividendos"] = df["Dividendos"]
             wallet["JCP"] = df["JCP"]
+            wallet["Quantidade"] = __getQuantidade(df)
+            wallet["Preço médio"] = __getPrecoMedio(df)
+            wallet["Preço médio+taxas"] = __getPrecoMedioTaxas(wallet)
+            wallet["Preço pago"] = __getPrecoPago(wallet)
 
             # Sort the data by market and ticker
             wallet = wallet.sort_values(by=["Mercado", "Ticker"])

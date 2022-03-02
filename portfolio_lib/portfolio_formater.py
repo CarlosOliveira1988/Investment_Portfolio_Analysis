@@ -138,6 +138,7 @@ class VariableIncomesFormater:
         self.InitialDate = DateColumnType("Data Inicial")
         self.Quantity = FloatColumnType("Quantidade")
         self.MeanPrice = CurencyColumnType("Preço médio")
+        self.MeanPriceFees = CurencyColumnType("Preço médio+taxas")
         self.Quotation = CurencyColumnType("Cotação")
         self.PaidPrice = CurencyColumnType("Preço pago")
         self.MarketPrice = CurencyColumnType("Preço mercado")
@@ -158,6 +159,7 @@ class VariableIncomesFormater:
         self.ColumnsVariableList.append("InitialDate")
         self.ColumnsVariableList.append("Quantity")
         self.ColumnsVariableList.append("MeanPrice")
+        self.ColumnsVariableList.append("MeanPriceFees")
         self.ColumnsVariableList.append("Quotation")
         self.ColumnsVariableList.append("PaidPrice")
         self.ColumnsVariableList.append("MarketPrice")
@@ -236,6 +238,7 @@ class TreasuriesFormater:
         self.InitialDate = DateColumnType("Data Inicial")
         self.Quantity = FloatColumnType("Quantidade")
         self.MeanPrice = CurencyColumnType("Preço médio")
+        self.MeanPriceFees = CurencyColumnType("Preço médio+taxas")
         self.Quotation = CurencyColumnType("Cotação")
         self.BuyPrice = CurencyColumnType("Preço pago")
         self.MarketPrice = CurencyColumnType("Preço mercado")
@@ -257,6 +260,7 @@ class TreasuriesFormater:
         self.ColumnsVariableList.append("InitialDate")
         self.ColumnsVariableList.append("Quantity")
         self.ColumnsVariableList.append("MeanPrice")
+        self.ColumnsVariableList.append("MeanPriceFees")
         self.ColumnsVariableList.append("Quotation")
         self.ColumnsVariableList.append("BuyPrice")
         self.ColumnsVariableList.append("MarketPrice")
@@ -327,6 +331,7 @@ class FixedIncomesFormater:
                 "JCP",
                 "Resultado liquido",
                 "Preço médio",
+                "Preço médio+taxas",
                 "Cotação",
                 "Preço pago",
                 "Preço mercado",
@@ -357,6 +362,7 @@ class FixedIncomesFormater:
                 "Data Inicial",
                 "Quantidade",
                 "Preço médio",
+                "Preço médio+taxas",
                 "Cotação",
                 "Preço pago",
                 "Preço mercado",
