@@ -145,11 +145,14 @@ class InvestmentConfig:
         # Copy the new data
         self.subtags = subtags
         self.subtitles = subtitles
-        self.target_list = [target * 100 for target in target_list]
+        self.target_list = target_list
+
+        # Adjust the 'target_list'
+        target_list_adj = [target * 100 for target in target_list]
 
         # Update the file with the new data
         self.parser = self.__readConfigFile()
-        config_dict = dict(zip(self.subtags, self.target_list))
+        config_dict = dict(zip(self.subtags, target_list_adj))
         self.parser[self.main_tag] = config_dict
         with open(self.config_file, "w") as configfile:
             self.parser.write(configfile)
