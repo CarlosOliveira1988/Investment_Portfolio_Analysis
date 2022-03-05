@@ -16,6 +16,7 @@ class TreeviewPandas(Treeview):
         coordinate_Y=IntTreeview.EMPTY_SPACE,
         width=IntTreeview.DEFAULT_WIDTH,
         height=IntTreeview.DEFAULT_HEIGHT,
+        split_big_title=True,
     ):
         """Create a Treeview table object from "QtWidgets.QTreeView".
 
@@ -37,6 +38,7 @@ class TreeviewPandas(Treeview):
             coordinate_Y=coordinate_Y,
             width=width,
             height=height,
+            split_big_title=split_big_title,
         )
 
     def showPandas(self, resize_per_contents=True):
@@ -56,7 +58,11 @@ class TreeviewPandas(Treeview):
 class ResizableTreeviewPandas(ResTreeview):
     """Class used to create a special Treeview with "QtWidgets.QTreeView"."""
 
-    def __init__(self, PandasDataFrame):
+    def __init__(
+        self,
+        PandasDataFrame,
+        split_big_title=True,
+    ):
         """
         Create a Treeview table object from "QtWidgets.QTreeView".
 
@@ -66,6 +72,7 @@ class ResizableTreeviewPandas(ResTreeview):
         self.PandasDataFrame = PandasDataFrame
         super().__init__(
             columns_title_list=list(self.PandasDataFrame),
+            split_big_title=split_big_title,
         )
 
     def showPandas(self, resize_per_contents=True):
@@ -76,6 +83,8 @@ class ResizableTreeviewPandas(ResTreeview):
             self.insertParentLine(items_list)
         if resize_per_contents:
             self.resizeColumnsToContents()
+        else:
+            self.resizeColumnsToTreeViewWidth()
 
     def setDataframe(self, dataframe):
         """Set the dataframe."""

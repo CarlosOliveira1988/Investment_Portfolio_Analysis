@@ -5,16 +5,17 @@ import webbrowser
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
+from balance_lib.balance_window import BalancingWindow
 from indexer_lib.economic_indexers_window import EconomicIndexerWindow
 from portfolio_lib.portfolio_widget import PortfolioViewerWidget
 from valuation_lib.valuation_window import ValuationWindow
 
 
-class MenuInterface(QtWidgets.QMenu):
-    """MenuInterface class for menus creation."""
+class SubMenu(QtWidgets.QMenu):
+    """SubMenu class for menus creation."""
 
     def __init__(self, tag_menu, menu_bar, function):
-        """Create the MenuInterface object."""
+        """Create the SubMenu object."""
         super().__init__(tag_menu, menu_bar)
         self.action = self.setAction(tag_menu, function)
 
@@ -29,24 +30,47 @@ class MenuInterface(QtWidgets.QMenu):
         return self.action
 
 
-class FileMenu(QtWidgets.QMenu):
+class MenuInterface(QtWidgets.QMenu):
+    """Interface to used while creating new menus for the application."""
+
+    def __init__(self, menu_title, menu_bar):
+        """Create the MenuInterface object."""
+        super().__init__(menu_title, menu_bar)
+
+    def addSubmenu(self, submenu_title, submenu_function):
+        """Create the sub menu item."""
+        sub_menu = SubMenu(
+            submenu_title,
+            self.menu_bar,
+            submenu_function,
+        )
+        self.addAction(sub_menu.getAction())
+        return sub_menu
+
+
+class FileMenu(MenuInterface):
     """FileMenu class."""
 
     def __init__(self, menu_bar, status_bar, PortfolioViewerWidget):
         """Create the FileMenu object."""
         super().__init__("&Arquivo", menu_bar)
-
-        self.PortfolioViewerWidget = PortfolioViewerWidget
+        self.menu_bar = menu_bar
         self.status_bar = status_bar
+        self.PortfolioViewerWidget = PortfolioViewerWidget
 
-        self.open = MenuInterface("&Abrir Extrato", menu_bar, self.openFile)
-        self.addAction(self.open.getAction())
-
-        self.exportGD = MenuInterface("&Exportar GD", menu_bar, self.exportGD)
-        self.addAction(self.exportGD.getAction())
-
-        self.exit = MenuInterface("&Sair", menu_bar, self.exitApp)
-        self.addAction(self.exit.getAction())
+        # Create the submenus
+        self.open = self.addSubmenu(
+            "&Abrir Extrato",
+            self.openFile,
+        )
+        self.exportGD = self.addSubmenu(
+            "&Exportar Planilha Google Drive",
+            self.exportGDFile,
+        )
+        self.exit = self.addSubmenu(
+            "&Sair",
+            self.exitApp,
+        )
 
     def openFile(self):
         """Open the 'Extrato' spreadsheet."""
@@ -62,7 +86,7 @@ class FileMenu(QtWidgets.QMenu):
             self.PortfolioViewerWidget.updateData(file_name)
             self.status_bar.showMessage(file_name)
 
-    def exportGD(self):
+    def exportGDFile(self):
         """Export the Google Drive spreadsheet."""
         try:
             self.PortfolioViewerWidget.exportGoogleDriveSheet()
@@ -97,66 +121,75 @@ class FileMenu(QtWidgets.QMenu):
         sys.exit()
 
 
-class ToolsMenu(QtWidgets.QMenu):
+class ToolsMenu(MenuInterface):
     """ToolsMenu class."""
 
-    def __init__(self, menu_bar):
+    def __init__(self, menu_bar, PortfolioViewerWidget):
         """Create the ToolsMenu object."""
         super().__init__("&Ferramentas", menu_bar)
+        self.menu_bar = menu_bar
+        self.PortfolioViewerWidget = PortfolioViewerWidget
 
+        # Variables for External Windows
         self.EconomicIndexerWindow = None
         self.ValuationWindow = None
+        self.BalancingWindow = None
 
-        self.indexers = MenuInterface(
+        # Create the submenus
+        self.indexers = self.addSubmenu(
             "&Indicadores Econômicos",
-            menu_bar,
-            self.indexer,
+            self.indexerWin,
         )
-        self.addAction(self.indexers.getAction())
-
-        self.valuation = MenuInterface(
+        self.valuation = self.addSubmenu(
             "&Indicadores Fundamentalistas",
-            menu_bar,
-            self.valuation,
+            self.valuationWin,
         )
-        self.addAction(self.valuation.getAction())
+        self.balancing = self.addSubmenu(
+            "&Balanceamento de Carteira",
+            self.balancingWin,
+        )
 
-    def indexer(self):
+    def indexerWin(self):
         """Launch the EconomicIndexer app."""
         self.EconomicIndexerWindow = EconomicIndexerWindow()
 
-    def valuation(self):
+    def valuationWin(self):
         """Launch the Valuation app."""
         self.ValuationWindow = ValuationWindow()
 
+    def balancingWin(self):
+        """Launch the Portfolio Balancing app."""
+        investment = self.PortfolioViewerWidget.getPortfolioInvestmentObject()
+        extrato_path = self.PortfolioViewerWidget.getExtratoPath()
+        self.BalancingWindow = BalancingWindow(
+            investment.currentPortfolio(),
+            investment.currentRendaFixa(),
+            investment.currentTesouroDireto(),
+            extrato_path,
+        )
 
-class LinksMenu(QtWidgets.QMenu):
+
+class LinksMenu(MenuInterface):
     """LinksMenu class."""
 
     def __init__(self, menu_bar):
         """Create the LinksMenu object."""
         super().__init__("&Links", menu_bar)
+        self.menu_bar = menu_bar
 
-        self.focus = MenuInterface(
+        # Create the submenus
+        self.focus = self.addSubmenu(
             "&Relatório Focus",
-            menu_bar,
             self.focusReportLink,
         )
-        self.addAction(self.focus.getAction())
-
-        self.fixedIncome = MenuInterface(
+        self.fixedIncome = self.addSubmenu(
             "&Simulador de Renda Fixa",
-            menu_bar,
             self.fixedIncomeLink,
         )
-        self.addAction(self.fixedIncome.getAction())
-
-        self.profitability = MenuInterface(
+        self.profitability = self.addSubmenu(
             "&Simulador de Rentabilidade",
-            menu_bar,
             self.profitabilityLink,
         )
-        self.addAction(self.profitability.getAction())
 
     def focusReportLink(self):
         """Open the 'Relatorio Focus' weblink."""
@@ -215,6 +248,7 @@ class MainWindow(QtWidgets.QWidget):
         # Tools menu
         self.toolsMenu = ToolsMenu(
             self.menuBar,
+            self.PortfolioViewerWidget,
         )
         self.menuBar.addMenu(self.toolsMenu)
 
@@ -232,23 +266,20 @@ class MainWindow(QtWidgets.QWidget):
 
 if __name__ == "__main__":
 
-    import sys
-
-    SOURCE_FILE_DIRECTORY = sys.path[0] + "\\portfolio_lib"
-    FILE_NAME = r"\PORTFOLIO_TEMPLATE_EMPTY.xlsx"
-    FILE = SOURCE_FILE_DIRECTORY + FILE_NAME
-
-    # Create the application
+    import os
     import sys
 
     from PyQt5 import QtWidgets
 
+    # Create the application
     app = QtWidgets.QApplication(sys.argv)
 
-    # File directory
-    source_file_directory = sys.path[0]
+    # Main directory
+    SOURCE_FILE_DIRECTORY = os.path.join(os.path.curdir, "portfolio_lib")
+    FILE_NAME = "PORTFOLIO_TEMPLATE_EMPTY.xlsx"
+    FILE = os.path.join(SOURCE_FILE_DIRECTORY, FILE_NAME)
 
-    # Create and shows the "MainWindow" object
+    # Create and show the "MainWindow" object
     main = MainWindow(FILE)
 
     # End the application when everything is closed

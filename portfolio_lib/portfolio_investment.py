@@ -1,5 +1,6 @@
 """This file has a set of methods related to Portfolio/Extrato."""
 
+import os
 import re
 import sys
 
@@ -52,6 +53,13 @@ class PortfolioInvestment:
         """Set the excel file related to the porfolio."""
         self.fileOperations = fileOperations
 
+    def getExtratoPath(self):
+        """Get the extrato sheet path."""
+        if os.path.isfile(self.fileOperations):
+            return os.path.dirname(self.fileOperations)
+        elif os.path.isdir(self.fileOperations):
+            return self.fileOperations
+
     def isValidFile(self):
         """Return if the excel portfolio file is valid or not."""
         valid_flag = True
@@ -94,7 +102,7 @@ class PortfolioInvestment:
         extrato = pd.read_excel(self.fileOperations)
 
         # Excel file has title and data lines
-        if len(extrato):
+        if self.isValidFile():
             return extrato
 
         # Excel file has ONLY the title line
@@ -516,7 +524,8 @@ class PortfolioInvestment:
 
         # Create a Pandas Excel writer using XlsxWriter as the engine
         file_name = "carteiraGoogleDrive.xlsx"
-        writer = pd.ExcelWriter(file_name, engine="xlsxwriter")
+        file = os.path.join(self.getExtratoPath(), "carteiraGoogleDrive.xlsx")
+        writer = pd.ExcelWriter(file, engine="xlsxwriter")
 
         # Convert the dataframe to an XlsxWriter Excel object.
         dataframe.to_excel(writer, sheet_name="Sheet1", index=False)

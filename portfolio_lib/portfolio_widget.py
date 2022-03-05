@@ -9,6 +9,7 @@ from gui_lib.window import Window
 from indexer_lib.dataframe_filter import DataframeFilter
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
+from widget_lib.tab_viewer import TabViewerWidget
 from xlrd import XLRDError
 
 from portfolio_lib.portfolio_formater import FixedIncomesFormater as FixFormat
@@ -262,52 +263,6 @@ class CustodyInformation:
         self.cust_formatter.setDataframe(self.cust_df)
         self.cust_formatter.runFormatter()
         return self.cust_formatter.getFormatedDataFrame()
-
-
-class TabViewerWidget:
-    """Widget used to show tabs related to PortfolioViewerWidget."""
-
-    def __init__(self, special_widget_list, tab_title, spacing=0):
-        """Create the TabViewerWidget object.
-
-        The 'special_widget_list' argument is a list of any widgets
-        based on the 'QtWidgets.QWidget' class.
-
-        The 'tab_title' is the text on the tab.
-        """
-        self.tab_title = tab_title
-        self.tab = QtWidgets.QWidget()
-        self.grid_tab = QtWidgets.QGridLayout()
-        self.grid_tab.setContentsMargins(
-            spacing,
-            spacing,
-            spacing,
-            spacing,
-        )
-        self.grid_tab.setSpacing(spacing)
-        for special_widget in special_widget_list:
-            self.grid_tab.addWidget(special_widget)
-        self.tab.setLayout(self.grid_tab)
-
-    def getTab(self):
-        """Return the 'Tab' object."""
-        return self.tab
-
-    def getGridTab(self):
-        """Return the 'GridTab' object."""
-        return self.grid_tab
-
-    def getTabTitle(self):
-        """Return the 'Tab' title."""
-        return self.tab_title
-
-    def setTabIndex(self, tab_index):
-        """Set the tab index."""
-        self.tab_index = tab_index
-
-    def getTabIndex(self):
-        """Return the tab index."""
-        return self.tab_index
 
 
 class TabViewerInterface:
@@ -799,28 +754,18 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
 
     def __updateMainDataframes(self):
         try:
+            self.investment.run()
+            self.extrato = self.investment.getExtrato()
+            self.variable_income = self.investment.currentPortfolio()
+            self.fixed_income = self.investment.currentRendaFixa()
+            self.treasuries = self.investment.currentTesouroDireto()
+            self.short_summary = self.extrato.copy()
             if self.investment.isValidFile():
-                self.investment.run()
-                self.extrato = self.investment.getExtrato()
-                self.variable_income = self.investment.currentPortfolio()
-                self.fixed_income = self.investment.currentRendaFixa()
-                self.treasuries = self.investment.currentTesouroDireto()
-                self.short_summary = self.extrato.copy()
                 return True
             else:
-                self.extrato = None
-                self.variable_income = None
-                self.fixed_income = None
-                self.treasuries = None
-                self.short_summary = None
                 self.__showColumnsErrorMessage()
                 return False
         except XLRDError:
-            self.extrato = None
-            self.variable_income = None
-            self.fixed_income = None
-            self.treasuries = None
-            self.short_summary = None
             self.__showXLRDErrorMessage()
             return False
 
@@ -910,3 +855,11 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         for tab_interface in self.TabInterfaceList:
             if index == tab_interface.getTabIndex():
                 tab_interface.onChangeAction()
+
+    def getPortfolioInvestmentObject(self):
+        """Return the Portfolio Investment Object to handle extrato sheet."""
+        return self.investment
+
+    def getExtratoPath(self):
+        """Get the extrato sheet path."""
+        return self.investment.getExtratoPath()
