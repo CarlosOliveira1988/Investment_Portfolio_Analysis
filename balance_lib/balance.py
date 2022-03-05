@@ -23,6 +23,8 @@ class InvestmentBox:
 
         Arguments:
         - box_title: a string for the box title
+        - auto_total_line: flag used to insert a total line in the last row
+        of the outputted dataframe
         """
         self.box_title = box_title
         self.auto_total_line = auto_total_line
@@ -236,7 +238,11 @@ class BalancingBox(ContributionBox):
     """Class used to handle balancing of portfolio."""
 
     def __init__(self, box_title):
-        """Create the BalancingBox object."""
+        """Create the BalancingBox object.
+
+        Arguments:
+        - box_title: a string for the box title
+        """
         super().__init__(box_title)
         self.expected_output_columns = [
             box_title,
@@ -274,7 +280,11 @@ class NewContributionBox(ContributionBox):
     """Class used to handle new contribution in portfolio."""
 
     def __init__(self, box_title):
-        """Create the NewContributionBox object."""
+        """Create the NewContributionBox object.
+
+        Arguments:
+        - box_title: a string for the box title
+        """
         super().__init__(box_title)
         self.expected_output_columns = [
             box_title,

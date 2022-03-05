@@ -15,7 +15,18 @@ class BalancingWindowTabs(QtWidgets.QTabWidget):
         TesouroDireto_df,
         ConfigurationManagerObj,
     ):
-        """Create the BalancingWindowTabs object."""
+        """Create the BalancingWindowTabs object.
+
+        Arguments:
+        - RendaVariavel_df, RendaFixa_df, TesouroDireto_df: short and
+        filtered dataframes exported by the 'PortfolioInvestment' class
+        type, grouped per investment types:
+          * RendaVariavel_df: ""Ações", "BDR", "ETF", "FII"
+          * RendaFixa_df: "Prefixado", "CDI", "IPCA"
+          * TesouroDireto_df: "Prefixado", "SELIC", "IPCA"
+        - ConfigurationManagerObj: an object related to the
+        'ConfigurationManager' class type
+        """
         super().__init__()
         self.config = ConfigurationManagerObj
 
@@ -76,6 +87,11 @@ class BalancingWindowTabs(QtWidgets.QTabWidget):
         return tab_panel, tab_index
 
     """Public methods."""
+
+    def updateConfigurationValues(self):
+        """Update configuration values from configuration file."""
+        for tab in self.tab_list:
+            tab.updateConfigurationValues()
 
     def onChange(self, index):
         """Onchange tab method to render the table columns."""

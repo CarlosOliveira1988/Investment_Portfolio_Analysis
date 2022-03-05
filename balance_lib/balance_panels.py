@@ -12,7 +12,16 @@ class GeneralDataframes:
     """Class used to manipulate general dataframes."""
 
     def __init__(self, RendaVariavel_df, RendaFixa_df, TesouroDireto_df):
-        """Create the GeneralDataframes object."""
+        """Create the GeneralDataframes object.
+
+        Arguments:
+        - RendaVariavel_df, RendaFixa_df, TesouroDireto_df: short and
+        filtered dataframes exported by the 'PortfolioInvestment' class
+        type, grouped per investment types:
+          * RendaVariavel_df: ""Ações", "BDR", "ETF", "FII"
+          * RendaFixa_df: "Prefixado", "CDI", "IPCA"
+          * TesouroDireto_df: "Prefixado", "SELIC", "IPCA"
+        """
         # Main dataframes
         self.RendaVariavel_df = RendaVariavel_df
         self.RendaFixa_df = RendaFixa_df
@@ -53,7 +62,34 @@ class GeneralDataframes:
         return self.TesouroDireto_df.copy()
 
 
-class GeneralTabPanel(TabViewerWidget):
+class TabPanelInterface(TabViewerWidget):
+    """Class used to create special tabs for balancing portfolio."""
+
+    def __init__(
+        self,
+        tree_list,
+        tab_title,
+        border_size=Window.DEFAULT_BORDER_SIZE,
+    ):
+        """Create the TabPanelInterface object.
+
+        Arguments:
+        - tree_list: a list of 'ResizableTreeviewPandas' objects
+        - tab_title: a string to be displayed in the tab
+        - border_size: a int value to define the border size
+          (by default: Window.DEFAULT_BORDER_SIZE)
+        """
+        super().__init__(tree_list, tab_title, border_size)
+
+    """Public methods."""
+
+    def resize(self):
+        """Resize the treeview."""
+        for box in self.box_list:
+            box.resize()
+
+
+class GeneralTabPanel(TabPanelInterface):
     """Class used to create the 'Geral' tab."""
 
     def __init__(
@@ -63,7 +99,18 @@ class GeneralTabPanel(TabViewerWidget):
         TesouroDireto_df,
         ConfigurationManagerObj,
     ):
-        """Create the GeneralTabPanel object."""
+        """Create the GeneralTabPanel object.
+
+        Arguments:
+        - RendaVariavel_df, RendaFixa_df, TesouroDireto_df: short and
+        filtered dataframes exported by the 'PortfolioInvestment' class
+        type, grouped per investment types:
+          * RendaVariavel_df: ""Ações", "BDR", "ETF", "FII"
+          * RendaFixa_df: "Prefixado", "CDI", "IPCA"
+          * TesouroDireto_df: "Prefixado", "SELIC", "IPCA"
+        - ConfigurationManagerObj: an object related to the
+        'ConfigurationManager' class type
+        """
         # Dataframes
         self.GeneralDataframes = GeneralDataframes(
             RendaVariavel_df,
@@ -75,6 +122,7 @@ class GeneralTabPanel(TabViewerWidget):
         self.config = ConfigurationManagerObj
         self.tree_list = []
         self.box_list = []
+        self.sub_config_list = []
         self.ClasseDeInvestimento = self.__createBoxTree(
             self.config.ClasseDeInvestimento,
             self.GeneralDataframes.getClasseDeInvestimentoDF(),
@@ -93,25 +141,31 @@ class GeneralTabPanel(TabViewerWidget):
         )
 
         # 'Geral' tab widget
-        super().__init__(self.tree_list, "Geral", Window.DEFAULT_BORDER_SIZE)
+        super().__init__(self.tree_list, "Geral")
 
     """Private methods."""
 
     def __createBoxTree(self, InvestmentConfigObj, dataframe=None):
-        boxtree = BalancingBoxTreeview(InvestmentConfigObj, dataframe)
+        boxtree = BalancingBoxTreeview(
+            InvestmentConfigObj,
+            dataframe,
+            immutable_type_list=True,
+        )
         self.tree_list.append(boxtree.getTree())
         self.box_list.append(boxtree)
+        self.sub_config_list.append(InvestmentConfigObj)
         return boxtree
 
     """Public methods."""
 
-    def resize(self):
-        """Resize the treeview."""
-        for box in self.box_list:
-            box.resize()
+    def updateConfigurationValues(self):
+        """Update configuration values from configuration file."""
+        for index, sub_config in enumerate(self.sub_config_list):
+            sub_config.updateDynamicValuesFromFile()
+            self.box_list[index].updateConfigurationValues()
 
 
-class AssetsTabPanel(TabViewerWidget):
+class AssetsTabPanel(TabPanelInterface):
     """Class used to create the 'Assets' tabs.
 
     The 'AssetsTabPanel' is useful to create the special tabs, with several
@@ -137,11 +191,7 @@ class AssetsTabPanel(TabViewerWidget):
         self.config = InvestmentConfigObj
         self.is_default = is_default_config
         self.__createBalancingBoxTreeview()
-        super().__init__(
-            self.treeview_list,
-            self.config.getMainTitle(),
-            Window.DEFAULT_BORDER_SIZE,
-        )
+        super().__init__(self.tree_list, self.config.getMainTitle())
 
     """Private methods."""
 
@@ -234,8 +284,9 @@ class AssetsTabPanel(TabViewerWidget):
         return df.reset_index(drop=True)
 
     def __createBalancingBoxTreeview(self):
-        self.balancing_box_list = []
-        self.treeview_list = []
+        self.tree_list = []
+        self.box_list = []
+        self.sub_config_list = []
         sub_config_dict = self.config.getSubConfigurationDict()
         for sub_config in sub_config_dict.values():
             # Before creating the BalancingBoxTreeview, we need to merge
@@ -244,12 +295,14 @@ class AssetsTabPanel(TabViewerWidget):
             self.__mergeConfigurations(sub_config)
             fassets_df = self.__getFilteredDataframe(sub_config)
             balancing_box = BalancingBoxTreeview(sub_config, fassets_df)
-            self.treeview_list.append(balancing_box.getTree())
-            self.balancing_box_list.append(balancing_box)
+            self.tree_list.append(balancing_box.getTree())
+            self.box_list.append(balancing_box)
+            self.sub_config_list.append(sub_config)
 
     """Public methods."""
 
-    def resize(self):
-        """Resize the treeview."""
-        for box in self.balancing_box_list:
-            box.resize()
+    def updateConfigurationValues(self):
+        """Update configuration values from configuration file."""
+        for index, sub_config in enumerate(self.sub_config_list):
+            self.__mergeConfigurations(sub_config)
+            self.box_list[index].updateConfigurationValues()

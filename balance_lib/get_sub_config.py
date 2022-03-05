@@ -10,7 +10,8 @@ class SubInvestmentConfig:
         """Create the SubInvestmentConfig object.
 
         The main output of this class is a special dictionary of configuration
-        objects, related to the 'InvestmentConfig' class."""
+        objects, related to the 'InvestmentConfig' class.
+        """
         self.config_main_tag = main_tag
         self.config_subtags_list = subtags_list
         self.config_subtitles_list = subtitles_list
