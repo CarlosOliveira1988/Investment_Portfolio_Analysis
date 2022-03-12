@@ -391,15 +391,14 @@ class PortfolioInvestment:
 
             def __getPrecoMedio(df):
                 priceBuy = df["Preço-médio Compra"]
-                priceSell = df["Preço-médio Venda"]
                 qtdBuy = df["Quantidade Compra"]
-                qtdSell = df["Quantidade Venda"]
-                total_price = qtdBuy * priceBuy - qtdSell * priceSell
-                total_qtd = qtdBuy - qtdSell
+                total_price = qtdBuy * priceBuy
+                total_qtd = qtdBuy
                 return total_price / total_qtd
 
-            def __getPrecoMedioTaxas(wallet):
-                mean_fee = wallet["Taxas"] / wallet["Quantidade"]
+            def __getPrecoMedioTaxas(wallet, df):
+                qtd_for_fees = df["Quantidade Compra"] + df["Quantidade Venda"]
+                mean_fee = wallet["Taxas"] / qtd_for_fees
                 return mean_fee + wallet["Preço médio"]
 
             def __getPrecoPago(wallet):
@@ -427,7 +426,7 @@ class PortfolioInvestment:
             wallet["JCP"] = df["JCP"]
             wallet["Quantidade"] = __getQuantidade(df)
             wallet["Preço médio"] = __getPrecoMedio(df)
-            wallet["Preço médio+taxas"] = __getPrecoMedioTaxas(wallet)
+            wallet["Preço médio+taxas"] = __getPrecoMedioTaxas(wallet, df)
             wallet["Preço pago"] = __getPrecoPago(wallet)
 
             # Sort the data by market and ticker
