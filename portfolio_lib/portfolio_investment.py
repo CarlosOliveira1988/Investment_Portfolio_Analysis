@@ -359,9 +359,11 @@ class PortfolioInvestment:
             "Data Inicial",
             "Data Final",
             "Quantidade",
+            "Quantidade compra",
             "Preço médio",
             "Preço médio+taxas",
             "Preço pago",
+            "Vendas parciais",
             "Proventos",
             "Custos",
             "Taxas",
@@ -370,10 +372,10 @@ class PortfolioInvestment:
             "JCP",
             "Cotação",
             "Preço mercado",
-            "Preço mercado-pago",
-            "Rentabilidade mercado-pago",
-            "Resultado liquido",
-            "Rentabilidade liquida",
+            "Mercado-pago",
+            "Mercado-pago(%)",
+            "Líquido parcial",
+            "Líquido parcial(%)",
             "Porcentagem carteira",
         ]
         defaultDF = pd.DataFrame(columns=col_list)
@@ -402,7 +404,10 @@ class PortfolioInvestment:
                 return mean_fee + wallet["Preço médio"]
 
             def __getPrecoPago(wallet):
-                return wallet["Quantidade"] * wallet["Preço médio"]
+                return wallet["Quantidade"] * wallet["Preço médio+taxas"]
+
+            def __getVendasParciais(df):
+                return df["Preço-médio Venda"] * df["Quantidade Venda"]
 
             # Wallet default dataframe with all empty columns
             wallet = self.__getDefaultDataframe()
@@ -424,10 +429,12 @@ class PortfolioInvestment:
             wallet["IR"] = df["IR"]
             wallet["Dividendos"] = df["Dividendos"]
             wallet["JCP"] = df["JCP"]
+            wallet["Quantidade compra"] = df["Quantidade Compra"]
             wallet["Quantidade"] = __getQuantidade(df)
             wallet["Preço médio"] = __getPrecoMedio(df)
             wallet["Preço médio+taxas"] = __getPrecoMedioTaxas(wallet, df)
             wallet["Preço pago"] = __getPrecoPago(wallet)
+            wallet["Vendas parciais"] = __getVendasParciais(df)
 
             # Sort the data by market and ticker
             wallet = wallet.sort_values(by=["Mercado", "Ticker"])
@@ -442,12 +449,15 @@ class PortfolioInvestment:
         # Calculate the target values
         wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
         deltaPrice = wallet["Preço mercado"] - wallet["Preço pago"]
-        wallet["Preço mercado-pago"] = deltaPrice
+        wallet["Mercado-pago"] = deltaPrice
         buyPrice = wallet["Preço pago"]
-        wallet["Rentabilidade mercado-pago"] = deltaPrice / buyPrice
-        netResult = deltaPrice + wallet["Proventos"] - wallet["Custos"]
-        wallet["Resultado liquido"] = netResult
-        wallet["Rentabilidade liquida"] = netResult / buyPrice
+        wallet["Mercado-pago(%)"] = deltaPrice / buyPrice
+        totalPrice = wallet["Preço mercado"] + wallet["Vendas parciais"]
+        totalPriceAdjusted = totalPrice + wallet["Proventos"] - wallet["IR"]
+        totalBuy = wallet["Preço médio+taxas"] * wallet["Quantidade compra"]
+        netResult = totalPriceAdjusted - totalBuy
+        wallet["Líquido parcial"] = netResult
+        wallet["Líquido parcial(%)"] = netResult / buyPrice
 
         # Calculate the ticker percentage per market
         for mkt in market_list:
@@ -500,10 +510,10 @@ class PortfolioInvestment:
             "Custos",
             "Cotação",
             "Preço mercado",
-            "Preço mercado-pago",
-            "Rentabilidade mercado-pago",
-            "Resultado liquido",
-            "Rentabilidade liquida",
+            "Mercado-pago",
+            "Mercado-pago(%)",
+            "Líquido parcial",
+            "Líquido parcial(%)",
         ]
         dataframe = dataframe[expected_col_list]
 
@@ -539,20 +549,20 @@ class PortfolioInvestment:
 
             gain_price_str = "=" + market_price_col + str(i)
             gain_price_str += "-" + buy_price_col + str(i)
-            dataframe.at[index, "Preço mercado-pago"] = gain_price_str
+            dataframe.at[index, "Mercado-pago"] = gain_price_str
 
             rent_gain_str = "=" + rent_gain_price_col + str(i)
             rent_gain_str += "/" + buy_price_col + str(i)
-            dataframe.at[index, "Rentabilidade mercado-pago"] = rent_gain_str
+            dataframe.at[index, "Mercado-pago(%)"] = rent_gain_str
 
             net_result_str = "=" + earning_col + str(i)
             net_result_str += "+" + rent_gain_price_col + str(i)
             net_result_str += "-" + costs_col + str(i)
-            dataframe.at[index, "Resultado liquido"] = net_result_str
+            dataframe.at[index, "Líquido parcial"] = net_result_str
 
             net_perc_str = "=" + net_result_col + str(i)
             net_perc_str += "/" + buy_price_col + str(i)
-            dataframe.at[index, "Rentabilidade liquida"] = net_perc_str
+            dataframe.at[index, "Líquido parcial(%)"] = net_perc_str
             # Increment the index to calculate the cells in Excel file.
             i += 1
 

@@ -142,14 +142,15 @@ class VariableIncomesFormater:
         self.Quotation = CurencyColumnType("Cotação")
         self.PaidPrice = CurencyColumnType("Preço pago")
         self.MarketPrice = CurencyColumnType("Preço mercado")
-        self.DeltaPrice = CurencyColumnType("Preço mercado-pago")
-        self.RentDelta = PercentageColumnType("Rentabilidade mercado-pago")
+        self.DeltaPrice = CurencyColumnType("Mercado-pago")
+        self.RentDelta = PercentageColumnType("Mercado-pago(%)")
+        self.PartialSell = CurencyColumnType("Vendas parciais")
         self.Fees = CurencyColumnType("Taxas")
         self.IncomeTax = CurencyColumnType("IR")
         self.Divided = CurencyColumnType("Dividendos")
         self.Jcp = CurencyColumnType("JCP")
-        self.NetValue = CurencyColumnType("Resultado liquido")
-        self.RentNetValue = PercentageColumnType("Rentabilidade liquida")
+        self.NetValue = CurencyColumnType("Líquido parcial")
+        self.RentNetValue = PercentageColumnType("Líquido parcial(%)")
         self.WalletPercentage = PercentageColumnType("Porcentagem carteira")
         self.ColumnsVariableList = []
 
@@ -165,6 +166,7 @@ class VariableIncomesFormater:
         self.ColumnsVariableList.append("MarketPrice")
         self.ColumnsVariableList.append("DeltaPrice")
         self.ColumnsVariableList.append("RentDelta")
+        self.ColumnsVariableList.append("PartialSell")
         self.ColumnsVariableList.append("Fees")
         self.ColumnsVariableList.append("IncomeTax")
         self.ColumnsVariableList.append("Divided")
@@ -242,14 +244,15 @@ class TreasuriesFormater:
         self.Quotation = CurencyColumnType("Cotação")
         self.BuyPrice = CurencyColumnType("Preço pago")
         self.MarketPrice = CurencyColumnType("Preço mercado")
-        self.DeltaPrice = CurencyColumnType("Preço mercado-pago")
-        self.RentDelta = PercentageColumnType("Rentabilidade mercado-pago")
+        self.DeltaPrice = CurencyColumnType("Mercado-pago")
+        self.RentDelta = PercentageColumnType("Mercado-pago(%)")
+        self.PartialSell = CurencyColumnType("Vendas parciais")
         self.Fees = CurencyColumnType("Taxas")
         self.IncomeTax = CurencyColumnType("IR")
         self.Divided = CurencyColumnType("Dividendos")
         self.Jcp = CurencyColumnType("JCP")
-        self.NetValue = CurencyColumnType("Resultado liquido")
-        self.RentNetValue = PercentageColumnType("Rentabilidade liquida")
+        self.NetValue = CurencyColumnType("Líquido parcial")
+        self.RentNetValue = PercentageColumnType("Líquido parcial(%)")
         self.WalletPercentage = PercentageColumnType("Porcentagem carteira")
         self.ColumnsVariableList = []
 
@@ -266,6 +269,7 @@ class TreasuriesFormater:
         self.ColumnsVariableList.append("MarketPrice")
         self.ColumnsVariableList.append("DeltaPrice")
         self.ColumnsVariableList.append("RentDelta")
+        self.ColumnsVariableList.append("PartialSell")
         self.ColumnsVariableList.append("Fees")
         self.ColumnsVariableList.append("IncomeTax")
         self.ColumnsVariableList.append("Divided")
@@ -329,13 +333,14 @@ class FixedIncomesFormater:
                 "IR",
                 "Dividendos",
                 "JCP",
-                "Resultado liquido",
+                "Líquido parcial",
                 "Preço médio",
                 "Preço médio+taxas",
                 "Cotação",
                 "Preço pago",
                 "Preço mercado",
-                "Preço mercado-pago",
+                "Mercado-pago",
+                "Vendas parciais",
             ]
         )
         self.formatter.setFloatType(["Quantidade"])
@@ -343,8 +348,8 @@ class FixedIncomesFormater:
         self.formatter.setPercentageType(
             [
                 "Rentabilidade-média Contratada",
-                "Rentabilidade mercado-pago",
-                "Rentabilidade liquida",
+                "Mercado-pago(%)",
+                "Líquido parcial(%)",
                 "Porcentagem carteira",
             ]
         )
@@ -366,14 +371,15 @@ class FixedIncomesFormater:
                 "Cotação",
                 "Preço pago",
                 "Preço mercado",
-                "Preço mercado-pago",
-                "Rentabilidade mercado-pago",
+                "Mercado-pago",
+                "Mercado-pago(%)",
+                "Vendas parciais",
                 "Taxas",
                 "IR",
                 "Dividendos",
                 "JCP",
-                "Resultado liquido",
-                "Rentabilidade liquida",
+                "Líquido parcial",
+                "Líquido parcial(%)",
                 "Porcentagem carteira",
             ]
         )
