@@ -422,22 +422,25 @@ class VariableTabInterface(TabViewerInterface):
             [
                 "Preço pago",
                 "Preço mercado",
-                "Preço mercado-pago",
-                "Proventos",
-                "Custos",
-                "Resultado liquido",
+                "Mercado-pago",
+                "Vendas parciais",
+                "Taxas Adicionais",
+                "IR",
+                "Dividendos",
+                "JCP",
+                "Líquido parcial",
             ],
             "Mercado",
             [
                 [
-                    "Rentabilidade mercado-pago",
+                    "Mercado-pago(%)",
                     "Preço pago",
-                    "Preço mercado-pago",
+                    "Mercado-pago",
                 ],
                 [
-                    "Rentabilidade liquida",
+                    "Líquido parcial(%)",
                     "Preço pago",
-                    "Resultado liquido",
+                    "Líquido parcial",
                 ],
             ],
         )
@@ -474,7 +477,7 @@ class VariableTabInterface(TabViewerInterface):
 
     def onChangeAction(self):
         """Execute during the onChange method."""
-        self.variable_treeview.resizeColumnsToTreeViewWidth()
+        self.variable_treeview.resizeColumnsToContents()
 
     def getTabIndex(self):
         """Return the Tab index."""
@@ -498,22 +501,25 @@ class TreasuriesTabInterface(TabViewerInterface):
             [
                 "Preço pago",
                 "Preço mercado",
-                "Preço mercado-pago",
-                "Proventos",
-                "Custos",
-                "Resultado liquido",
+                "Mercado-pago",
+                "Vendas parciais",
+                "Taxas Adicionais",
+                "IR",
+                "Dividendos",
+                "JCP",
+                "Líquido parcial",
             ],
             "Ticker",
             [
                 [
-                    "Rentabilidade mercado-pago",
+                    "Mercado-pago(%)",
                     "Preço pago",
-                    "Preço mercado-pago",
+                    "Mercado-pago",
                 ],
                 [
-                    "Rentabilidade liquida",
+                    "Líquido parcial(%)",
                     "Preço pago",
-                    "Resultado liquido",
+                    "Líquido parcial",
                 ],
             ],
         )
@@ -574,22 +580,25 @@ class FixedIncomeTabInterface(TabViewerInterface):
             [
                 "Preço pago",
                 "Preço mercado",
-                "Preço mercado-pago",
-                "Proventos",
-                "Custos",
-                "Resultado liquido",
+                "Mercado-pago",
+                "Vendas parciais",
+                "Taxas Adicionais",
+                "IR",
+                "Dividendos",
+                "JCP",
+                "Líquido parcial",
             ],
             "Ticker",
             [
                 [
-                    "Rentabilidade mercado-pago",
+                    "Mercado-pago(%)",
                     "Preço pago",
-                    "Preço mercado-pago",
+                    "Mercado-pago",
                 ],
                 [
-                    "Rentabilidade liquida",
+                    "Líquido parcial(%)",
                     "Preço pago",
-                    "Resultado liquido",
+                    "Líquido parcial",
                 ],
             ],
         )

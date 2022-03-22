@@ -254,6 +254,8 @@ class OperationsHistory:
 
         quantity_buy = 0
         quantity_sell = 0
+        taxes_buy = 0
+        taxes_sell = 0
         price_buy = 0
         price_sell = 0
         rate_price_buy = 0
@@ -277,6 +279,9 @@ class OperationsHistory:
         mean_price_sell_list = []
         total_price_sell_list = []
         taxes_list = []
+        taxes_buy_list = []
+        taxes_sell_list = []
+        taxes_other_list = []
         IR_list = []
         dividend_list = []
         JCP_list = []
@@ -338,6 +343,10 @@ class OperationsHistory:
             ]
             taxes = dividenddf["Taxas"].sum()
             taxes_list.append(taxes)
+            taxes_other = taxes - taxes_buy - taxes_sell
+            taxes_buy_list.append(taxes_buy)
+            taxes_sell_list.append(taxes_sell)
+            taxes_other_list.append(taxes_other)
             IR = dividenddf["IR"].sum()
             IR_list.append(IR)
             dividend = dividenddf["Dividendos"].sum()
@@ -371,12 +380,14 @@ class OperationsHistory:
                 if isInitialDateEmpty():
                     if data_row["Operação"] == "Compra":
                         quantity_buy += data_row["Quantidade"]
+                        taxes_buy += data_row["Taxas"]
                         price_buy += data_row["Preço Total"]
                         rate = data_row["Rentabilidade Contratada"]
                         price = data_row["Preço Total"]
                         rate_price_buy += rate * price
                     elif data_row["Operação"] == "Venda":
                         quantity_sell += data_row["Quantidade"]
+                        taxes_sell += data_row["Taxas"]
                         price_sell += data_row["Preço Total"]
                     indexer = data_row["Indexador"]
                     initial_date = data_row["Data"]
@@ -386,12 +397,14 @@ class OperationsHistory:
                 else:
                     if data_row["Operação"] == "Compra":
                         quantity_buy += data_row["Quantidade"]
+                        taxes_buy += data_row["Taxas"]
                         price_buy += data_row["Preço Total"]
                         rate = data_row["Rentabilidade Contratada"]
                         price = data_row["Preço Total"]
                         rate_price_buy += rate * price
                     elif data_row["Operação"] == "Venda":
                         quantity_sell += data_row["Quantidade"]
+                        taxes_sell += data_row["Taxas"]
                         price_sell += data_row["Preço Total"]
                     indexer = data_row["Indexador"]
                     if quantity_buy == quantity_sell:
@@ -403,6 +416,8 @@ class OperationsHistory:
                         appendResults()
                     quantity_buy = 0
                     quantity_sell = 0
+                    taxes_buy = 0
+                    taxes_sell = 0
                     price_buy = 0
                     price_sell = 0
                     rate_price_buy = 0
@@ -419,6 +434,8 @@ class OperationsHistory:
                             appendResults()
                         quantity_buy = 0
                         quantity_sell = 0
+                        taxes_buy = 0
+                        taxes_sell = 0
                         price_buy = 0
                         price_sell = 0
                         rate_price_buy = 0
@@ -440,9 +457,12 @@ class OperationsHistory:
         operations_df["Quantidade Compra"] = quantity_buy_list
         operations_df["Preço-médio Compra"] = mean_price_buy_list
         operations_df["Preço-total Compra"] = total_price_buy_list
+        operations_df["Taxas Compra"] = taxes_buy_list
         operations_df["Quantidade Venda"] = quantity_sell_list
         operations_df["Preço-médio Venda"] = mean_price_sell_list
         operations_df["Preço-total Venda"] = total_price_sell_list
+        operations_df["Taxas Venda"] = taxes_sell_list
+        operations_df["Outras Taxas"] = taxes_other_list
         operations_df["Taxas"] = taxes_list
         operations_df["IR"] = IR_list
         operations_df["Dividendos"] = dividend_list
