@@ -589,7 +589,7 @@ class PortfolioInvestment:
 
         # Create a Pandas Excel writer using XlsxWriter as the engine
         file_name = "carteiraGoogleDrive.xlsx"
-        file = os.path.join(self.getExtratoPath(), "carteiraGoogleDrive.xlsx")
+        file = os.path.join(self.getExtratoPath(), file_name)
         writer = pd.ExcelWriter(file, engine="xlsxwriter")
 
         # Convert the dataframe to an XlsxWriter Excel object.
@@ -756,7 +756,7 @@ class PortfolioInvestment:
 
         if auto_open:
             try:
-                os.system("start EXCEL.EXE " + file_name)
+                os.startfile(file)
             finally:
                 pass
 
