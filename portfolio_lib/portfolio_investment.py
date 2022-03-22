@@ -363,6 +363,7 @@ class PortfolioInvestment:
             "Preço médio",
             "Preço médio+taxas",
             "Preço pago",
+            "Compras totais",
             "Vendas parciais",
             "Proventos",
             "Custos",
@@ -405,6 +406,9 @@ class PortfolioInvestment:
             def __getPrecoPago(wallet):
                 return wallet["Quantidade"] * wallet["Preço médio+taxas"]
 
+            def __getComprasTotais(wallet):
+                return wallet["Preço médio+taxas"] * wallet["Quantidade compra"]
+
             def __getVendasParciais(df):
                 return df["Preço-médio Venda"] * df["Quantidade Venda"]
 
@@ -433,6 +437,7 @@ class PortfolioInvestment:
             wallet["Preço médio"] = __getPrecoMedio(df)
             wallet["Preço médio+taxas"] = __getPrecoMedioTaxas(wallet, df)
             wallet["Preço pago"] = __getPrecoPago(wallet)
+            wallet["Compras totais"] = __getComprasTotais(wallet)
             wallet["Vendas parciais"] = __getVendasParciais(df)
 
             # Sort the data by market and ticker
@@ -454,7 +459,7 @@ class PortfolioInvestment:
         totalPrice = wallet["Preço mercado"] + wallet["Vendas parciais"]
         additionalCosts = wallet["IR"] + wallet["Taxas Adicionais"]
         totalPriceAdjusted = totalPrice + wallet["Proventos"] - additionalCosts
-        totalBuy = wallet["Preço médio+taxas"] * wallet["Quantidade compra"]
+        totalBuy = wallet["Compras totais"]
         netResult = totalPriceAdjusted - totalBuy
         wallet["Líquido parcial"] = netResult
         wallet["Líquido parcial(%)"] = netResult / buyPrice
@@ -492,7 +497,7 @@ class PortfolioInvestment:
 
         return wallet
 
-    def currentPortfolioGoogleDrive(self):
+    def currentPortfolioGoogleDrive(self, auto_open=True):
         """Save the excel file to be used in Google Drive."""
         # Get the current portfolio
         dataframe = self.currentPortfolio()
@@ -504,10 +509,13 @@ class PortfolioInvestment:
             "Ticker",
             "Mercado",
             "Quantidade",
-            "Preço médio",
+            "Preço médio+taxas",
             "Preço pago",
             "Proventos",
-            "Custos",
+            "Compras totais",
+            "Vendas parciais",
+            "Taxas Adicionais",
+            "IR",
             "Cotação",
             "Preço mercado",
             "Mercado-pago",
@@ -524,16 +532,19 @@ class PortfolioInvestment:
         mean_price_col = "D"
         buy_price_col = "E"
         earning_col = "F"
-        costs_col = "G"
-        quotation_col = "H"
-        market_price_col = "I"
-        rent_gain_price_col = "J"
-        gain_price_col = "K"
-        net_result_col = "L"
-        net_result_perc_col = "M"
-        empty_col = "N"
-        chart_col = "O"
-        sum_if_col = "P"
+        total_buy_col = "G"
+        partial_sell_col = "H"
+        costs_col = "I"
+        IR_col = "J"
+        quotation_col = "K"
+        market_price_col = "L"
+        rent_gain_price_col = "M"
+        gain_price_col = "N"
+        net_result_col = "O"
+        net_result_perc_col = "P"
+        empty_col = "Q"
+        chart_col = "R"
+        sum_if_col = "S"
 
         # Add some formulas to be used in GoogleSheets
         i = 2
@@ -555,9 +566,12 @@ class PortfolioInvestment:
             rent_gain_str += "/" + buy_price_col + str(i)
             dataframe.at[index, "Mercado-pago(%)"] = rent_gain_str
 
-            net_result_str = "=" + earning_col + str(i)
-            net_result_str += "+" + rent_gain_price_col + str(i)
+            net_result_str = "=" + market_price_col + str(i)
+            net_result_str += "+" + partial_sell_col + str(i)
+            net_result_str += "+" + earning_col + str(i)
             net_result_str += "-" + costs_col + str(i)
+            net_result_str += "-" + IR_col + str(i)
+            net_result_str += "-" + total_buy_col + str(i)
             dataframe.at[index, "Líquido parcial"] = net_result_str
 
             net_perc_str = "=" + net_result_col + str(i)
@@ -632,15 +646,15 @@ class PortfolioInvestment:
         # or any cells that contain dates or datetimes.
 
         # Set the column width and format
-        def formatAsText(col_list, width=15):
+        def formatAsText(col_list, width=18):
             for col in col_list:
                 worksheet.set_column(col + ":" + col, width, formatText)
 
-        def formatAsFloat(col_list, width=15):
+        def formatAsFloat(col_list, width=18):
             for col in col_list:
                 worksheet.set_column(col + ":" + col, width, formatFloat)
 
-        def formatAsPercentage(col_list, width=15):
+        def formatAsPercentage(col_list, width=18):
             for col in col_list:
                 worksheet.set_column(col + ":" + col, width, formatPerc)
 
@@ -656,7 +670,10 @@ class PortfolioInvestment:
                 mean_price_col,
                 buy_price_col,
                 earning_col,
+                total_buy_col,
+                partial_sell_col,
                 costs_col,
+                IR_col,
                 quotation_col,
                 market_price_col,
             ]
@@ -728,6 +745,12 @@ class PortfolioInvestment:
 
         # Close the Pandas Excel writer and output the Excel file
         writer.save()
+
+        if auto_open:
+            try:
+                os.system("start EXCEL.EXE " + file_name)
+            finally:
+                pass
 
         return dataframe
 
