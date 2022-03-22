@@ -366,7 +366,7 @@ class PortfolioInvestment:
             "Vendas parciais",
             "Proventos",
             "Custos",
-            "Taxas",
+            "Taxas Adicionais",
             "IR",
             "Dividendos",
             "JCP",
@@ -399,8 +399,7 @@ class PortfolioInvestment:
                 return total_price / total_qtd
 
             def __getPrecoMedioTaxas(wallet, df):
-                qtd_for_fees = df["Quantidade Compra"] + df["Quantidade Venda"]
-                mean_fee = wallet["Taxas"] / qtd_for_fees
+                mean_fee = df["Taxas Compra"] / df["Quantidade Compra"]
                 return mean_fee + wallet["Preço médio"]
 
             def __getPrecoPago(wallet):
@@ -425,7 +424,7 @@ class PortfolioInvestment:
             wallet["Data Final"] = df["Data Final"]
             wallet["Proventos"] = df["Dividendos"] + df["JCP"]
             wallet["Custos"] = df["Taxas"] + df["IR"]
-            wallet["Taxas"] = df["Taxas"]
+            wallet["Taxas Adicionais"] = df["Taxas Venda"] + df["Outras Taxas"]
             wallet["IR"] = df["IR"]
             wallet["Dividendos"] = df["Dividendos"]
             wallet["JCP"] = df["JCP"]
@@ -453,7 +452,8 @@ class PortfolioInvestment:
         buyPrice = wallet["Preço pago"]
         wallet["Mercado-pago(%)"] = deltaPrice / buyPrice
         totalPrice = wallet["Preço mercado"] + wallet["Vendas parciais"]
-        totalPriceAdjusted = totalPrice + wallet["Proventos"] - wallet["IR"]
+        additionalCosts = wallet["IR"] + wallet["Taxas Adicionais"]
+        totalPriceAdjusted = totalPrice + wallet["Proventos"] - additionalCosts
         totalBuy = wallet["Preço médio+taxas"] * wallet["Quantidade compra"]
         netResult = totalPriceAdjusted - totalBuy
         wallet["Líquido parcial"] = netResult

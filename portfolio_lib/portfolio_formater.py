@@ -145,7 +145,7 @@ class VariableIncomesFormater:
         self.DeltaPrice = CurencyColumnType("Mercado-pago")
         self.RentDelta = PercentageColumnType("Mercado-pago(%)")
         self.PartialSell = CurencyColumnType("Vendas parciais")
-        self.Fees = CurencyColumnType("Taxas")
+        self.Fees = CurencyColumnType("Taxas Adicionais")
         self.IncomeTax = CurencyColumnType("IR")
         self.Divided = CurencyColumnType("Dividendos")
         self.Jcp = CurencyColumnType("JCP")
@@ -247,7 +247,7 @@ class TreasuriesFormater:
         self.DeltaPrice = CurencyColumnType("Mercado-pago")
         self.RentDelta = PercentageColumnType("Mercado-pago(%)")
         self.PartialSell = CurencyColumnType("Vendas parciais")
-        self.Fees = CurencyColumnType("Taxas")
+        self.Fees = CurencyColumnType("Taxas Adicionais")
         self.IncomeTax = CurencyColumnType("IR")
         self.Divided = CurencyColumnType("Dividendos")
         self.Jcp = CurencyColumnType("JCP")
@@ -329,7 +329,7 @@ class FixedIncomesFormater:
         self.formatter.setDataframe(portfolio_data_frame)
         self.formatter.setCurrencyType(
             [
-                "Taxas",
+                "Taxas Adicionais",
                 "IR",
                 "Dividendos",
                 "JCP",
@@ -374,7 +374,7 @@ class FixedIncomesFormater:
                 "Mercado-pago",
                 "Mercado-pago(%)",
                 "Vendas parciais",
-                "Taxas",
+                "Taxas Adicionais",
                 "IR",
                 "Dividendos",
                 "JCP",
