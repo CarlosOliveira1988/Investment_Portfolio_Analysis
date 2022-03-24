@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 from balance_lib.balance_window import BalancingWindow
 from indexer_lib.economic_indexers_window import EconomicIndexerWindow
+from main_config import ExtratoFileManager
 from portfolio_lib.portfolio_widget import PortfolioViewerWidget
 from valuation_lib.valuation_window import ValuationWindow
 
@@ -207,23 +208,27 @@ class LinksMenu(MenuInterface):
 class MainWindow(QtWidgets.QWidget):
     """Class used to create the Main Window of the project."""
 
-    def __init__(self, file, auto_show=True):
+    def __init__(self, auto_show=True):
         """Create the MainWindow object."""
         super().__init__()
         self.setWindowTitle("Análise de Portfólio")
+
+        # Define the Extrato spreadsheet file
+        self.extrato_manager = ExtratoFileManager()
+        self.extrato_file = self.extrato_manager.getExtratoFile()
 
         # Grid layout manager
         self.grid = QtWidgets.QGridLayout()
         self.setLayout(self.grid)
 
         # Portfolio widget
-        self.PortfolioViewerWidget = PortfolioViewerWidget(file)
+        self.PortfolioViewerWidget = PortfolioViewerWidget(self.extrato_file)
         self.grid.addWidget(self.PortfolioViewerWidget)
 
         # Status bar
         self.statusBar = QtWidgets.QStatusBar()
         self.grid.addWidget(self.statusBar)
-        self.statusBar.showMessage(file)
+        self.statusBar.showMessage(self.extrato_file)
 
         # Add menu bar
         self._createMenuBar()
@@ -261,12 +266,14 @@ class MainWindow(QtWidgets.QWidget):
     def closeEvent(self, event):
         """Override 'QtWidgets.QWidget.closeEvent'."""
         event.accept()
+        extrato_file = self.PortfolioViewerWidget.getExtratoFile()
+        self.extrato_manager.setExtratoFile(extrato_file)
+        self.extrato_file = extrato_file
         sys.exit()
 
 
 if __name__ == "__main__":
 
-    import os
     import sys
 
     from PyQt5 import QtWidgets
@@ -274,13 +281,8 @@ if __name__ == "__main__":
     # Create the application
     app = QtWidgets.QApplication(sys.argv)
 
-    # Main directory
-    SOURCE_FILE_DIRECTORY = os.path.join(os.path.curdir, "portfolio_lib")
-    FILE_NAME = "PORTFOLIO_TEMPLATE_EMPTY.xlsx"
-    FILE = os.path.join(SOURCE_FILE_DIRECTORY, FILE_NAME)
-
     # Create and show the "MainWindow" object
-    main = MainWindow(FILE)
+    main = MainWindow()
 
     # End the application when everything is closed
     sys.exit(app.exec_())

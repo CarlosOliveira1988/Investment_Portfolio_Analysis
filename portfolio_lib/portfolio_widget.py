@@ -756,6 +756,7 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         - File: the Portfolio file
         """
         super().__init__()
+        self.File = File
         self.setNewData(File)
 
         # Connect tab event
@@ -820,6 +821,7 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         """Read the excel file and update the main dataframes."""
         self.investment = PortfolioInvestment()
         self.investment.setFile(File)
+        self.File = File
         df_updated_flag = self.__updateMainDataframes()
         self.__setTabDataframeList()
         return df_updated_flag
@@ -845,6 +847,7 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
             self.FixedTab.setNewData(self.fixed_income)
             self.TreasuriesTab.setNewData(self.treasuries)
             self.ShortSummaryTab.setNewData(self.short_summary)
+            self.File = File
 
     def clearData(self):
         """Clear the treeview data lines."""
@@ -858,6 +861,7 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
                 tab_interface = self.TabInterfaceList[index]
                 tab_dataframe = self.TabDataframeList[index]
                 tab_interface.updateData(tab_dataframe)
+            self.File = File
 
     def onChange(self, index):
         """Onchange tab method to render the table columns."""
@@ -872,3 +876,7 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
     def getExtratoPath(self):
         """Get the extrato sheet path."""
         return self.investment.getExtratoPath()
+
+    def getExtratoFile(self):
+        """Get the extrato sheet file."""
+        return self.File
