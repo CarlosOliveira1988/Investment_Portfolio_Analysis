@@ -52,12 +52,19 @@ class MenuInterface(QtWidgets.QMenu):
 class FileMenu(MenuInterface):
     """FileMenu class."""
 
-    def __init__(self, menu_bar, status_bar, PortfolioViewerWidget):
+    def __init__(
+        self,
+        menu_bar,
+        status_bar,
+        PortfolioViewerWidget,
+        close_function,
+    ):
         """Create the FileMenu object."""
         super().__init__("&Arquivo", menu_bar)
         self.menu_bar = menu_bar
         self.status_bar = status_bar
         self.PortfolioViewerWidget = PortfolioViewerWidget
+        self.close_function = close_function
 
         # Create the submenus
         self.open = self.addSubmenu(
@@ -119,7 +126,7 @@ class FileMenu(MenuInterface):
 
     def exitApp(self):
         """Close the application."""
-        sys.exit()
+        self.close_function()
 
 
 class ToolsMenu(MenuInterface):
@@ -247,6 +254,7 @@ class MainWindow(QtWidgets.QWidget):
             self.menuBar,
             self.statusBar,
             self.PortfolioViewerWidget,
+            self.__closeEvent,
         )
         self.menuBar.addMenu(self.fileMenu)
 
@@ -263,13 +271,16 @@ class MainWindow(QtWidgets.QWidget):
         )
         self.menuBar.addMenu(self.linksMenu)
 
-    def closeEvent(self, event):
-        """Override 'QtWidgets.QWidget.closeEvent'."""
-        event.accept()
+    def __closeEvent(self):
         extrato_file = self.PortfolioViewerWidget.getExtratoFile()
         self.extrato_manager.setExtratoFile(extrato_file)
         self.extrato_file = extrato_file
         sys.exit()
+
+    def closeEvent(self, event):
+        """Override 'QtWidgets.QWidget.closeEvent'."""
+        event.accept()
+        self.__closeEvent()
 
 
 if __name__ == "__main__":
