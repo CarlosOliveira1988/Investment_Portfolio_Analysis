@@ -2,11 +2,13 @@
 
 import webbrowser
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
 from balance_lib.balance_window import BalancingWindow
+from gui_lib.pushbutton import StandardPushButton
 from indexer_lib.economic_indexers_window import EconomicIndexerWindow
+from main_config import ExtratoFileManager
 from portfolio_lib.portfolio_widget import PortfolioViewerWidget
 from valuation_lib.valuation_window import ValuationWindow
 
@@ -51,12 +53,21 @@ class MenuInterface(QtWidgets.QMenu):
 class FileMenu(MenuInterface):
     """FileMenu class."""
 
-    def __init__(self, menu_bar, status_bar, PortfolioViewerWidget):
+    def __init__(
+        self,
+        menu_bar,
+        PortfolioViewerWidget,
+        file_name,
+        status_bar_function,
+        close_function,
+    ):
         """Create the FileMenu object."""
         super().__init__("&Arquivo", menu_bar)
         self.menu_bar = menu_bar
-        self.status_bar = status_bar
         self.PortfolioViewerWidget = PortfolioViewerWidget
+        self.status_bar_function = status_bar_function
+        self.close_function = close_function
+        self.file_name = file_name
 
         # Create the submenus
         self.open = self.addSubmenu(
@@ -72,6 +83,13 @@ class FileMenu(MenuInterface):
             self.exitApp,
         )
 
+    def reopenFile(self):
+        """Reopen the 'Extrato' spreadsheet."""
+        if self.file_name:
+            self.PortfolioViewerWidget.clearData()
+            self.PortfolioViewerWidget.updateData(self.file_name)
+            self.status_bar_function(self.file_name)
+
     def openFile(self):
         """Open the 'Extrato' spreadsheet."""
         file_name_tuple = QtWidgets.QFileDialog.getOpenFileName(
@@ -82,9 +100,8 @@ class FileMenu(MenuInterface):
         )
         file_name = file_name_tuple[0]
         if ".xlsx" in file_name:
-            self.PortfolioViewerWidget.clearData()
-            self.PortfolioViewerWidget.updateData(file_name)
-            self.status_bar.showMessage(file_name)
+            self.file_name = file_name
+            self.reopenFile()
 
     def exportGDFile(self):
         """Export the Google Drive spreadsheet."""
@@ -118,7 +135,7 @@ class FileMenu(MenuInterface):
 
     def exitApp(self):
         """Close the application."""
-        sys.exit()
+        self.close_function()
 
 
 class ToolsMenu(MenuInterface):
@@ -207,32 +224,55 @@ class LinksMenu(MenuInterface):
 class MainWindow(QtWidgets.QWidget):
     """Class used to create the Main Window of the project."""
 
-    def __init__(self, file, auto_show=True):
+    def __init__(self, auto_show=True):
         """Create the MainWindow object."""
         super().__init__()
         self.setWindowTitle("Análise de Portfólio")
+
+        # Define the Extrato spreadsheet file
+        self.extrato_manager = ExtratoFileManager()
+        self.extrato_file = self.extrato_manager.getExtratoFile()
 
         # Grid layout manager
         self.grid = QtWidgets.QGridLayout()
         self.setLayout(self.grid)
 
         # Portfolio widget
-        self.PortfolioViewerWidget = PortfolioViewerWidget(file)
+        self.PortfolioViewerWidget = PortfolioViewerWidget(self.extrato_file)
         self.grid.addWidget(self.PortfolioViewerWidget)
 
-        # Status bar
-        self.statusBar = QtWidgets.QStatusBar()
-        self.grid.addWidget(self.statusBar)
-        self.statusBar.showMessage(file)
-
         # Add menu bar
-        self._createMenuBar()
+        self.__createMenuBar()
+
+        # Add status bar
+        self.__createStatusBar()
 
         # Show the window
         if auto_show:
             self.showMaximized()
 
-    def _createMenuBar(self):
+    """Private methods."""
+
+    def __createStatusBar(self):
+        # Update Button
+        self.updateBtn = QtWidgets.QPushButton("Reabrir Planilha Extrato")
+        self.updateBtn.setFixedSize(
+            QtCore.QSize(
+                StandardPushButton.DEFAULT_WIDTH,
+                StandardPushButton.DEFAULT_HEIGHT,
+            )
+        )
+        self.updateBtn.clicked.connect(self.fileMenu.reopenFile)
+
+        # Status Bar
+        self.statusBar = QtWidgets.QStatusBar()
+        self.statusBar.addPermanentWidget(self.updateBtn)
+        self.statusBar.showMessage(self.extrato_file)
+
+        # Add Status Bar to the main grid
+        self.grid.addWidget(self.statusBar)
+
+    def __createMenuBar(self):
         # Menu bar
         self.menuBar = QtWidgets.QMenuBar()
         self.grid.setMenuBar(self.menuBar)
@@ -240,8 +280,10 @@ class MainWindow(QtWidgets.QWidget):
         # File menu
         self.fileMenu = FileMenu(
             self.menuBar,
-            self.statusBar,
             self.PortfolioViewerWidget,
+            self.extrato_file,
+            self.__updateStatusBar,
+            self.__close,
         )
         self.menuBar.addMenu(self.fileMenu)
 
@@ -258,15 +300,25 @@ class MainWindow(QtWidgets.QWidget):
         )
         self.menuBar.addMenu(self.linksMenu)
 
+    def __close(self):
+        extrato_file = self.PortfolioViewerWidget.getExtratoFile()
+        self.extrato_manager.setExtratoFile(extrato_file)
+        self.extrato_file = extrato_file
+        sys.exit()
+
+    def __updateStatusBar(self, string):
+        self.statusBar.showMessage(string)
+
+    """Puclic methods."""
+
     def closeEvent(self, event):
         """Override 'QtWidgets.QWidget.closeEvent'."""
         event.accept()
-        sys.exit()
+        self.__close()
 
 
 if __name__ == "__main__":
 
-    import os
     import sys
 
     from PyQt5 import QtWidgets
@@ -274,13 +326,8 @@ if __name__ == "__main__":
     # Create the application
     app = QtWidgets.QApplication(sys.argv)
 
-    # Main directory
-    SOURCE_FILE_DIRECTORY = os.path.join(os.path.curdir, "portfolio_lib")
-    FILE_NAME = "PORTFOLIO_TEMPLATE_EMPTY.xlsx"
-    FILE = os.path.join(SOURCE_FILE_DIRECTORY, FILE_NAME)
-
     # Create and show the "MainWindow" object
-    main = MainWindow(FILE)
+    main = MainWindow()
 
     # End the application when everything is closed
     sys.exit(app.exec_())
