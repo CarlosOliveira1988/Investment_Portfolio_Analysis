@@ -762,20 +762,24 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         # Connect tab event
         self.currentChanged.connect(self.onChange)
 
+    def __setMainDataframes(self):
+        self.extrato = self.investment.getExtrato()
+        self.variable_income = self.investment.currentPortfolio()
+        self.fixed_income = self.investment.currentRendaFixa()
+        self.treasuries = self.investment.currentTesouroDireto()
+        self.short_summary = self.extrato.copy()
+
     def __updateMainDataframes(self):
         try:
             self.investment.run()
-            self.extrato = self.investment.getExtrato()
-            self.variable_income = self.investment.currentPortfolio()
-            self.fixed_income = self.investment.currentRendaFixa()
-            self.treasuries = self.investment.currentTesouroDireto()
-            self.short_summary = self.extrato.copy()
+            self.__setMainDataframes()
             if self.investment.isValidFile():
                 return True
             else:
                 self.__showColumnsErrorMessage()
                 return False
         except XLRDError:
+            self.__setMainDataframes()
             self.__showXLRDErrorMessage()
             return False
 
@@ -841,13 +845,12 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         self.__setTabInterfaceList()
 
         # Set the data in the tabs
-        if self.setPortfolioInvestment(File):
-            self.ExtratoTab.setNewData(self.extrato)
-            self.VariableTab.setNewData(self.variable_income)
-            self.FixedTab.setNewData(self.fixed_income)
-            self.TreasuriesTab.setNewData(self.treasuries)
-            self.ShortSummaryTab.setNewData(self.short_summary)
-            self.File = File
+        self.setPortfolioInvestment(File)
+        self.ExtratoTab.setNewData(self.extrato)
+        self.VariableTab.setNewData(self.variable_income)
+        self.FixedTab.setNewData(self.fixed_income)
+        self.TreasuriesTab.setNewData(self.treasuries)
+        self.ShortSummaryTab.setNewData(self.short_summary)
 
     def clearData(self):
         """Clear the treeview data lines."""
