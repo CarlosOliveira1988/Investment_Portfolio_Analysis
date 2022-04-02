@@ -3,8 +3,34 @@
 from datetime import datetime
 
 import pandas as pd
-from gui_lib.treeview.format_applier import TreeviewFormatApplier
+from gui_lib.treeview.format_applier import EasyFormatter
 from indexer_lib.dataframe_filter import DataframeFilter
+
+
+class MarketFormatter(EasyFormatter):
+    """This class is useful to format Market dataFrames.
+
+    Basically, here we manipulate the dataframe to define:
+    - the columns order
+    - the columns types
+    - the number of columns
+
+    Arguments:
+    - dataframe: the portfolio pandas dataframe
+    """
+
+    def __init__(self, dataframe):
+        """Create the MarketFormatter object."""
+        column_type_dict = {
+            "Mercado": "s",
+            "Taxas": "$",
+            "IR": "$",
+            "Dividendos": "$",
+            "JCP": "$",
+            "Venda-Compra Realizado": "$",
+            "Líquido Realizado": "$",
+        }
+        super().__init__(dataframe, column_type_dict)
 
 
 class MarketInformation:
@@ -39,21 +65,6 @@ class MarketInformation:
 
         # Sorting dataframe 'Market'
         self.mkt_df = self.mkt_df.sort_values(by=["Mercado"])
-
-        # Formatter
-        self.mkt_formatter = TreeviewFormatApplier()
-        self.mkt_formatter.setDataframe(self.mkt_df)
-        self.mkt_formatter.setRequiredString(["Mercado"])
-        self.mkt_formatter.setCurrencyType(
-            [
-                "Taxas",
-                "IR",
-                "Dividendos",
-                "JCP",
-                "Venda-Compra Realizado",
-                "Líquido Realizado",
-            ]
-        )
 
     def _getGrossResultList(self):
         gross_result_list = []
@@ -133,9 +144,8 @@ class MarketInformation:
         - Venda-Compra Realizado
         - Líquido Realizado
         """
-        self.mkt_formatter.setDataframe(self.mkt_df.copy())
-        self.mkt_formatter.runFormatter()
-        return self.mkt_formatter.getFormatedDataFrame().copy()
+        mkt_formatter = MarketFormatter(self.getDataframe())
+        return mkt_formatter.getFormattedDataFrame()
 
     def getTotalDataframe(self):
         """Return a dataframe with the sum of the useful data.
@@ -176,21 +186,49 @@ class MarketInformation:
         - Líquido Realizado
         """
         # Formatter
-        mkt_formatter = TreeviewFormatApplier()
-        mkt_formatter.setDataframe(self.getTotalDataframe())
-        mkt_formatter.setRequiredString(["Mercado"])
-        mkt_formatter.setCurrencyType(
-            [
-                "Taxas",
-                "IR",
-                "Dividendos",
-                "JCP",
-                "Venda-Compra Realizado",
-                "Líquido Realizado",
-            ]
-        )
-        mkt_formatter.runFormatter()
-        return mkt_formatter.getFormatedDataFrame().copy()
+        mkt_formatter = MarketFormatter(self.getTotalDataframe())
+        return mkt_formatter.getFormattedDataFrame()
+
+
+class HistoryFormatter(EasyFormatter):
+    """This class is useful to format Operations History dataFrames.
+
+    Basically, here we manipulate the dataframe to define:
+    - the columns order
+    - the columns types
+    - the number of columns
+
+    Arguments:
+    - dataframe: the portfolio pandas dataframe
+    """
+
+    def __init__(self, dataframe):
+        """Create the HistoryFormatter object."""
+        column_type_dict = {
+            "Mercado": "s",
+            "Ticker": "s",
+            "Indexador": "ns",
+            "Taxa Contratada": "%",
+            "Operação": "s",
+            "Data Inicial": "0-0",
+            "Data Final": "0-0",
+            "Duração dias": "0.0",
+            "Duração meses": "0.0",
+            "Preço-médio Compra": "$",
+            "Quantidade Compra": "0.0",
+            "Preço-total Compra": "$",
+            "Preço-médio Venda": "$",
+            "Quantidade Venda": "0.0",
+            "Preço-total Venda": "$",
+            "Taxas": "$",
+            "IR": "$",
+            "Dividendos": "$",
+            "JCP": "$",
+            "Venda-Compra Realizado": "$",
+            "Líquido Realizado": "$",
+            "Rentabilidade Líquida": "%",
+        }
+        super().__init__(dataframe, column_type_dict)
 
 
 class OperationsHistory:
@@ -535,56 +573,8 @@ class OperationsHistory:
             operations_mkt_df = self.getOpenedOperationsDataframe()
 
         # Formatter
-        op_formatter = TreeviewFormatApplier()
-        op_formatter.setDataframe(operations_mkt_df)
-        op_formatter.setRequiredString(
-            [
-                "Mercado",
-                "Ticker",
-                "Operação",
-            ]
-        )
-        op_formatter.setNonRequiredString(
-            [
-                "Indexador",
-            ]
-        )
-        op_formatter.setCurrencyType(
-            [
-                "Preço-médio Compra",
-                "Preço-total Compra",
-                "Preço-médio Venda",
-                "Preço-total Venda",
-                "Taxas",
-                "IR",
-                "Dividendos",
-                "JCP",
-                "Venda-Compra Realizado",
-                "Líquido Realizado",
-            ]
-        )
-        op_formatter.setDateType(
-            [
-                "Data Inicial",
-                "Data Final",
-            ]
-        )
-        op_formatter.setFloatType(
-            [
-                "Duração dias",
-                "Duração meses",
-                "Quantidade Compra",
-                "Quantidade Venda",
-            ]
-        )
-        op_formatter.setPercentageType(
-            [
-                "Rentabilidade Líquida",
-                "Taxa Contratada",
-            ]
-        )
-        op_formatter.runFormatter()
-        return op_formatter.getFormatedDataFrame()
+        op_formatter = HistoryFormatter(operations_mkt_df)
+        return op_formatter.getFormattedDataFrame()
 
     def getClosedOperationsPerTicker(self, ticker):
         """Return a dataframe of closed operations related to the ticker."""

@@ -145,7 +145,7 @@ class ExtratoWidget(QtWidgets.QWidget):
         self.TreeviewParentLinesDictionary = {}
         non_duplicated_market_list = (
             self.__PortfolioViewerManager.getColumnNonDuplicatedValuesList(
-                self.__PortfolioViewerManager.PortfolioFormater.Market.Title,
+                "Mercado",
             )
         )
         for market in non_duplicated_market_list:
@@ -450,7 +450,7 @@ class VariableTabInterface(TabViewerInterface):
         """Set the data table."""
         dataframe = self.__addTotalLine(dataframe)
         self.formatter = VFormat(dataframe)
-        formatted_df = self.formatter.getFormatedPortolioDataFrame()
+        formatted_df = self.formatter.getFormattedDataFrame()
         self.variable_treeview = ResizableTreeviewPandas(formatted_df)
         self.variable_treeview.showPandas(resize_per_contents=False)
         self.VariableIncomeTab = TabViewerWidget(
@@ -529,7 +529,7 @@ class TreasuriesTabInterface(TabViewerInterface):
         """Set the data table."""
         dataframe = self.__addTotalLine(dataframe)
         self.formatter = TFormat(dataframe)
-        formatted_df = self.formatter.getFormatedPortolioDataFrame()
+        formatted_df = self.formatter.getFormattedDataFrame()
         self.treasuries_treeview = ResizableTreeviewPandas(formatted_df)
         self.treasuries_treeview.showPandas(resize_per_contents=False)
         self.TreasuriesTab = TabViewerWidget(
@@ -608,7 +608,7 @@ class FixedIncomeTabInterface(TabViewerInterface):
         """Set the data table."""
         dataframe = self.__addTotalLine(dataframe)
         self.formatter = FixFormat(dataframe)
-        formatted_df = self.formatter.getFormatedPortolioDataFrame()
+        formatted_df = self.formatter.getFormattedDataFrame()
         self.treeview = ResizableTreeviewPandas(formatted_df)
         self.treeview.showPandas(resize_per_contents=False)
         self.tab = TabViewerWidget(

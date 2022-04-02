@@ -413,13 +413,13 @@ class IndexerManager:
         """
         if stacked:
             stacked_formater = StackedIndexerFormater(self.getDataframe(stacked=True))
-            formated_dataframe = stacked_formater.getFormatedDataFrame()
+            formated_dataframe = stacked_formater.getFormattedDataFrame()
             return formated_dataframe
         else:
             original_formater = OriginalIndexerFormater(
                 self.getDataframe(stacked=False)
             )
-            formated_dataframe = original_formater.getFormatedDataFrame()
+            formated_dataframe = original_formater.getFormattedDataFrame()
             return formated_dataframe
 
     def getFileName(self):
