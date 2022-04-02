@@ -37,7 +37,7 @@ class ValuationWindow(QtWidgets.QWidget):
         self.formater = FundamentalAnalysisFormater(
             self.analysis.getTickersDataframe(),
         )
-        self.formated_dataframe = self.formater.getFormatedDataFrame()
+        self.formated_dataframe = self.formater.getFormattedDataFrame()
 
         # Treeview
         self.treeview = ResizableTreeviewPandas(self.formated_dataframe)

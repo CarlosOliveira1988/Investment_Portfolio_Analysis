@@ -316,6 +316,34 @@ class PortfolioInvestment:
         data = dataframe["Adj Close"].tail(1)
         return float(data)
 
+    def currentMarketYieldByTicker(self, ticker, market):
+        """Return the current Dividend Yield from Status Invest website."""
+        strip_list = ticker.split(".")  # The left side is without ".SA"
+        main_url = "https://statusinvest.com.br/"
+        if market == "FII":
+            url = main_url + "fundos-imobiliarios/" + strip_list[0]
+        else:
+            url = main_url + "acoes/" + strip_list[0]
+        page = requests.get(url)
+        soup = BeautifulSoup(page.content, "html.parser")
+        if market == "FII":
+            selector = soup.select(
+                "#main-2 > div.container.pb-7 > div.top-info.d-flex.flex-wrap."
+                + "justify-between.mb-3.mb-md-5 > div:nth-child(4) > div > div"
+                + ":nth-child(1) > strong"
+            )
+        else:
+            selector = soup.select(
+                "#main-2 > div:nth-child(4) > div > div.pb-3.pb-md-5 > div >"
+                + " div:nth-child(4) > div > div:nth-child(1) > strong"
+            )
+        try:
+            value_str = selector[0].get_text()
+            value = value_str.replace(",", ".")
+            return float(value) / 100
+        except IndexError:
+            return 0.0
+
     def currentMarketPriceByTickerList(self, list):
         """Return a dataframe with the last price of the stocks in the list."""
         dataframe = yf.download(list, period="1d")
@@ -335,6 +363,15 @@ class PortfolioInvestment:
         except AttributeError:
             data = data
         return data
+
+    def currentMarketYieldByTickerList(self, tickerList, market_list):
+        """Return a dataframe with the current Dividend Yield."""
+        yield_dict = {}
+        for index, ticker in enumerate(tickerList):
+            market = market_list[index]
+            yield_val = self.currentMarketYieldByTicker(ticker, market)
+            yield_dict[ticker] = [yield_val]
+        return pd.DataFrame(data=yield_dict)
 
     def sectorOfTicker(self, ticker):
         """Return the sector of a given ticker.
@@ -491,16 +528,40 @@ class PortfolioInvestment:
         # Create a list of ticker to be used in YFinance API
         listTicker = wallet["Ticker"].tolist()
         listTicker = [(Ticker + ".SA") for Ticker in listTicker]
+        listMarket = wallet["Mercado"].tolist()
 
-        # Get the current values of all tickers in the wallet
+        # Get related values of all tickers in the wallet
         if listTicker:
+
+            # Get the current values of all tickers in the wallet
             curPricesTickers = self.currentMarketPriceByTickerList(listTicker)
             for index, row in wallet.iterrows():
-                ticker = row["Ticker"] + ".SA"
+                ticker = row["Ticker"] + ".SA"  # ".SA" is needed due YFinance
                 wallet.at[index, "Cotação"] = float(curPricesTickers[ticker])
+
+            # Get the current dividend yield of all tickers in the wallet
+            yield_col = "Rentabilidade-média Contratada"
+            curYieldsTickers = self.currentMarketYieldByTickerList(
+                listTicker, listMarket
+            )
+            for index, row in wallet.iterrows():
+                ticker = row["Ticker"] + ".SA"  # ".SA" is needed due YFinance
+                wallet.at[index, yield_col] = float(curYieldsTickers[ticker])
+
+        def renameYieldColumn(wallet):
+            default_yield_col = "Rentabilidade-média Contratada"
+            yield_col = "Dividend-Yield Ajustado"
+            dict_rename = {default_yield_col: yield_col}
+            wallet = wallet.rename(columns=dict_rename, inplace=False)
+            return yield_col, wallet
 
         # Calculate values related to the wallet default columns
         self.__calculateWalletDefaultColumns(wallet, market_list)
+
+        # Calculate the adjusted dividend yield
+        yield_col, wallet = renameYieldColumn(wallet)
+        yield_val = wallet[yield_col] * wallet["Preço mercado"]
+        wallet[yield_col] = yield_val / wallet["Preço pago"]
 
         return wallet
 

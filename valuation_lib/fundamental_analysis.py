@@ -32,7 +32,7 @@ class FundamentalAnalysisJob:
 
             def setDate(value):
                 try:
-                    return time.strftime("%Y-%m-%d", time.localtime(value))
+                    return time.strftime("%Y/%m/%d", time.localtime(value))
                 except ValueError:
                     return None
 

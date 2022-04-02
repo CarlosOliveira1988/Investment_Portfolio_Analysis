@@ -15,7 +15,7 @@ class PortfolioViewerManager:
     def __init__(self, PortolioDataFrame):
         """Create the PortfolioViewerManager object."""
         self.PortfolioFormater = PortfolioFormater(PortolioDataFrame)
-        self.FormatedDF = self.PortfolioFormater.getFormatedPortolioDataFrame()
+        self.FormatedDF = self.PortfolioFormater.getFormattedDataFrame()
 
     """
     Public methods
