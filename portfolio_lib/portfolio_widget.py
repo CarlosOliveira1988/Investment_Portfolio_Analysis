@@ -469,7 +469,7 @@ class VariableTabInterface(TabViewerInterface):
         """Update the data table."""
         dataframe = self.__addTotalLine(dataframe)
         self.formatter = VFormat(dataframe)
-        formatted_dataframe = self.formatter.getFormatedPortolioDataFrame()
+        formatted_dataframe = self.formatter.getFormattedDataFrame()
         self.variable_treeview.clearData()
         self.variable_treeview.setDataframe(formatted_dataframe)
         self.variable_treeview.showPandas(resize_per_contents=False)
@@ -548,7 +548,7 @@ class TreasuriesTabInterface(TabViewerInterface):
         """Update the data table."""
         dataframe = self.__addTotalLine(dataframe)
         self.formatter = TFormat(dataframe)
-        formatted_df = self.formatter.getFormatedPortolioDataFrame()
+        formatted_df = self.formatter.getFormattedDataFrame()
         self.treasuries_treeview.clearData()
         self.treasuries_treeview.setDataframe(formatted_df)
         self.treasuries_treeview.showPandas(resize_per_contents=False)
@@ -627,7 +627,7 @@ class FixedIncomeTabInterface(TabViewerInterface):
         """Update the data table."""
         dataframe = self.__addTotalLine(dataframe)
         self.formatter = FixFormat(dataframe)
-        formatted_df = self.formatter.getFormatedPortolioDataFrame()
+        formatted_df = self.formatter.getFormattedDataFrame()
         self.treeview.clearData()
         self.treeview.setDataframe(formatted_df)
         self.treeview.showPandas(resize_per_contents=False)
