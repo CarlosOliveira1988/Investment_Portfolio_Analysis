@@ -343,6 +343,8 @@ class PortfolioInvestment:
             return float(value) / 100
         except IndexError:
             return 0.0
+        except ValueError:
+            return 0.0
 
     def currentMarketPriceByTickerList(self, list):
         """Return a dataframe with the last price of the stocks in the list."""
@@ -922,7 +924,10 @@ class PortfolioInvestment:
             # as decimal spacer.
             value = value.replace(",", ".")
 
-        return float(value)
+        try:
+            return float(value)
+        except ValueError:
+            return 0.0
 
     def currentTesouroDireto(self):
         """Create a dataframe with all open operations of Tesouro Direto."""
