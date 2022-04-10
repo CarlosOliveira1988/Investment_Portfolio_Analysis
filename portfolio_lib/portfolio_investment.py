@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 try:
     from indexer_lib.fixed_income import FixedIncomeCalculation
 
+    from portfolio_lib.multi_processing import MultiProcessingTasks
     from portfolio_lib.portfolio_history import OperationsHistory as OpInfo
 
 except ModuleNotFoundError:
@@ -23,6 +24,7 @@ except ModuleNotFoundError:
     # Run the import statements
     from indexer_lib.fixed_income import FixedIncomeCalculation
 
+    from portfolio_lib.multi_processing import MultiProcessingTasks
     from portfolio_lib.portfolio_history import OperationsHistory as OpInfo
 
 
@@ -51,6 +53,7 @@ class PortfolioInvestment:
             "Notas",
         ]
         self.fileOperations = None
+        self.multi_process = MultiProcessingTasks()
         self.run()
 
     def getExpectedColumnsTitleList(self):
@@ -84,14 +87,21 @@ class PortfolioInvestment:
             valid_flag = False
         return valid_flag
 
+    def _startNewProcess(self, function):
+        self.multi_process.startNewProcess(function)
+
+    def _endAllProcesses(self):
+        self.multi_process.endAllProcesses()
+
     def run(self):
         """Run the main routines related to the excel porfolio file."""
-        self._updateOperations()
-        self._updateOpenedOperations()
-        self._updateOperationsYear()
-        self._updateCurrentPortfolio()
-        self._updateCurrentRendaFixa()
-        self._updateCurrentTesouroDireto()
+        self._startNewProcess(self._updateOperations())
+        self._startNewProcess(self._updateOpenedOperations())
+        self._startNewProcess(self._updateOperationsYear())
+        self._startNewProcess(self._updateCurrentPortfolio())
+        self._startNewProcess(self._updateCurrentRendaFixa())
+        self._startNewProcess(self._updateCurrentTesouroDireto())
+        self._endAllProcesses()
 
     def _updateOperations(self):
         self.operations = self._readExtrato()
@@ -1026,7 +1036,7 @@ if __name__ == "__main__":
 
     # Main directory
     SOURCE_FILE_DIRECTORY = os.path.join(os.path.curdir, "portfolio_lib")
-    FILE_NAME = "PORTFOLIO_TEMPLATE.xlsx"
+    FILE_NAME = "PORTFOLIO_TEMPLATE_PERFORMANCE.xlsx"
     FILE = os.path.join(SOURCE_FILE_DIRECTORY, FILE_NAME)
 
     # Example:
