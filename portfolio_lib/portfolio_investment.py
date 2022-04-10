@@ -32,13 +32,6 @@ class PortfolioInvestment:
     def __init__(self):
         """Create the PortfolioInvestment object."""
         self.fixedIncomeCalc = FixedIncomeCalculation()
-        self.fileOperations = None
-        self.openedOperations = None
-        self.operations = None
-        self.operationsYear = None
-        self.currentVariableIncome = None
-        self.currentFixedIncome = None
-        self.currentTreasuries = None
         self.expected_title_list = [
             "Mercado",
             "Ticker",
@@ -57,6 +50,8 @@ class PortfolioInvestment:
             "Custo Total",
             "Notas",
         ]
+        self.fileOperations = None
+        self.run()
 
     def getExpectedColumnsTitleList(self):
         """Return a list of expected column titles."""
@@ -65,6 +60,7 @@ class PortfolioInvestment:
     def setFile(self, fileOperations):
         """Set the excel file related to the porfolio."""
         self.fileOperations = fileOperations
+        self._updateOperations()
 
     def getExtratoPath(self):
         """Get the extrato sheet path."""
@@ -76,13 +72,12 @@ class PortfolioInvestment:
     def isValidFile(self):
         """Return if the excel portfolio file is valid or not."""
         valid_flag = True
-        dataframe = pd.read_excel(self.fileOperations)
         # If some expected column is not present in the excel file
         # or the title line is empty in the excel file,
         # then the file is not valid
-        if list(dataframe):
+        if list(self.operations):
             for expected_title in self.expected_title_list:
-                if expected_title not in dataframe:
+                if expected_title not in self.operations:
                     valid_flag = False
                     break
         else:
@@ -91,37 +86,51 @@ class PortfolioInvestment:
 
     def run(self):
         """Run the main routines related to the excel porfolio file."""
-        # Dataframe with all the operations from the Excel file.
-        self.operations = self.getExtrato()
+        self._updateOperations()
+        self._updateOpenedOperations()
+        self._updateOperationsYear()
+        self._updateCurrentPortfolio()
+        self._updateCurrentRendaFixa()
+        self._updateCurrentTesouroDireto()
 
-        # Dataframe with opened operations
+    def _updateOperations(self):
+        self.operations = self._readExtrato()
+
+    def _updateOpenedOperations(self):
         history = OpInfo(self.operations.copy())
         self.openedOperations = history.getOpenedOperationsDataframe()
 
-        # 3 lists of number of operations by year. Suitable to be plot.
+    def _updateOperationsYear(self):
         self.operationsYear = self.numberOperationsYear()
 
-        # Dataframe of the current portfolio related to 'Renda Variavel'
+    def _updateCurrentPortfolio(self):
         self.currentVariableIncome = self.__currentPortfolio()
 
-        # Dataframe of the current portfolio related to 'Renda Fixa'
+    def _updateCurrentRendaFixa(self):
         self.currentFixedIncome = self.__currentRendaFixa()
 
-        # Dataframe of the current portfolio related to 'Tesouro Direto'
+    def _updateCurrentTesouroDireto(self):
         self.currentTreasuries = self.__currentTesouroDireto()
+
+    def _getDefaultExtrato(self):
+        col_list = self.getExpectedColumnsTitleList()
+        return pd.DataFrame(columns=col_list)
+
+    def _readExtrato(self):
+        try:
+            extrato = pd.read_excel(self.fileOperations)
+            # Excel file has title and data lines
+            if self.isValidFile():
+                return extrato
+            # Excel file has ONLY the title line
+            else:
+                return self._getDefaultExtrato()
+        except ValueError:
+            return self._getDefaultExtrato()
 
     def getExtrato(self):
         """Return the raw dataframe related to the excel porfolio file."""
-        extrato = pd.read_excel(self.fileOperations)
-
-        # Excel file has title and data lines
-        if self.isValidFile():
-            return extrato
-
-        # Excel file has ONLY the title line
-        else:
-            col_list = self.getExpectedColumnsTitleList()
-            return pd.DataFrame(columns=col_list)
+        return self.operations.copy()
 
     def overallTaxAndIncomes(self):
         """Return the sum of the fees, income tax, dividend and jcp."""
