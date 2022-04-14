@@ -1,6 +1,6 @@
 """This file has a class to show Valuation analysis frame."""
 
-import sys
+import os
 
 import pandas as pd
 from gui_lib.treeview.treeview_pandas import ResizableTreeviewPandas
@@ -24,8 +24,11 @@ class ValuationWindow(QtWidgets.QWidget):
         self.setWindowTitle("Indicadores Fundamentalistas")
 
         # Excel file under analysis
-        self.file_path = sys.path[0]
-        self.file_path += "\\valuation_lib\\analise_fundamentalista.xlsx"
+        self.file_path = os.path.join(
+            os.path.curdir,
+            "valuation_lib",
+            "analise_fundamentalista.xlsx",
+        )
         self.file_dataframe = pd.read_excel(self.file_path)
 
         # Analysis object
