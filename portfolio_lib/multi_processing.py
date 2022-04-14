@@ -20,3 +20,5 @@ class MultiProcessingTasks:
         """End all tasks."""
         for process in self.process_list:
             process.join()
+            process.close()
+        self.process_list.clear()

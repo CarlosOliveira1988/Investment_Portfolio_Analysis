@@ -757,6 +757,7 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         """
         super().__init__()
         self.File = File
+        self.investment = PortfolioInvestment()
         self.setNewData(File)
 
         # Connect tab event
@@ -823,9 +824,8 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
 
     def setPortfolioInvestment(self, File):
         """Read the excel file and update the main dataframes."""
-        self.investment = PortfolioInvestment()
-        self.investment.setFile(File)
         self.File = File
+        self.investment.setFile(self.File)
         df_updated_flag = self.__updateMainDataframes()
         self.__setTabDataframeList()
         return df_updated_flag
