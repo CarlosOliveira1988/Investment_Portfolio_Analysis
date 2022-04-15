@@ -22,3 +22,19 @@ class MultiProcessingTasks:
             process.join()
             process.close()
         self.process_list.clear()
+
+
+class PoolTasks:
+    """This is a class to manage tasks with parameters in parallel."""
+
+    def __init__(self):
+        """Create the PoolTasks object."""
+        self.workers = multiprocessing.cpu_count() - 1
+        self.pool = multiprocessing.Pool(self.workers)
+
+    def runPool(self, function, arg_list):
+        """Start new tasks."""
+        pool_map = self.pool.map(function, arg_list)
+        self.pool.close()
+        self.pool.join()
+        return pool_map

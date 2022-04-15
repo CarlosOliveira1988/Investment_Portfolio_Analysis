@@ -13,8 +13,8 @@ try:
     from indexer_lib.fixed_income import FixedIncomeCalculation
 
     from portfolio_lib.assets import PortfolioAssets
-    from portfolio_lib.multi_processing import MultiProcessingTasks
-    from portfolio_lib.portfolio_history import OperationsHistory as OpInfo
+    from portfolio_lib.multi_processing import MultiProcessingTasks, PoolTasks
+    from portfolio_lib.portfolio_history import OperationsHistory
 
 except ModuleNotFoundError:
 
@@ -26,8 +26,8 @@ except ModuleNotFoundError:
     from indexer_lib.fixed_income import FixedIncomeCalculation
 
     from portfolio_lib.assets import PortfolioAssets
-    from portfolio_lib.multi_processing import MultiProcessingTasks
-    from portfolio_lib.portfolio_history import OperationsHistory as OpInfo
+    from portfolio_lib.multi_processing import MultiProcessingTasks, PoolTasks
+    from portfolio_lib.portfolio_history import OperationsHistory
 
 
 class PortfolioInvestment:
@@ -130,7 +130,7 @@ class PortfolioInvestment:
         self.operations = self._readExtrato()
 
     def _updateOpenedOperations(self):
-        history = OpInfo(self.operations.copy())
+        history = OperationsHistory(self.operations.copy())
         self.openedOperations = history.getOpenedOperationsDataframe()
 
     def _updateOperationsYear(self):
@@ -363,12 +363,20 @@ class PortfolioInvestment:
 
     def currentMarketYieldByTicker(self, ticker, market):
         """Return the current Dividend Yield from Status Invest website."""
+        # During some performance tests, I noticed this is the
+        # slowest function related to RendaVariavel type.
+        # If we want to improve the application performance, we need to change
+        # something here.
+
+        # Prepare the URL
         strip_list = ticker.split(".")  # The left side is without ".SA"
         main_url = "https://statusinvest.com.br/"
         if market == "FII":
             url = main_url + "fundos-imobiliarios/" + strip_list[0]
         else:
             url = main_url + "acoes/" + strip_list[0]
+
+        # Web scraping
         page = requests.get(url)
         soup = BeautifulSoup(page.content, "html.parser")
         if market == "FII":
@@ -382,6 +390,8 @@ class PortfolioInvestment:
                 "#main-2 > div:nth-child(4) > div > div.pb-3.pb-md-5 > div >"
                 + " div:nth-child(4) > div > div:nth-child(1) > strong"
             )
+
+        # Convert string to float values
         try:
             value_str = selector[0].get_text()
             value = value_str.replace(",", ".")
@@ -411,14 +421,34 @@ class PortfolioInvestment:
             data = data
         return data
 
-    def currentMarketYieldByTickerList(self, tickerList, market_list):
+    def _currentMarketYieldByTicker(self, arg_list):
+        ticker = arg_list[0]
+        market = arg_list[1]
+        return [self.currentMarketYieldByTicker(ticker, market)]
+
+    def currentMarketYieldByTickerList(self, tickerList, marketList):
         """Return a dataframe with the current Dividend Yield."""
-        yield_dict = {}
+        # Set the pool list variables
+        self.tickerPool = []
+        self.marketPool = []
+        self.yieldPool = []
         for index, ticker in enumerate(tickerList):
-            market = market_list[index]
-            yield_val = self.currentMarketYieldByTicker(ticker, market)
-            yield_dict[ticker] = [yield_val]
-        return pd.DataFrame(data=yield_dict)
+            self.tickerPool.append(ticker)
+            self.marketPool.append(marketList[index])
+            self.yieldPool.append([])
+        self.indexPool = range(len(self.yieldPool))
+
+        # Run the pool multitask
+        self.yieldPool = PoolTasks().runPool(
+            self._currentMarketYieldByTicker,
+            zip(
+                self.tickerPool,
+                self.marketPool,
+                self.indexPool,
+            ),
+        )
+        df_dict = dict(zip(self.tickerPool, self.yieldPool))
+        return pd.DataFrame(data=df_dict)
 
     def sectorOfTicker(self, ticker):
         """Return the sector of a given ticker.
@@ -454,17 +484,20 @@ class PortfolioInvestment:
             # Get the current values of all tickers in the wallet
             curPricesTickers = self.currentMarketPriceByTickerList(listTicker)
             for index, row in wallet.iterrows():
-                ticker = row["Ticker"] + ".SA"  # ".SA" is needed due YFinance
+                # ".SA" is needed due YFinance
+                ticker = row["Ticker"] + ".SA"
                 wallet.at[index, "Cotação"] = float(curPricesTickers[ticker])
 
             # Get the current dividend yield of all tickers in the wallet
             yield_col = "Rentabilidade-média Contratada"
-            curYieldsTickers = self.currentMarketYieldByTickerList(
-                listTicker, listMarket
+            yield_df = self.currentMarketYieldByTickerList(
+                listTicker,
+                listMarket,
             )
             for index, row in wallet.iterrows():
-                ticker = row["Ticker"] + ".SA"  # ".SA" is needed due YFinance
-                wallet.at[index, yield_col] = float(curYieldsTickers[ticker])
+                # ".SA" is needed due YFinance
+                ticker = row["Ticker"] + ".SA"
+                wallet.at[index, yield_col] = float(yield_df[ticker])
 
         def renameYieldColumn(wallet):
             default_yield_col = "Rentabilidade-média Contratada"
