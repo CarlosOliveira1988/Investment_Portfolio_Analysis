@@ -756,8 +756,10 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         - File: the Portfolio file
         """
         super().__init__()
-        self.File = File
-        self.setNewData(File)
+        self.investment = PortfolioInvestment(File)
+        self.__createTabs()
+        self.setPortfolioInvestment(File, initialization=True)
+        self.__addDataToTabs()
 
         # Connect tab event
         self.currentChanged.connect(self.onChange)
@@ -769,9 +771,10 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         self.treasuries = self.investment.currentTesouroDireto()
         self.short_summary = self.extrato.copy()
 
-    def __updateMainDataframes(self):
+    def __updateMainDataframes(self, initialization):
         try:
-            self.investment.run()
+            if not initialization:
+                self.investment.run()
             self.__setMainDataframes()
             if self.investment.isValidFile():
                 return True
@@ -821,12 +824,12 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
             self.short_summary,
         ]
 
-    def setPortfolioInvestment(self, File):
+    def setPortfolioInvestment(self, File, initialization=False):
         """Read the excel file and update the main dataframes."""
-        self.investment = PortfolioInvestment()
-        self.investment.setFile(File)
         self.File = File
-        df_updated_flag = self.__updateMainDataframes()
+        if not initialization:
+            self.investment.setFile(self.File)
+        df_updated_flag = self.__updateMainDataframes(initialization)
         self.__setTabDataframeList()
         return df_updated_flag
 
@@ -834,9 +837,7 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         """Export the Google Drive spreasheet."""
         self.investment.currentPortfolioGoogleDrive()
 
-    def setNewData(self, File):
-        """Set the new treeview data lines."""
-        # Create the special tabs
+    def __createTabs(self):
         self.ExtratoTab = ExtratoTabInterface(self.__addNewTab)
         self.VariableTab = VariableTabInterface(self.__addNewTab)
         self.FixedTab = FixedIncomeTabInterface(self.__addNewTab)
@@ -844,8 +845,7 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         self.ShortSummaryTab = ShortSummaryTabInterface(self.__addNewTab)
         self.__setTabInterfaceList()
 
-        # Set the data in the tabs
-        self.setPortfolioInvestment(File)
+    def __addDataToTabs(self):
         self.ExtratoTab.setNewData(self.extrato)
         self.VariableTab.setNewData(self.variable_income)
         self.FixedTab.setNewData(self.fixed_income)

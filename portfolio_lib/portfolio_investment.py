@@ -12,7 +12,9 @@ from bs4 import BeautifulSoup
 try:
     from indexer_lib.fixed_income import FixedIncomeCalculation
 
-    from portfolio_lib.portfolio_history import OperationsHistory as OpInfo
+    from portfolio_lib.assets import PortfolioAssets
+    from portfolio_lib.multi_processing import MultiProcessingTasks, PoolTasks
+    from portfolio_lib.portfolio_history import OperationsHistory
 
 except ModuleNotFoundError:
 
@@ -23,22 +25,24 @@ except ModuleNotFoundError:
     # Run the import statements
     from indexer_lib.fixed_income import FixedIncomeCalculation
 
-    from portfolio_lib.portfolio_history import OperationsHistory as OpInfo
+    from portfolio_lib.assets import PortfolioAssets
+    from portfolio_lib.multi_processing import MultiProcessingTasks, PoolTasks
+    from portfolio_lib.portfolio_history import OperationsHistory
 
 
 class PortfolioInvestment:
     """This is a class to manage all portfolio operations."""
 
-    def __init__(self):
+    TOTAL_PROCESSES = 2
+    EXTRATO_PROCESS_ID = 0
+    REALTIME_PROCESS_ID = 1
+
+    def __init__(self, fileOperations=None):
         """Create the PortfolioInvestment object."""
+        self.VariableIncome = PortfolioAssets()
+        self.FixedIncome = PortfolioAssets()
+        self.Treasuries = PortfolioAssets()
         self.fixedIncomeCalc = FixedIncomeCalculation()
-        self.fileOperations = None
-        self.openedOperations = None
-        self.operations = None
-        self.operationsYear = None
-        self.currentVariableIncome = None
-        self.currentFixedIncome = None
-        self.currentTreasuries = None
         self.expected_title_list = [
             "Mercado",
             "Ticker",
@@ -57,6 +61,13 @@ class PortfolioInvestment:
             "Custo Total",
             "Notas",
         ]
+        self.multi_process_list = self.__getProcessList()
+        self.setFile(fileOperations)
+        self.run()
+
+    def __getProcessList(self):
+        processes = PortfolioInvestment.TOTAL_PROCESSES
+        return [MultiProcessingTasks() for x in range(processes)]
 
     def getExpectedColumnsTitleList(self):
         """Return a list of expected column titles."""
@@ -65,6 +76,7 @@ class PortfolioInvestment:
     def setFile(self, fileOperations):
         """Set the excel file related to the porfolio."""
         self.fileOperations = fileOperations
+        self._updateOperations()
 
     def getExtratoPath(self):
         """Get the extrato sheet path."""
@@ -75,53 +87,85 @@ class PortfolioInvestment:
 
     def isValidFile(self):
         """Return if the excel portfolio file is valid or not."""
+        return self.valid_file
+
+    def __isValidFile(self, extrato):
+        """Return if the excel portfolio file is valid or not."""
         valid_flag = True
-        dataframe = pd.read_excel(self.fileOperations)
         # If some expected column is not present in the excel file
         # or the title line is empty in the excel file,
         # then the file is not valid
-        if list(dataframe):
+        if list(extrato):
             for expected_title in self.expected_title_list:
-                if expected_title not in dataframe:
+                if expected_title not in extrato:
                     valid_flag = False
                     break
         else:
             valid_flag = False
         return valid_flag
 
+    def _startNewProcess(self, function, proc_index):
+        self.multi_process_list[proc_index].startNewProcess(function)
+
+    def _endAllProcesses(self, proc_index):
+        self.multi_process_list[proc_index].endAllProcesses()
+
     def run(self):
         """Run the main routines related to the excel porfolio file."""
-        # Dataframe with all the operations from the Excel file.
-        self.operations = self.getExtrato()
+        # The bellow tasks run in parallel
+        proc_id = PortfolioInvestment.EXTRATO_PROCESS_ID
+        self._startNewProcess(self._updateOpenedOperations(), proc_id)
+        self._startNewProcess(self._updateOperationsYear(), proc_id)
+        self._endAllProcesses(proc_id)
 
-        # Dataframe with opened operations
-        history = OpInfo(self.operations.copy())
+        # The below tasks run in parallel and are dependent of the above tasks
+        proc_id = PortfolioInvestment.REALTIME_PROCESS_ID
+        self._startNewProcess(self._updateCurrentPortfolio(), proc_id)
+        self._startNewProcess(self._updateCurrentRendaFixa(), proc_id)
+        self._startNewProcess(self._updateCurrentTesouroDireto(), proc_id)
+        self._endAllProcesses(proc_id)
+
+    def _updateOperations(self):
+        self.operations = self._readExtrato()
+
+    def _updateOpenedOperations(self):
+        history = OperationsHistory(self.operations.copy())
         self.openedOperations = history.getOpenedOperationsDataframe()
 
-        # 3 lists of number of operations by year. Suitable to be plot.
+    def _updateOperationsYear(self):
         self.operationsYear = self.numberOperationsYear()
 
-        # Dataframe of the current portfolio related to 'Renda Variavel'
+    def _updateCurrentPortfolio(self):
         self.currentVariableIncome = self.__currentPortfolio()
 
-        # Dataframe of the current portfolio related to 'Renda Fixa'
+    def _updateCurrentRendaFixa(self):
         self.currentFixedIncome = self.__currentRendaFixa()
 
-        # Dataframe of the current portfolio related to 'Tesouro Direto'
+    def _updateCurrentTesouroDireto(self):
         self.currentTreasuries = self.__currentTesouroDireto()
+
+    def _getDefaultExtrato(self):
+        col_list = self.getExpectedColumnsTitleList()
+        return pd.DataFrame(columns=col_list)
+
+    def _readExtrato(self):
+        try:
+            extrato = pd.read_excel(self.fileOperations)
+            # Excel file has title and data lines
+            if self.__isValidFile(extrato):
+                self.valid_file = True
+                return extrato
+            # Excel file has ONLY the title line
+            else:
+                self.valid_file = False
+                return self._getDefaultExtrato()
+        except ValueError:
+            self.valid_file = False
+            return self._getDefaultExtrato()
 
     def getExtrato(self):
         """Return the raw dataframe related to the excel porfolio file."""
-        extrato = pd.read_excel(self.fileOperations)
-
-        # Excel file has title and data lines
-        if self.isValidFile():
-            return extrato
-
-        # Excel file has ONLY the title line
-        else:
-            col_list = self.getExpectedColumnsTitleList()
-            return pd.DataFrame(columns=col_list)
+        return self.operations.copy()
 
     def overallTaxAndIncomes(self):
         """Return the sum of the fees, income tax, dividend and jcp."""
@@ -318,12 +362,20 @@ class PortfolioInvestment:
 
     def currentMarketYieldByTicker(self, ticker, market):
         """Return the current Dividend Yield from Status Invest website."""
+        # During some performance tests, I noticed this is the
+        # slowest function related to RendaVariavel type.
+        # If we want to improve the application performance, we need to change
+        # something here.
+
+        # Prepare the URL
         strip_list = ticker.split(".")  # The left side is without ".SA"
         main_url = "https://statusinvest.com.br/"
         if market == "FII":
             url = main_url + "fundos-imobiliarios/" + strip_list[0]
         else:
             url = main_url + "acoes/" + strip_list[0]
+
+        # Web scraping
         page = requests.get(url)
         soup = BeautifulSoup(page.content, "html.parser")
         if market == "FII":
@@ -337,11 +389,15 @@ class PortfolioInvestment:
                 "#main-2 > div:nth-child(4) > div > div.pb-3.pb-md-5 > div >"
                 + " div:nth-child(4) > div > div:nth-child(1) > strong"
             )
+
+        # Convert string to float values
         try:
             value_str = selector[0].get_text()
             value = value_str.replace(",", ".")
             return float(value) / 100
         except IndexError:
+            return 0.0
+        except ValueError:
             return 0.0
 
     def currentMarketPriceByTickerList(self, list):
@@ -364,14 +420,34 @@ class PortfolioInvestment:
             data = data
         return data
 
-    def currentMarketYieldByTickerList(self, tickerList, market_list):
+    def _currentMarketYieldByTicker(self, arg_list):
+        ticker = arg_list[0]
+        market = arg_list[1]
+        return [self.currentMarketYieldByTicker(ticker, market)]
+
+    def currentMarketYieldByTickerList(self, tickerList, marketList):
         """Return a dataframe with the current Dividend Yield."""
-        yield_dict = {}
+        # Set the pool list variables
+        self.tickerPool = []
+        self.marketPool = []
+        self.yieldPool = []
         for index, ticker in enumerate(tickerList):
-            market = market_list[index]
-            yield_val = self.currentMarketYieldByTicker(ticker, market)
-            yield_dict[ticker] = [yield_val]
-        return pd.DataFrame(data=yield_dict)
+            self.tickerPool.append(ticker)
+            self.marketPool.append(marketList[index])
+            self.yieldPool.append([])
+        self.indexPool = range(len(self.yieldPool))
+
+        # Run the pool multitask
+        self.yieldPool = PoolTasks().runPool(
+            self._currentMarketYieldByTicker,
+            zip(
+                self.tickerPool,
+                self.marketPool,
+                self.indexPool,
+            ),
+        )
+        df_dict = dict(zip(self.tickerPool, self.yieldPool))
+        return pd.DataFrame(data=df_dict)
 
     def sectorOfTicker(self, ticker):
         """Return the sector of a given ticker.
@@ -381,136 +457,6 @@ class PortfolioInvestment:
         ticker = ticker + ".SA"
         data = yf.Ticker(ticker)
         return data.info["sector"]
-
-    def __getMarketValueSum(self, wallet, market):
-        df = wallet[wallet["Mercado"] == market]
-        return df["Preço mercado"].sum()
-
-    def __setTickerPercentage(self, wallet, market):
-        marketValue = self.__getMarketValueSum(wallet, market)
-        marketDF = wallet[wallet["Mercado"].isin([market])]
-        for index, row in marketDF.iterrows():
-            marketPrice = row["Preço mercado"]
-            percentage = marketPrice / marketValue
-            wallet.at[index, "Porcentagem carteira"] = percentage
-
-    def __getDefaultDataframe(self):
-        col_list = [
-            "Ticker",
-            "Mercado",
-            "Indexador",
-            "Rentabilidade-média Contratada",
-            "Data Inicial",
-            "Data Final",
-            "Quantidade",
-            "Quantidade compra",
-            "Preço médio",
-            "Preço médio+taxas",
-            "Preço pago",
-            "Compras totais",
-            "Vendas parciais",
-            "Proventos",
-            "Custos",
-            "Taxas Adicionais",
-            "IR",
-            "Dividendos",
-            "JCP",
-            "Cotação",
-            "Preço mercado",
-            "Mercado-pago",
-            "Mercado-pago(%)",
-            "Líquido parcial",
-            "Líquido parcial(%)",
-            "Porcentagem carteira",
-        ]
-        defaultDF = pd.DataFrame(columns=col_list)
-        return defaultDF
-
-    def __createWalletDefaultColumns(self, market_list):
-        # Dataframe with opened operations
-        df = self.openedOperations.copy()
-
-        # 'Extrato' dataframe has title and data lines
-        if len(df):
-
-            def __getQuantidade(df):
-                return df["Quantidade Compra"] - df["Quantidade Venda"]
-
-            def __getPrecoMedio(df):
-                priceBuy = df["Preço-médio Compra"]
-                qtdBuy = df["Quantidade Compra"]
-                total_price = qtdBuy * priceBuy
-                total_qtd = qtdBuy
-                return total_price / total_qtd
-
-            def __getPrecoMedioTaxas(wallet, df):
-                mean_fee = df["Taxas Compra"] / df["Quantidade Compra"]
-                return mean_fee + wallet["Preço médio"]
-
-            def __getPrecoPago(wallet):
-                return wallet["Quantidade"] * wallet["Preço médio+taxas"]
-
-            def __getComprasTotais(wallet):
-                return wallet["Preço médio+taxas"] * wallet["Quantidade compra"]
-
-            def __getVendasParciais(df):
-                return df["Preço-médio Venda"] * df["Quantidade Venda"]
-
-            # Wallet default dataframe with all empty columns
-            wallet = self.__getDefaultDataframe()
-
-            # Prepare the useful dataframe
-            df = df[df["Mercado"].isin(market_list)]
-            df.drop_duplicates(subset="Ticker", keep="first", inplace=True)
-
-            # Copy the useful data to the 'wallet'
-            wallet["Ticker"] = df["Ticker"]
-            wallet["Mercado"] = df["Mercado"]
-            wallet["Indexador"] = df["Indexador"]
-            wallet["Rentabilidade-média Contratada"] = df["Taxa Contratada"]
-            wallet["Data Inicial"] = df["Data Inicial"]
-            wallet["Data Final"] = df["Data Final"]
-            wallet["Proventos"] = df["Dividendos"] + df["JCP"]
-            wallet["Custos"] = df["Taxas"] + df["IR"]
-            wallet["Taxas Adicionais"] = df["Taxas Venda"] + df["Outras Taxas"]
-            wallet["IR"] = df["IR"]
-            wallet["Dividendos"] = df["Dividendos"]
-            wallet["JCP"] = df["JCP"]
-            wallet["Quantidade compra"] = df["Quantidade Compra"]
-            wallet["Quantidade"] = __getQuantidade(df)
-            wallet["Preço médio"] = __getPrecoMedio(df)
-            wallet["Preço médio+taxas"] = __getPrecoMedioTaxas(wallet, df)
-            wallet["Preço pago"] = __getPrecoPago(wallet)
-            wallet["Compras totais"] = __getComprasTotais(wallet)
-            wallet["Vendas parciais"] = __getVendasParciais(df)
-
-            # Sort the data by market and ticker
-            wallet = wallet.sort_values(by=["Mercado", "Ticker"])
-
-            return wallet
-
-        # 'Extrato' dataframe has ONLY the title line
-        else:
-            return self.__getDefaultDataframe()
-
-    def __calculateWalletDefaultColumns(self, wallet, market_list):
-        # Calculate the target values
-        wallet["Preço mercado"] = wallet["Quantidade"] * wallet["Cotação"]
-        deltaPrice = wallet["Preço mercado"] - wallet["Preço pago"]
-        wallet["Mercado-pago"] = deltaPrice
-        buyPrice = wallet["Preço pago"]
-        wallet["Mercado-pago(%)"] = deltaPrice / buyPrice
-        totalPrice = wallet["Preço mercado"] + wallet["Vendas parciais"]
-        additionalCosts = wallet["IR"] + wallet["Taxas Adicionais"]
-        totalPriceAdjusted = totalPrice + wallet["Proventos"] - additionalCosts
-        totalBuy = wallet["Compras totais"]
-        netResult = totalPriceAdjusted - totalBuy
-        wallet["Líquido parcial"] = netResult
-        wallet["Líquido parcial(%)"] = netResult / buyPrice
-
-        # Calculate the ticker percentage per market
-        for mkt in market_list:
-            self.__setTickerPercentage(wallet, mkt)
 
     def currentPortfolio(self):
         """Analyze the operations to get the current wallet.
@@ -523,7 +469,8 @@ class PortfolioInvestment:
     def __currentPortfolio(self):
         # Prepare the default wallet dataframe
         market_list = ["Ações", "ETF", "FII", "BDR"]
-        wallet = self.__createWalletDefaultColumns(market_list)
+        self.VariableIncome.setOpenedOperations(self.openedOperations)
+        wallet = self.VariableIncome.createWalletDefaultColumns(market_list)
 
         # Create a list of ticker to be used in YFinance API
         listTicker = wallet["Ticker"].tolist()
@@ -536,17 +483,20 @@ class PortfolioInvestment:
             # Get the current values of all tickers in the wallet
             curPricesTickers = self.currentMarketPriceByTickerList(listTicker)
             for index, row in wallet.iterrows():
-                ticker = row["Ticker"] + ".SA"  # ".SA" is needed due YFinance
+                # ".SA" is needed due YFinance
+                ticker = row["Ticker"] + ".SA"
                 wallet.at[index, "Cotação"] = float(curPricesTickers[ticker])
 
             # Get the current dividend yield of all tickers in the wallet
             yield_col = "Rentabilidade-média Contratada"
-            curYieldsTickers = self.currentMarketYieldByTickerList(
-                listTicker, listMarket
+            yield_df = self.currentMarketYieldByTickerList(
+                listTicker,
+                listMarket,
             )
             for index, row in wallet.iterrows():
-                ticker = row["Ticker"] + ".SA"  # ".SA" is needed due YFinance
-                wallet.at[index, yield_col] = float(curYieldsTickers[ticker])
+                # ".SA" is needed due YFinance
+                ticker = row["Ticker"] + ".SA"
+                wallet.at[index, yield_col] = float(yield_df[ticker])
 
         def renameYieldColumn(wallet):
             default_yield_col = "Rentabilidade-média Contratada"
@@ -556,7 +506,7 @@ class PortfolioInvestment:
             return yield_col, wallet
 
         # Calculate values related to the wallet default columns
-        self.__calculateWalletDefaultColumns(wallet, market_list)
+        self.VariableIncome.calculateWalletDefaultColumns(market_list)
 
         # Calculate the adjusted dividend yield
         yield_col, wallet = renameYieldColumn(wallet)
@@ -922,7 +872,10 @@ class PortfolioInvestment:
             # as decimal spacer.
             value = value.replace(",", ".")
 
-        return float(value)
+        try:
+            return float(value)
+        except ValueError:
+            return 0.0
 
     def currentTesouroDireto(self):
         """Create a dataframe with all open operations of Tesouro Direto."""
@@ -931,7 +884,8 @@ class PortfolioInvestment:
     def __currentTesouroDireto(self):
         # Prepare the default wallet dataframe
         market_list = ["Tesouro Direto"]
-        wallet = self.__createWalletDefaultColumns(market_list)
+        self.Treasuries.setOpenedOperations(self.openedOperations)
+        wallet = self.Treasuries.createWalletDefaultColumns(market_list)
 
         # Insert the current market values
         for index, row in wallet.iterrows():
@@ -939,7 +893,7 @@ class PortfolioInvestment:
             wallet.at[index, "Cotação"] = self.currentMarketTesouro(ticker)
 
         # Calculate values related to the wallet default columns
-        self.__calculateWalletDefaultColumns(wallet, market_list)
+        self.Treasuries.calculateWalletDefaultColumns(market_list)
 
         return wallet
 
@@ -983,7 +937,8 @@ class PortfolioInvestment:
     def __currentRendaFixa(self):
         # Prepare the default wallet dataframe
         market_list = ["Renda Fixa"]
-        wallet = self.__createWalletDefaultColumns(market_list)
+        self.FixedIncome.setOpenedOperations(self.openedOperations)
+        wallet = self.FixedIncome.createWalletDefaultColumns(market_list)
 
         # Insert the current market values
         for index, row in wallet.iterrows():
@@ -1001,7 +956,7 @@ class PortfolioInvestment:
             )
 
         # Calculate values related to the wallet default columns
-        self.__calculateWalletDefaultColumns(wallet, market_list)
+        self.FixedIncome.calculateWalletDefaultColumns(market_list)
 
         return wallet
 
@@ -1012,14 +967,12 @@ if __name__ == "__main__":
 
     # Main directory
     SOURCE_FILE_DIRECTORY = os.path.join(os.path.curdir, "portfolio_lib")
-    FILE_NAME = "PORTFOLIO_TEMPLATE.xlsx"
+    FILE_NAME = "PORTFOLIO_TEMPLATE_PERFORMANCE.xlsx"
     FILE = os.path.join(SOURCE_FILE_DIRECTORY, FILE_NAME)
 
     # Example:
-    portfolio = PortfolioInvestment()
-    portfolio.setFile(FILE)
+    portfolio = PortfolioInvestment(FILE)
     if portfolio.isValidFile():
-        portfolio.run()
         carteiraGD = portfolio.currentPortfolioGoogleDrive()
         carteiraRV = portfolio.currentPortfolio()
         carteiraRF = portfolio.currentRendaFixa()
