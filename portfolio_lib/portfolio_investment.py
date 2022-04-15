@@ -37,7 +37,7 @@ class PortfolioInvestment:
     EXTRATO_PROCESS_ID = 0
     REALTIME_PROCESS_ID = 1
 
-    def __init__(self):
+    def __init__(self, fileOperations=None):
         """Create the PortfolioInvestment object."""
         self.VariableIncome = PortfolioAssets()
         self.FixedIncome = PortfolioAssets()
@@ -61,9 +61,8 @@ class PortfolioInvestment:
             "Custo Total",
             "Notas",
         ]
-        self.fileOperations = None
         self.multi_process_list = self.__getProcessList()
-        self.setFile(self.fileOperations)
+        self.setFile(fileOperations)
         self.run()
 
     def __getProcessList(self):
@@ -972,10 +971,8 @@ if __name__ == "__main__":
     FILE = os.path.join(SOURCE_FILE_DIRECTORY, FILE_NAME)
 
     # Example:
-    portfolio = PortfolioInvestment()
-    portfolio.setFile(FILE)
+    portfolio = PortfolioInvestment(FILE)
     if portfolio.isValidFile():
-        portfolio.run()
         carteiraGD = portfolio.currentPortfolioGoogleDrive()
         carteiraRV = portfolio.currentPortfolio()
         carteiraRF = portfolio.currentRendaFixa()
