@@ -888,9 +888,10 @@ class PortfolioInvestment:
         wallet = self.Treasuries.createWalletDefaultColumns(market_list)
 
         # Insert the current market values
-        for index, row in wallet.iterrows():
-            ticker = row["Ticker"]
-            wallet.at[index, "Cotação"] = self.currentMarketTesouro(ticker)
+        wallet["Cotação"] = wallet.apply(
+            lambda row: self.currentMarketTesouro(row["Ticker"]),
+            axis=1,
+        )
 
         # Calculate values related to the wallet default columns
         self.Treasuries.calculateWalletDefaultColumns(market_list)
