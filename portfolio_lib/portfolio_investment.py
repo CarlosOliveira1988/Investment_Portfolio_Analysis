@@ -3,10 +3,10 @@
 import os
 import sys
 
-import pandas as pd
 import yfinance as yf
 
 try:
+    from portfolio_lib.extrato_manager import ExtratoFileManager
     from portfolio_lib.fixed_income import FixedIncomeAssets
     from portfolio_lib.gdrive_exporter import GoogleDriveExporter
     from portfolio_lib.multi_processing import MultiProcessingTasks
@@ -21,6 +21,7 @@ except ModuleNotFoundError:
     sys.path.append(os.path.dirname(SCRIPT_DIR))
 
     # Run the import statements
+    from portfolio_lib.extrato_manager import ExtratoFileManager
     from portfolio_lib.fixed_income import FixedIncomeAssets
     from portfolio_lib.gdrive_exporter import GoogleDriveExporter
     from portfolio_lib.multi_processing import MultiProcessingTasks
@@ -29,7 +30,7 @@ except ModuleNotFoundError:
     from portfolio_lib.variable_income import VariableIncomeAssets
 
 
-class PortfolioInvestment:
+class PortfolioInvestment(ExtratoFileManager):
     """This is a class to manage all portfolio operations."""
 
     TOTAL_PROCESSES = 2
@@ -38,93 +39,26 @@ class PortfolioInvestment:
 
     def __init__(self, fileOperations=None):
         """Create the PortfolioInvestment object."""
+        super().__init__(fileOperations)
         self.VariableIncome = VariableIncomeAssets()
         self.FixedIncome = FixedIncomeAssets()
         self.Treasuries = TreasuriesAssets()
-        self.expected_title_list = [
-            "Mercado",
-            "Ticker",
-            "Operação",
-            "Data",
-            "Rentabilidade Contratada",
-            "Indexador",
-            "Vencimento",
-            "Quantidade",
-            "Preço Unitário",
-            "Preço Total",
-            "Taxas",
-            "IR",
-            "Dividendos",
-            "JCP",
-            "Custo Total",
-            "Notas",
-        ]
         self.multi_process_list = self.__getProcessList()
-        self.setFile(fileOperations)
         self.run()
+
+    """Private methods."""
 
     def __getProcessList(self):
         processes = PortfolioInvestment.TOTAL_PROCESSES
         return [MultiProcessingTasks() for x in range(processes)]
 
-    def getExpectedColumnsTitleList(self):
-        """Return a list of expected column titles."""
-        return self.expected_title_list
-
-    def setFile(self, fileOperations):
-        """Set the excel file related to the porfolio."""
-        self.fileOperations = fileOperations
-        self._updateOperations()
-
-    def getExtratoPath(self):
-        """Get the extrato sheet path."""
-        if os.path.isfile(self.fileOperations):
-            return os.path.dirname(self.fileOperations)
-        elif os.path.isdir(self.fileOperations):
-            return self.fileOperations
-
-    def isValidFile(self):
-        """Return if the excel portfolio file is valid or not."""
-        return self.valid_file
-
-    def __isValidFile(self, extrato):
-        """Return if the excel portfolio file is valid or not."""
-        valid_flag = True
-        # If some expected column is not present in the excel file
-        # or the title line is empty in the excel file,
-        # then the file is not valid
-        if list(extrato):
-            for expected_title in self.expected_title_list:
-                if expected_title not in extrato:
-                    valid_flag = False
-                    break
-        else:
-            valid_flag = False
-        return valid_flag
+    """Protected methods."""
 
     def _startNewProcess(self, function, proc_index):
         self.multi_process_list[proc_index].startNewProcess(function)
 
     def _endAllProcesses(self, proc_index):
         self.multi_process_list[proc_index].endAllProcesses()
-
-    def run(self):
-        """Run the main routines related to the excel porfolio file."""
-        # The bellow tasks run in parallel
-        proc_id = PortfolioInvestment.EXTRATO_PROCESS_ID
-        self._startNewProcess(self._updateOpenedOperations(), proc_id)
-        self._startNewProcess(self._updateOperationsYear(), proc_id)
-        self._endAllProcesses(proc_id)
-
-        # The below tasks run in parallel and are dependent of the above tasks
-        proc_id = PortfolioInvestment.REALTIME_PROCESS_ID
-        self._startNewProcess(self._updateCurrentPortfolio(), proc_id)
-        self._startNewProcess(self._updateCurrentRendaFixa(), proc_id)
-        self._startNewProcess(self._updateCurrentTesouroDireto(), proc_id)
-        self._endAllProcesses(proc_id)
-
-    def _updateOperations(self):
-        self.operations = self._readExtrato()
 
     def _updateOpenedOperations(self):
         history = OperationsHistory(self.operations.copy())
@@ -145,28 +79,22 @@ class PortfolioInvestment:
     def _updateCurrentTesouroDireto(self):
         self.currentTreasuries = self.Treasuries.currentTesouroDireto()
 
-    def _getDefaultExtrato(self):
-        col_list = self.getExpectedColumnsTitleList()
-        return pd.DataFrame(columns=col_list)
+    """Public methods."""
 
-    def _readExtrato(self):
-        try:
-            extrato = pd.read_excel(self.fileOperations)
-            # Excel file has title and data lines
-            if self.__isValidFile(extrato):
-                self.valid_file = True
-                return extrato
-            # Excel file has ONLY the title line
-            else:
-                self.valid_file = False
-                return self._getDefaultExtrato()
-        except ValueError:
-            self.valid_file = False
-            return self._getDefaultExtrato()
+    def run(self):
+        """Run the main routines related to the excel porfolio file."""
+        # The bellow tasks run in parallel
+        proc_id = PortfolioInvestment.EXTRATO_PROCESS_ID
+        self._startNewProcess(self._updateOpenedOperations(), proc_id)
+        self._startNewProcess(self._updateOperationsYear(), proc_id)
+        self._endAllProcesses(proc_id)
 
-    def getExtrato(self):
-        """Return the raw dataframe related to the excel porfolio file."""
-        return self.operations.copy()
+        # The below tasks run in parallel and are dependent of the above tasks
+        proc_id = PortfolioInvestment.REALTIME_PROCESS_ID
+        self._startNewProcess(self._updateCurrentPortfolio(), proc_id)
+        self._startNewProcess(self._updateCurrentRendaFixa(), proc_id)
+        self._startNewProcess(self._updateCurrentTesouroDireto(), proc_id)
+        self._endAllProcesses(proc_id)
 
     def overallTaxAndIncomes(self):
         """Return the sum of the fees, income tax, dividend and jcp."""
