@@ -15,7 +15,7 @@ class VariableIncomeAssets(PortfolioAssets):
     def __init__(self):
         """Create the VariableIncomeAssets object."""
         super().__init__()
-        self.__renameYieldColumn(self.wallet)
+        yield_col, self.wallet = self.__renameYieldColumn(self.wallet)
 
     """Private methods."""
 
@@ -74,6 +74,27 @@ class VariableIncomeAssets(PortfolioAssets):
         return [self.currentMarketYieldByTicker(ticker, market)]
 
     """Public methods."""
+
+    def sectorOfTicker(self, ticker):
+        """Return the sector of a given ticker.
+
+        The function uses the yfinance library to get the information.
+        """
+        ticker = ticker + ".SA"
+        data = yf.Ticker(ticker)
+        return data.info["sector"]
+
+    def currentMarketPriceByTicker(self, ticker):
+        """Return the last price of the stock."""
+        # I had issues when downloading data for Fundos imobiliários.
+        # It was necessary to work with period of 30d.
+        # I believe that is mandatory period or start/end date.
+        # With start/end I also had issues for reading the values.
+        # The solution was to consider "30d" as the period.
+        # I compared the results from function in Google and they were correct.
+        dataframe = yf.download(ticker, period="30d")
+        data = dataframe["Adj Close"].tail(1)
+        return float(data)
 
     def currentMarketYieldByTicker(self, ticker, market):
         """Return the current Dividend Yield from Status Invest website."""

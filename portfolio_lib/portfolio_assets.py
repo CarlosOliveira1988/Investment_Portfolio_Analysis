@@ -146,6 +146,10 @@ class PortfolioAssets:
 
     """Public methods."""
 
+    def getColumnsTitleList(self):
+        """Return a list of expected column titles."""
+        return list(self.wallet)
+
     def setOpenedOperations(self, openedOperations):
         """Set the opened operations."""
         self.openedOperations = openedOperations.copy()
