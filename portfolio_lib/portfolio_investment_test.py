@@ -41,6 +41,10 @@ class Test_PortfolioInvestment:
         assert all(item in title_list for item in list(TreasuriesDF)) is True
         assert len(TreasuriesDF) == 0
 
+        GDriveDF = portfolio.currentPortfolioGoogleDrive(False, False)
+        assert isinstance(GDriveDF, pd.DataFrame) is True
+        assert len(TreasuriesDF) == 0
+
     def test_not_valid_file_initialization(self):
         """Test the 'PortfolioInvestment' initialization."""
         portfolio = PortfolioInvestment("NOT_VALID_FILE")
@@ -66,6 +70,10 @@ class Test_PortfolioInvestment:
         title_list = portfolio.Treasuries.getColumnsTitleList()
         assert isinstance(TreasuriesDF, pd.DataFrame) is True
         assert all(item in title_list for item in list(TreasuriesDF)) is True
+        assert len(TreasuriesDF) == 0
+
+        GDriveDF = portfolio.currentPortfolioGoogleDrive(False, False)
+        assert isinstance(GDriveDF, pd.DataFrame) is True
         assert len(TreasuriesDF) == 0
 
     def test_valid_file_initialization(self):
@@ -96,3 +104,7 @@ class Test_PortfolioInvestment:
         assert isinstance(TreasuriesDF, pd.DataFrame) is True
         assert all(item in title_list for item in list(TreasuriesDF)) is True
         assert len(TreasuriesDF) > 0
+
+        GDriveDF = portfolio.currentPortfolioGoogleDrive(False, False)
+        assert isinstance(GDriveDF, pd.DataFrame) is True
+        assert len(GDriveDF) > 0

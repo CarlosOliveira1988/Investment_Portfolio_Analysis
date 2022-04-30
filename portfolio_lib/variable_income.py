@@ -5,6 +5,7 @@ import requests
 import yfinance as yf
 from bs4 import BeautifulSoup
 
+from portfolio_lib.gdrive_exporter import GoogleDriveExporter
 from portfolio_lib.multi_processing import PoolTasks
 from portfolio_lib.portfolio_assets import PortfolioAssets
 
@@ -188,3 +189,18 @@ class VariableIncomeAssets(PortfolioAssets):
         """
         self.wallet = self.__currentPortfolio()
         return self.wallet.copy()
+
+    def currentPortfolioGoogleDrive(
+        self,
+        extrato_path,
+        auto_save=True,
+        auto_open=True,
+    ):
+        """Save the excel file to be used in Google Drive."""
+        exporter = GoogleDriveExporter()
+        return exporter.save(
+            self.wallet.copy(),
+            extrato_path,
+            auto_save,
+            auto_open,
+        )

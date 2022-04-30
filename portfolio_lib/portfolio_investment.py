@@ -90,10 +90,13 @@ class PortfolioInvestment(ExtratoFileManager):
         self._startNewProcess(self._updateCurrentTesouroDireto(), proc_id)
         self._endAllProcesses(proc_id)
 
-    def currentPortfolioGoogleDrive(self):
+    def currentPortfolioGoogleDrive(self, auto_save=True, auto_open=True):
         """Save the excel file to be used in Google Drive."""
-        exporter = GoogleDriveExporter()
-        exporter.save(self.currentPortfolio(), self.getExtratoPath())
+        return self.VariableIncome.currentPortfolioGoogleDrive(
+            self.getExtratoPath(),
+            auto_save,
+            auto_open,
+        )
 
     def currentPortfolio(self):
         """Create a dataframe with all opened operations of Renda Variável."""
@@ -124,6 +127,7 @@ if __name__ == "__main__":
         carteiraRV = portfolio.currentPortfolio()
         carteiraRF = portfolio.currentRendaFixa()
         tesouro = portfolio.currentTesouroDireto()
+        print("\nCarteira Renda Variável - Google Drive:", carteiraGD)
         print("\nCarteira Renda Variável:", carteiraRV)
         print("\nCarteira Renda Fixa:", carteiraRF)
         print("\nCarteira Tesouro Direto:", tesouro)
