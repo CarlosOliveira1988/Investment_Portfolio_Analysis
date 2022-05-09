@@ -1,11 +1,11 @@
 """This file is useful to show some valid statistics related to Portfolio."""
 
 
-class PortfolioStatistcs:
+class PortfolioStatistics:
     """This is a class to manage statistics related to portfolio."""
 
     def __init__(self):
-        """Create the PortfolioStatistcs object."""
+        """Create the PortfolioStatistics object."""
         self.operations = None
 
     """Public methods."""

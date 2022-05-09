@@ -1,5 +1,7 @@
 """This file has a class to manage Portfolio assets."""
 
+from datetime import datetime
+
 import pandas as pd
 
 
@@ -8,12 +10,12 @@ class PortfolioAssets:
 
     def __init__(self):
         """Create the PortfolioAssets object."""
-        self.wallet = self.__getDefaultDataframe()
-        self.openedOperations = self.__getDefaultDataframe()
+        self.wallet = self._getDefaultDataframe()
+        self.openedOperations = self._getDefaultDataframe()
 
     """Private methods."""
 
-    def __getDefaultDataframe(self):
+    def _getDefaultDataframe(self):
         col_list = [
             "Ticker",
             "Mercado",
@@ -144,6 +146,20 @@ class PortfolioAssets:
         additionalCosts = self.__getCustosAdicionais()
         return totalPrice + self.wallet["Proventos"] - additionalCosts
 
+    """Protected methods."""
+
+    def _checkDateType(self, date):
+        if not isinstance(date, datetime):
+            raise TypeError(
+                "The date argument should be a datetime type.",
+            )
+
+    def _checkNumberType(self, value):
+        if not isinstance(value, int) and not isinstance(value, float):
+            raise TypeError(
+                "The value argument should be int/float type.",
+            )
+
     """Public methods."""
 
     def getColumnsTitleList(self):
@@ -169,7 +185,7 @@ class PortfolioAssets:
             )
 
             # Copy the useful data to the 'wallet'
-            self.wallet = self.__getDefaultDataframe()
+            self.wallet = self._getDefaultDataframe()
             self.wallet["Ticker"] = self.__getTicker()
             self.wallet["Mercado"] = self.__getMercado()
             self.wallet["Indexador"] = self.__getIndexador()
@@ -197,7 +213,7 @@ class PortfolioAssets:
 
         # 'Extrato' dataframe has ONLY the title line
         else:
-            return self.__getDefaultDataframe().copy()
+            return self._getDefaultDataframe().copy()
 
     def calculateWalletDefaultColumns(self, market_list):
         """Calculate default column values."""

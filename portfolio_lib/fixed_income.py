@@ -41,6 +41,18 @@ class FixedIncomeAssets(PortfolioAssets):
 
         return wallet
 
+    """Protected methods."""
+
+    def _checkIndexerType(self, indexer):
+        if not isinstance(indexer, str):
+            raise TypeError(
+                "The indexer argument should be a string type.",
+            )
+        elif indexer not in ["PREFIXADO", "IPCA", "CDI"]:
+            raise ValueError(
+                "The indexer argument should be 'PREFIXADO', 'IPCA' or 'CDI'.",
+            )
+
     """Public methods."""
 
     def currentValRendaFixa(
@@ -51,7 +63,18 @@ class FixedIncomeAssets(PortfolioAssets):
         rate,
         buyPrice,
     ):
-        """Return the current price of the related 'Renda Fixa' ticker."""
+        """Return the current price of the related 'Renda Fixa' ticker.
+
+        The available indexer types are:
+        - PREFIXADO: the result is based in an "annual rate"
+        - IPCA: the result is based in an "annual rate" + IPCA
+        - CDI: the result is based in an "annual rate" * CDI
+        """
+        self._checkDateType(initial_date)
+        self._checkDateType(final_date)
+        self._checkIndexerType(indexer)
+        self._checkNumberType(rate)
+        self._checkNumberType(buyPrice)
         if indexer == "PREFIXADO":
             return self.fixedIncomeCalc.getValueByPrefixedRate(
                 initial_date,
@@ -77,6 +100,6 @@ class FixedIncomeAssets(PortfolioAssets):
             return float(buyPrice)
 
     def currentRendaFixa(self):
-        """Create a dataframe with all open operations of Renda Fixa."""
+        """Create a dataframe with all opened operations of Renda Fixa."""
         self.wallet = self.__currentRendaFixa()
         return self.wallet.copy()
