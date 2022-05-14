@@ -44,11 +44,8 @@ class FixedIncomeAssets(PortfolioAssets):
     """Protected methods."""
 
     def _checkIndexerType(self, indexer):
-        if not isinstance(indexer, str):
-            raise TypeError(
-                "The indexer argument should be a string type.",
-            )
-        elif indexer not in ["PREFIXADO", "IPCA", "CDI"]:
+        self._checkStringType(indexer)
+        if indexer not in ["PREFIXADO", "IPCA", "CDI"]:
             raise ValueError(
                 "The indexer argument should be 'PREFIXADO', 'IPCA' or 'CDI'.",
             )

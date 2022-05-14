@@ -10,12 +10,12 @@ class PortfolioAssets:
 
     def __init__(self):
         """Create the PortfolioAssets object."""
-        self.wallet = self._getDefaultDataframe()
-        self.openedOperations = self._getDefaultDataframe()
+        self.wallet = self._getAssetsDefaultDataframe()
+        self.openedOperations = self._getAssetsDefaultDataframe()
 
     """Private methods."""
 
-    def _getDefaultDataframe(self):
+    def _getAssetsDefaultDataframe(self):
         col_list = [
             "Ticker",
             "Mercado",
@@ -45,6 +45,9 @@ class PortfolioAssets:
             "Porcentagem carteira",
         ]
         return pd.DataFrame(columns=col_list)
+
+    def _getDefaultDataframe(self):
+        return self._getAssetsDefaultDataframe()
 
     def __getMarketValueSum(self, market):
         df = self.wallet[self.wallet["Mercado"] == market]
@@ -160,6 +163,27 @@ class PortfolioAssets:
                 "The value argument should be int/float type.",
             )
 
+    def _checkStringType(self, value):
+        if not isinstance(value, str):
+            raise TypeError(
+                "The value argument should be a string type.",
+            )
+
+    def _checkListType(self, value_list):
+        if not isinstance(value_list, list):
+            raise TypeError(
+                "The value_list argument should be a list type.",
+            )
+
+    def _checkStringListType(self, value_list):
+        self._checkListType(value_list)
+        if value_list:
+            [self._checkStringType(value) for value in value_list]
+        else:
+            raise ValueError(
+                "The value_list argument should not be empty.",
+            )
+
     """Public methods."""
 
     def getColumnsTitleList(self):
@@ -185,7 +209,7 @@ class PortfolioAssets:
             )
 
             # Copy the useful data to the 'wallet'
-            self.wallet = self._getDefaultDataframe()
+            self.wallet = self._getAssetsDefaultDataframe()
             self.wallet["Ticker"] = self.__getTicker()
             self.wallet["Mercado"] = self.__getMercado()
             self.wallet["Indexador"] = self.__getIndexador()
@@ -213,7 +237,7 @@ class PortfolioAssets:
 
         # 'Extrato' dataframe has ONLY the title line
         else:
-            return self._getDefaultDataframe().copy()
+            return self._getAssetsDefaultDataframe().copy()
 
     def calculateWalletDefaultColumns(self, market_list):
         """Calculate default column values."""

@@ -104,8 +104,37 @@ class Test_FixedIncomeAssets_currentRendaFixa:
 
     def test_currentRendaFixa(self):
         """Test the 'FixedIncomeAssets' class: test_currentRendaFixa."""
+        expected_title_list = [
+            "Ticker",
+            "Mercado",
+            "Indexador",
+            "Rentabilidade-média Contratada",
+            "Data Inicial",
+            "Data Final",
+            "Quantidade",
+            "Quantidade compra",
+            "Preço médio",
+            "Preço médio+taxas",
+            "Preço pago",
+            "Compras totais",
+            "Vendas parciais",
+            "Proventos",
+            "Custos",
+            "Taxas Adicionais",
+            "IR",
+            "Dividendos",
+            "JCP",
+            "Cotação",
+            "Preço mercado",
+            "Mercado-pago",
+            "Mercado-pago(%)",
+            "Líquido parcial",
+            "Líquido parcial(%)",
+            "Porcentagem carteira",
+        ]
         assets = FixedIncomeAssets()
         title_list = list(assets._getDefaultDataframe())
         df = assets.currentRendaFixa()
         assert isinstance(df, pd.DataFrame) is True
         assert all(item in title_list for item in list(df)) is True
+        assert title_list == expected_title_list

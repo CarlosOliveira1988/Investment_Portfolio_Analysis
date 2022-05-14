@@ -13,12 +13,20 @@ from portfolio_lib.portfolio_assets import PortfolioAssets
 class VariableIncomeAssets(PortfolioAssets):
     """Class used to manipulate the Variable Income assets."""
 
+    SECTOR_NOT_FOUND = "Sector not found"
+    VALUE_NOT_FOUND = 0.0
+
     def __init__(self):
         """Create the VariableIncomeAssets object."""
         super().__init__()
-        yield_col, self.wallet = self.__renameYieldColumn(self.wallet)
+        self.wallet = self.__renameColumns(self.wallet)
+        self.openedOperations = self.__renameColumns(self.openedOperations)
 
     """Private methods."""
+
+    def __renameColumns(self, dataframe):
+        col, dataframe = self.__renameYieldColumn(dataframe)
+        return dataframe
 
     def __renameYieldColumn(self, wallet):
         default_yield_col = "Rentabilidade-média Contratada"
@@ -69,10 +77,46 @@ class VariableIncomeAssets(PortfolioAssets):
 
         return wallet
 
+    def __getSectorOfTicker(self, ticker):
+        data = yf.Ticker(ticker)
+        return data.info["sector"]
+
+    def __getCurrentMarketPriceByTicker(self, ticker):
+        # I had issues when downloading data for Fundos imobiliários.
+        # It was necessary to work with period of 30d.
+        # I believe that is mandatory period or start/end date.
+        # With start/end I also had issues for reading the values.
+        # The solution was to consider "30d" as the period.
+        # I compared the results from function in Google and they were correct.
+        try:
+            dataframe = yf.download(ticker, period="30d")
+            data = dataframe["Adj Close"].tail(1)
+            return float(data)
+        except TypeError:
+            return VariableIncomeAssets.VALUE_NOT_FOUND
+
+    """Protected methods."""
+
     def _currentMarketYieldByTicker(self, arg_list):
         ticker = arg_list[0]
         market = arg_list[1]
         return [self.currentMarketYieldByTicker(ticker, market)]
+
+    def _checkMarketType(self, market):
+        self._checkStringType(market)
+        if market not in ["Ações", "FII", "BDR", "ETF"]:
+            raise ValueError(
+                "The market argument should be 'Ações', 'FII', 'BDR', 'ETF'.",
+            )
+
+    def _checkMarketListType(self, market_list):
+        self._checkStringListType(market_list)
+        [self._checkMarketType(market) for market in market_list]
+
+    def _getDefaultDataframe(self):
+        dataframe = self._getAssetsDefaultDataframe()
+        yield_col, dataframe = self.__renameYieldColumn(dataframe)
+        return dataframe
 
     """Public methods."""
 
@@ -81,24 +125,42 @@ class VariableIncomeAssets(PortfolioAssets):
 
         The function uses the yfinance library to get the information.
         """
-        ticker = ticker + ".SA"
-        data = yf.Ticker(ticker)
-        return data.info["sector"]
+        self._checkStringType(ticker)
+        try:
+            return self.__getSectorOfTicker(ticker)
+        except KeyError:
+            try:
+                return self.__getSectorOfTicker(ticker + ".SA")
+            except KeyError:
+                return VariableIncomeAssets.SECTOR_NOT_FOUND
 
     def currentMarketPriceByTicker(self, ticker):
-        """Return the last price of the stock."""
-        # I had issues when downloading data for Fundos imobiliários.
-        # It was necessary to work with period of 30d.
-        # I believe that is mandatory period or start/end date.
-        # With start/end I also had issues for reading the values.
-        # The solution was to consider "30d" as the period.
-        # I compared the results from function in Google and they were correct.
-        dataframe = yf.download(ticker, period="30d")
-        data = dataframe["Adj Close"].tail(1)
-        return float(data)
+        """Return the last price of a given ticker.
+
+        The function uses the yfinance library to get the information.
+        """
+        self._checkStringType(ticker)
+        try:
+            return self.__getCurrentMarketPriceByTicker(ticker)
+        except KeyError:
+            try:
+                return self.__getCurrentMarketPriceByTicker(ticker + ".SA")
+            except KeyError:
+                return VariableIncomeAssets.VALUE_NOT_FOUND
 
     def currentMarketYieldByTicker(self, ticker, market):
-        """Return the current Dividend Yield from Status Invest website."""
+        """Return the current Dividend Yield of a given ticker and market.
+
+        The available type of markets are:
+        - Ações
+        - FII
+        - BDR
+        - ETF
+
+        The function uses the Status Invest website to get the information.
+        """
+        self._checkStringType(ticker)
+        self._checkMarketType(market)
         # During some performance tests, I noticed this is the
         # slowest function related to RendaVariavel type.
         # If we want to improve the application performance, we need to change
@@ -106,11 +168,12 @@ class VariableIncomeAssets(PortfolioAssets):
 
         # Prepare the URL
         strip_list = ticker.split(".")  # The left side is without ".SA"
+        true_ticker = strip_list[0]
         main_url = "https://statusinvest.com.br/"
         if market == "FII":
-            url = main_url + "fundos-imobiliarios/" + strip_list[0]
+            url = main_url + "fundos-imobiliarios/" + true_ticker
         else:
-            url = main_url + "acoes/" + strip_list[0]
+            url = main_url + "acoes/" + true_ticker
 
         # Web scraping
         page = requests.get(url)
@@ -133,18 +196,22 @@ class VariableIncomeAssets(PortfolioAssets):
             value = value_str.replace(",", ".")
             return float(value) / 100
         except IndexError:
-            return 0.0
+            return VariableIncomeAssets.VALUE_NOT_FOUND
         except ValueError:
-            return 0.0
+            return VariableIncomeAssets.VALUE_NOT_FOUND
 
-    def currentMarketPriceByTickerList(self, list):
-        """Return a dataframe with the last price of the stocks in the list."""
-        dataframe = yf.download(list, period="1d")
-        data = dataframe["Adj Close"].tail(1)
+    def currentMarketPriceByTickerList(self, value_list):
+        """Return a dataframe with the last price of the stocks in the list.
+
+        The function uses the yfinance library to get the information.
+        """
+        self._checkStringListType(value_list)
 
         # The 'tail' method returns a 'pandas.series'
         # when exists only 1 ticker in the variable 'list'.
-        #
+        dataframe = yf.download(value_list, period="1d")
+        data = dataframe["Adj Close"].tail(1)
+
         # In order to solve the '1 ticker' case and return always
         # a 'pandas.dataframe' with the ticker name, we need to convert
         # the 'pandas.series' to a 'pandas.dataframe' and adjust its
@@ -152,13 +219,24 @@ class VariableIncomeAssets(PortfolioAssets):
         try:
             data = data.to_frame()
             if len(data) == 1:
-                data = data.rename(columns={"Adj Close": list[0]})
+                data = data.rename(columns={"Adj Close": value_list[0]})
         except AttributeError:
             data = data
         return data
 
     def currentMarketYieldByTickerList(self, tickerList, marketList):
-        """Return a dataframe with the current Dividend Yield."""
+        """Return a dataframe with the current Dividend Yield.
+
+        The available type of markets are:
+        - Ações
+        - FII
+        - BDR
+        - ETF
+
+        The function uses the Status Invest website to get the information
+        """
+        self._checkStringListType(tickerList)
+        self._checkMarketListType(marketList)
         # Set the pool list variables
         self.tickerPool = []
         self.marketPool = []
