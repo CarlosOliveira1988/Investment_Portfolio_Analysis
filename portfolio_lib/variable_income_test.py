@@ -2,7 +2,6 @@
 
 import os
 import sys
-from datetime import datetime
 
 import pandas as pd
 import pytest
@@ -11,11 +10,6 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from portfolio_lib.variable_income import VariableIncomeAssets
-
-
-def date(string):
-    """Return a date from the string."""
-    return datetime.strptime(string, "%Y/%m/%d")
 
 
 class Test_VariableIncomeAssets_initialization:

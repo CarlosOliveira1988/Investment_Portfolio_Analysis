@@ -11,11 +11,79 @@ from portfolio_lib.portfolio_assets import PortfolioAssets
 class TreasuriesAssets(PortfolioAssets):
     """Class used to manipulate the Treasuries assets."""
 
+    VALUE_NOT_FOUND = 0.0
+
     def __init__(self):
         """Create the TreasuriesAssets object."""
         super().__init__()
+        self.__initRegexPatterns()
 
     """Private methods."""
+
+    def __regexCompile(self, stringA, stringB):
+        return re.compile(stringA + self.dig4 + stringB + self.dig6)
+
+    def __initRegexPatterns(self):
+        # Main link
+        self.init_link = r"https://statusinvest.com.br/tesouro/"
+
+        # Regex patterns
+        juros = " com Juros Semestrais) "
+        self.dig4 = r"(\d\d\d\d)"
+        self.dig6 = r"(\d\d\d\d\d\d)"
+        self.rxselic = self.__regexCompile(r"(SELIC) ", r"|(LFT) ")
+        self.rxpre = self.__regexCompile(r"(Prefixado) ", r"|(LTN) ")
+        self.rxprej = self.__regexCompile(r"(Prefixado" + juros, r"|(NTN-F) ")
+        self.rxipca = self.__regexCompile(r"(IPCA\+) ", r"|(NTN-B Principal) ")
+        self.rxipcaj = self.__regexCompile(r"(IPCA\+" + juros, r"|(NTN-B) ")
+
+        # Regex patterns dictionary
+        self.pattern_dict = {
+            "SELIC": [
+                self.rxselic,
+                self.init_link + "tesouro-selic-",
+            ],
+            "Prefixado": [
+                self.rxpre,
+                self.init_link + "tesouro-prefixado-",
+            ],
+            "Prefixado com Juros Semestrais": [
+                self.rxprej,
+                self.init_link + "tesouro-prefixado-com-juros-semestrais-",
+            ],
+            "IPCA+": [
+                self.rxipca,
+                self.init_link + "tesouro-ipca-",
+            ],
+            "IPCA+ com Juros Semestrais": [
+                self.rxipcaj,
+                self.init_link + "tesouro-ipca-com-juros-semestrais-",
+            ],
+        }
+
+    def __getYearPattern(self, rgx, text):
+        matching = rgx.search(text)
+        if matching:
+            if matching.group(2):
+                return matching.group(2)
+            elif matching.group(4):
+                slc = matching.group(4)[4:]
+                return "20" + slc
+            else:
+                return None
+        else:
+            return None
+
+    def __getURL(self, text):
+        url = False
+        for value_list in self.pattern_dict.values():
+            rgx = value_list[0]
+            link = value_list[1]
+            year = self.__getYearPattern(rgx, text)
+            if year:
+                url = link + year
+                break
+        return url
 
     def __currentTesouroDireto(self):
         # Prepare the default wallet dataframe
@@ -49,76 +117,11 @@ class TreasuriesAssets(PortfolioAssets):
         NTN-B = Notas do Tesouro Nacional Tipo B
             -> Tesouro IPCA com cupons semestrais
         """
-        dig4 = r"(\d\d\d\d)"
-        dig6 = r"(\d\d\d\d\d\d)"
-        rgx_selic = re.compile(
-            r"(SELIC) " + dig4 + "|(LFT) " + dig6,
-        )
-        rgx_pre = re.compile(
-            r"(Prefixado) " + dig4 + "|(LTN) " + dig6,
-        )
-        rgx_pre_juros = re.compile(
-            r"(Prefixado com Juros Semestrais) " + dig4 + "|(NTN-F) " + dig6,
-        )
-        rgx_ipca = re.compile(
-            r"(IPCA\+) " + dig4 + "|(NTN-B Principal) " + dig6,
-        )
-        rgx_ipca_juros = re.compile(
-            r"(IPCA\+ com Juros Semestrais) " + dig4 + "|(NTN-B) " + dig6,
-        )
+        self._checkStringType(ticker)
 
-        init_link = r"https://statusinvest.com.br/tesouro/"
-        pattern_dict = {
-            "SELIC": [
-                rgx_selic,
-                init_link + "tesouro-selic-",
-            ],
-            "Prefixado": [
-                rgx_pre,
-                init_link + "tesouro-prefixado-",
-            ],
-            "Prefixado com Juros Semestrais": [
-                rgx_pre_juros,
-                init_link + "tesouro-prefixado-com-juros-semestrais-",
-            ],
-            "IPCA+": [
-                rgx_ipca,
-                init_link + "tesouro-ipca-",
-            ],
-            "IPCA+ com Juros Semestrais": [
-                rgx_ipca_juros,
-                init_link + "tesouro-ipca-com-juros-semestrais-",
-            ],
-        }
+        url = self.__getURL(ticker)
 
-        def getYearPattern(rgx, text):
-            matching = rgx.search(text)
-            if matching:
-                if matching.group(2):
-                    return matching.group(2)
-                elif matching.group(4):
-                    slc = matching.group(4)[4:]
-                    return "20" + slc
-                else:
-                    return None
-            else:
-                return None
-
-        def getURL(text):
-            url = False
-            for value_list in pattern_dict.values():
-                rgx = value_list[0]
-                link = value_list[1]
-                year = getYearPattern(rgx, text)
-                if year:
-                    url = link + year
-                    break
-            return url
-
-        value = 0
-        url = getURL(ticker)
-
-        if url:
+        try:
             # Get information from URL
             page = requests.get(url)
             soup = BeautifulSoup(page.content, "html.parser")
@@ -133,13 +136,15 @@ class TreasuriesAssets(PortfolioAssets):
             # Replace comma to point because Python uses point
             # as decimal spacer.
             value = value.replace(",", ".")
-
-        try:
             return float(value)
+
         except ValueError:
-            return 0.0
+            return TreasuriesAssets.VALUE_NOT_FOUND
+
+        except AttributeError:
+            return TreasuriesAssets.VALUE_NOT_FOUND
 
     def currentTesouroDireto(self):
-        """Create a dataframe with all open operations of Tesouro Direto."""
+        """Create a dataframe with all opened operations of Tesouro Direto."""
         self.wallet = self.__currentTesouroDireto()
         return self.wallet.copy()
