@@ -20,7 +20,7 @@ class PortfolioAssets:
             "Ticker",
             "Mercado",
             "Indexador",
-            "Rentabilidade-média Contratada",
+            "Taxa-média Contratada",
             "Data Inicial",
             "Data Final",
             "Quantidade",
@@ -75,7 +75,7 @@ class PortfolioAssets:
         return df["Quantidade Compra"] - df["Quantidade Venda"]
 
     def __getTaxa(self):
-        return self.openedOperations["Taxa Contratada"]
+        return self.openedOperations["Taxa-média Contratada"]
 
     def __getDataInicial(self):
         return self.openedOperations["Data Inicial"]
@@ -213,7 +213,7 @@ class PortfolioAssets:
             self.wallet["Ticker"] = self.__getTicker()
             self.wallet["Mercado"] = self.__getMercado()
             self.wallet["Indexador"] = self.__getIndexador()
-            self.wallet["Rentabilidade-média Contratada"] = self.__getTaxa()
+            self.wallet["Taxa-média Contratada"] = self.__getTaxa()
             self.wallet["Data Inicial"] = self.__getDataInicial()
             self.wallet["Data Final"] = self.__getDataFinal()
             self.wallet["Proventos"] = self.__getProventos()

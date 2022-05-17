@@ -29,7 +29,7 @@ class VariableIncomeAssets(PortfolioAssets):
         return dataframe
 
     def __renameYieldColumn(self, wallet):
-        default_yield_col = "Rentabilidade-média Contratada"
+        default_yield_col = "Taxa-média Contratada"
         yield_col = "Dividend-Yield Ajustado"
         dict_rename = {default_yield_col: yield_col}
         wallet = wallet.rename(columns=dict_rename, inplace=False)
@@ -57,7 +57,7 @@ class VariableIncomeAssets(PortfolioAssets):
                 wallet.at[index, "Cotação"] = float(curPricesTickers[ticker])
 
             # Get the current dividend yield of all tickers in the wallet
-            yield_col = "Rentabilidade-média Contratada"
+            yield_col = "Taxa-média Contratada"
             yield_df = self.currentMarketYieldByTickerList(
                 listTicker,
                 listMarket,

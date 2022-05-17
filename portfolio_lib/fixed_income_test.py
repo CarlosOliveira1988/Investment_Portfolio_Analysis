@@ -108,7 +108,7 @@ class Test_FixedIncomeAssets_currentRendaFixa:
             "Ticker",
             "Mercado",
             "Indexador",
-            "Rentabilidade-média Contratada",
+            "Taxa-média Contratada",
             "Data Inicial",
             "Data Final",
             "Quantidade",

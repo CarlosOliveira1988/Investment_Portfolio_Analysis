@@ -86,7 +86,7 @@ class Test_TreasuriesAssets_currentTesouroDireto:
             "Ticker",
             "Mercado",
             "Indexador",
-            "Rentabilidade-média Contratada",
+            "Taxa-média Contratada",
             "Data Inicial",
             "Data Final",
             "Quantidade",

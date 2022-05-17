@@ -89,7 +89,7 @@ class TreasuriesFormater(EasyFormatter):
         column_type_dict = {
             "Ticker": "s",
             "Indexador": "s",
-            "Rentabilidade-média Contratada": "%",
+            "Taxa-média Contratada": "%",
             "Data Inicial": "0-0",
             "Quantidade": "0.0",
             "Preço médio": "$",
@@ -125,7 +125,7 @@ class FixedIncomesFormater(EasyFormatter):
         column_type_dict = {
             "Ticker": "s",
             "Indexador": "s",
-            "Rentabilidade-média Contratada": "%",
+            "Taxa-média Contratada": "%",
             "Data Inicial": "0-0",
             "Quantidade": "0.0",
             "Preço médio": "$",

@@ -26,7 +26,7 @@ class FixedIncomeAssets(PortfolioAssets):
             initial_date = row["Data Inicial"]
             final_date = row["Data Final"]
             indexer = row["Indexador"]
-            rate = row["Rentabilidade-média Contratada"]
+            rate = row["Taxa-média Contratada"]
             buy_price = row["Preço médio"]
             wallet.at[index, "Cotação"] = self.currentValRendaFixa(
                 initial_date,
