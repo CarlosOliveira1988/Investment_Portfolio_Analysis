@@ -123,7 +123,7 @@ class VariableIncomeAssets(PortfolioAssets):
 
     def _getDefaultDataframe(self):
         dataframe = self._getAssetsDefaultDataframe()
-        yield_col, dataframe = self.__renameYieldColumn(dataframe)
+        yield_col1, yield_col2, dataframe = self.__renameYieldColumn(dataframe)
         return dataframe
 
     """Public methods."""
