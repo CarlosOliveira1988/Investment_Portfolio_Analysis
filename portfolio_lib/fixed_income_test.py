@@ -109,6 +109,7 @@ class Test_FixedIncomeAssets_currentRendaFixa:
             "Mercado",
             "Indexador",
             "Taxa-média Contratada",
+            "Taxa-média Ajustada",
             "Data Inicial",
             "Data Final",
             "Quantidade",

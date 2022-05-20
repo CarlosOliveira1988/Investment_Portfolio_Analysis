@@ -288,6 +288,7 @@ class Test_VariableIncomeAssets_currentPortfolio:
             "Ticker",
             "Mercado",
             "Indexador",
+            "Dividend-Yield",
             "Dividend-Yield Ajustado",
             "Data Inicial",
             "Data Final",

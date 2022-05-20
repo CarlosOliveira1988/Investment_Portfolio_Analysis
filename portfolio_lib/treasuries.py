@@ -94,7 +94,12 @@ class TreasuriesAssets(PortfolioAssets):
         # Insert the current market values
         for index, row in wallet.iterrows():
             ticker = row["Ticker"]
+            indexer = row["Indexador"]
+            rate = row["Taxa-média Contratada"]
             wallet.at[index, "Cotação"] = self.currentMarketTesouro(ticker)
+            wallet.at[index, "Taxa-média Ajustada"] = self.getAdjustedYield(
+                rate, indexer
+            )
 
         # Calculate values related to the wallet default columns
         self.calculateWalletDefaultColumns(market_list)

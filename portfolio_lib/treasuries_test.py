@@ -87,6 +87,7 @@ class Test_TreasuriesAssets_currentTesouroDireto:
             "Mercado",
             "Indexador",
             "Taxa-média Contratada",
+            "Taxa-média Ajustada",
             "Data Inicial",
             "Data Final",
             "Quantidade",

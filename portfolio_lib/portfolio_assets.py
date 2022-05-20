@@ -3,6 +3,7 @@
 from datetime import datetime
 
 import pandas as pd
+from indexer_lib.months_indexers import TwelveMonthsIndexer
 
 
 class PortfolioAssets:
@@ -12,6 +13,7 @@ class PortfolioAssets:
         """Create the PortfolioAssets object."""
         self.wallet = self._getAssetsDefaultDataframe()
         self.openedOperations = self._getAssetsDefaultDataframe()
+        self.indexers = TwelveMonthsIndexer()
 
     """Private methods."""
 
@@ -21,6 +23,7 @@ class PortfolioAssets:
             "Mercado",
             "Indexador",
             "Taxa-média Contratada",
+            "Taxa-média Ajustada",
             "Data Inicial",
             "Data Final",
             "Quantidade",
@@ -75,6 +78,9 @@ class PortfolioAssets:
         return df["Quantidade Compra"] - df["Quantidade Venda"]
 
     def __getTaxa(self):
+        return self.openedOperations["Taxa-média Contratada"]
+
+    def __getTaxaAjustada(self):
         return self.openedOperations["Taxa-média Contratada"]
 
     def __getDataInicial(self):
@@ -186,6 +192,26 @@ class PortfolioAssets:
 
     """Public methods."""
 
+    def getAdjustedYield(self, yield_val, adjust_type):
+        """Return the 'adjusted_yield' value given an 'adjust_type'.
+
+        The availabe 'adjust_type' are:
+        - IPCA : return 'yield_val + IPCA'
+        - SELIC: return 'yield_val + SELIC'
+        - CDI  : return 'yield_val * CDI'
+        - PREFIXADO: return 'yield_val'
+        """
+        if adjust_type == "IPCA":
+            return yield_val + self.indexers.getIPCA()
+        elif adjust_type == "SELIC":
+            return yield_val + self.indexers.getSELIC()
+        elif adjust_type == "CDI":
+            return yield_val * self.indexers.getCDI()
+        elif adjust_type == "PREFIXADO":
+            return yield_val
+        else:
+            return 0.0
+
     def getColumnsTitleList(self):
         """Return a list of expected column titles."""
         return list(self.wallet)
@@ -214,6 +240,7 @@ class PortfolioAssets:
             self.wallet["Mercado"] = self.__getMercado()
             self.wallet["Indexador"] = self.__getIndexador()
             self.wallet["Taxa-média Contratada"] = self.__getTaxa()
+            self.wallet["Taxa-média Ajustada"] = self.__getTaxaAjustada()
             self.wallet["Data Inicial"] = self.__getDataInicial()
             self.wallet["Data Final"] = self.__getDataFinal()
             self.wallet["Proventos"] = self.__getProventos()

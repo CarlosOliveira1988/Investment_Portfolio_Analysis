@@ -25,15 +25,21 @@ class VariableIncomeAssets(PortfolioAssets):
     """Private methods."""
 
     def __renameColumns(self, dataframe):
-        col, dataframe = self.__renameYieldColumn(dataframe)
+        col1, col2, dataframe = self.__renameYieldColumn(dataframe)
         return dataframe
 
     def __renameYieldColumn(self, wallet):
         default_yield_col = "Taxa-média Contratada"
-        yield_col = "Dividend-Yield Ajustado"
-        dict_rename = {default_yield_col: yield_col}
+        yield_col1 = "Dividend-Yield"
+        dict_rename = {default_yield_col: yield_col1}
         wallet = wallet.rename(columns=dict_rename, inplace=False)
-        return yield_col, wallet
+
+        default_yield_col = "Taxa-média Ajustada"
+        yield_col2 = "Dividend-Yield Ajustado"
+        dict_rename = {default_yield_col: yield_col2}
+        wallet = wallet.rename(columns=dict_rename, inplace=False)
+
+        return yield_col1, yield_col2, wallet
 
     def __currentPortfolio(self):
         # Prepare the default wallet dataframe
@@ -57,7 +63,8 @@ class VariableIncomeAssets(PortfolioAssets):
                 wallet.at[index, "Cotação"] = float(curPricesTickers[ticker])
 
             # Get the current dividend yield of all tickers in the wallet
-            yield_col = "Taxa-média Contratada"
+            yield_col1 = "Taxa-média Contratada"
+            yield_col2 = "Taxa-média Ajustada"
             yield_df = self.currentMarketYieldByTickerList(
                 listTicker,
                 listMarket,
@@ -65,15 +72,16 @@ class VariableIncomeAssets(PortfolioAssets):
             for index, row in wallet.iterrows():
                 # ".SA" is needed due YFinance
                 ticker = row["Ticker"] + ".SA"
-                wallet.at[index, yield_col] = float(yield_df[ticker])
+                wallet.at[index, yield_col1] = float(yield_df[ticker])
+                wallet.at[index, yield_col2] = float(yield_df[ticker])
 
         # Calculate values related to the wallet default columns
         self.calculateWalletDefaultColumns(market_list)
 
         # Calculate the adjusted dividend yield
-        yield_col, wallet = self.__renameYieldColumn(wallet)
-        yield_val = wallet[yield_col] * wallet["Preço mercado"]
-        wallet[yield_col] = yield_val / wallet["Preço pago"]
+        yield_col1, yield_col2, wallet = self.__renameYieldColumn(wallet)
+        yield_val = wallet[yield_col2] * wallet["Preço mercado"]
+        wallet[yield_col2] = yield_val / wallet["Preço pago"]
 
         return wallet
 

@@ -29,11 +29,10 @@ class FixedIncomeAssets(PortfolioAssets):
             rate = row["Taxa-média Contratada"]
             buy_price = row["Preço médio"]
             wallet.at[index, "Cotação"] = self.currentValRendaFixa(
-                initial_date,
-                final_date,
-                indexer,
-                rate,
-                buy_price,
+                initial_date, final_date, indexer, rate, buy_price
+            )
+            wallet.at[index, "Taxa-média Ajustada"] = self.getAdjustedYield(
+                rate, indexer
             )
 
         # Calculate values related to the wallet default columns
