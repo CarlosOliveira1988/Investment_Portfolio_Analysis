@@ -44,17 +44,33 @@ class IndexerCalc(Benchmark):
         return datetime.strptime(date_str, "%Y-%m-%d")
 
     def _getMonthsPeriod(self, init_year, init_month, end_year, end_month):
+        # Considering:
+        # - init_year=2000, init_month=01 (january)
+        # - end_year=2000, end_month=12 (december)
+        # Output: 12
         init = self._getNumberOfMonths(init_year, init_month)
         end = self._getNumberOfMonths(end_year, end_month)
         return (end - init) + 1
 
     def _getNumberOfMonths(self, year, month):
+        # Considering:
+        # - year = 2000
+        # - month = 01 (january)
+        # Output: 24.000
         return (year * 12) + (month - 1)
 
     def _getDaysPeriod(self, initial_date, final_date):
+        # Considering:
+        # - initial_date = 2000-01-01
+        # - final_date = 2000-01-31
+        # Output: 31
         return (final_date - initial_date).days + 1
 
     def _getTotalDaysInMonth(self, year, month):
+        # Considering:
+        # - year = 2000
+        # - month = 01 (january)
+        # Output: 31
         range_tuple = calendar.monthrange(year, month)
         return range_tuple[1]
 
@@ -102,6 +118,7 @@ class FixedIncomeCalculation:
         end_y, end_m, end_d = self.idx._getYearMonthDay(final_date)
         months_period = self.idx._getMonthsPeriod(init_y, init_m, end_y, end_m)
         days_period = self.idx._getDaysPeriod(initial_date, final_date)
+        days_period -= 1  # The 1st day does not generate income
 
         # Find the first day of the prefixed series
         pre_1st_day = self.idx._getDate(init_y, init_m, 1)
@@ -112,7 +129,14 @@ class FixedIncomeCalculation:
 
         # Calculate the proportion of days
         pre_days_period = self.idx._getDaysPeriod(pre_1st_day, pre_end_date)
-        day_proportion = days_period / pre_days_period
+        pre_days_period -= 1  # The 1st day does not generate income
+        try:
+            if days_period <= 0.0:
+                day_proportion = 0.0
+            else:
+                day_proportion = days_period / pre_days_period
+        except ZeroDivisionError:
+            day_proportion = 0.0
 
         # Calculate the final value
         mean_rate = self.interest.calculateMeanInterestRatePerPeriod(

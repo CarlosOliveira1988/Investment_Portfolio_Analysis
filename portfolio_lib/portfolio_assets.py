@@ -1,6 +1,9 @@
 """This file has a class to manage Portfolio assets."""
 
+from datetime import datetime
+
 import pandas as pd
+from indexer_lib.months_indexers import TwelveMonthsIndexer
 
 
 class PortfolioAssets:
@@ -8,17 +11,19 @@ class PortfolioAssets:
 
     def __init__(self):
         """Create the PortfolioAssets object."""
-        self.wallet = self.__getDefaultDataframe()
-        self.openedOperations = self.__getDefaultDataframe()
+        self.wallet = self._getAssetsDefaultDataframe()
+        self.openedOperations = self._getAssetsDefaultDataframe()
+        self.indexers = TwelveMonthsIndexer()
 
     """Private methods."""
 
-    def __getDefaultDataframe(self):
+    def _getAssetsDefaultDataframe(self):
         col_list = [
             "Ticker",
             "Mercado",
             "Indexador",
-            "Rentabilidade-média Contratada",
+            "Taxa-média Contratada",
+            "Taxa-média Ajustada",
             "Data Inicial",
             "Data Final",
             "Quantidade",
@@ -43,6 +48,9 @@ class PortfolioAssets:
             "Porcentagem carteira",
         ]
         return pd.DataFrame(columns=col_list)
+
+    def _getDefaultDataframe(self):
+        return self._getAssetsDefaultDataframe()
 
     def __getMarketValueSum(self, market):
         df = self.wallet[self.wallet["Mercado"] == market]
@@ -70,7 +78,10 @@ class PortfolioAssets:
         return df["Quantidade Compra"] - df["Quantidade Venda"]
 
     def __getTaxa(self):
-        return self.openedOperations["Taxa Contratada"]
+        return self.openedOperations["Taxa-média Contratada"]
+
+    def __getTaxaAjustada(self):
+        return self.openedOperations["Taxa-média Contratada"]
 
     def __getDataInicial(self):
         return self.openedOperations["Data Inicial"]
@@ -144,7 +155,66 @@ class PortfolioAssets:
         additionalCosts = self.__getCustosAdicionais()
         return totalPrice + self.wallet["Proventos"] - additionalCosts
 
+    """Protected methods."""
+
+    def _checkDateType(self, date):
+        if not isinstance(date, datetime):
+            raise TypeError(
+                "The date argument should be a datetime type.",
+            )
+
+    def _checkNumberType(self, value):
+        if not isinstance(value, int) and not isinstance(value, float):
+            raise TypeError(
+                "The value argument should be int/float type.",
+            )
+
+    def _checkStringType(self, value):
+        if not isinstance(value, str):
+            raise TypeError(
+                "The value argument should be a string type.",
+            )
+
+    def _checkListType(self, value_list):
+        if not isinstance(value_list, list):
+            raise TypeError(
+                "The value_list argument should be a list type.",
+            )
+
+    def _checkStringListType(self, value_list):
+        self._checkListType(value_list)
+        if value_list:
+            [self._checkStringType(value) for value in value_list]
+        else:
+            raise ValueError(
+                "The value_list argument should not be empty.",
+            )
+
     """Public methods."""
+
+    def getAdjustedYield(self, yield_val, adjust_type):
+        """Return the 'adjusted_yield' value given an 'adjust_type'.
+
+        The availabe 'adjust_type' are:
+        - IPCA : return 'yield_val + IPCA'
+        - SELIC: return 'yield_val + SELIC'
+        - CDI  : return 'yield_val * CDI'
+        - PREFIXADO: return 'yield_val'
+        """
+        if adjust_type == "IPCA":
+            return yield_val + self.indexers.getIPCA()
+        elif adjust_type == "SELIC":
+            return yield_val + self.indexers.getSELIC()
+        elif adjust_type == "CDI":
+            return yield_val * self.indexers.getCDI()
+        elif adjust_type == "PREFIXADO":
+            return yield_val
+        else:
+            return 0.0
+
+    def getColumnsTitleList(self):
+        """Return a list of expected column titles."""
+        return list(self.wallet)
 
     def setOpenedOperations(self, openedOperations):
         """Set the opened operations."""
@@ -165,11 +235,12 @@ class PortfolioAssets:
             )
 
             # Copy the useful data to the 'wallet'
-            self.wallet = self.__getDefaultDataframe()
+            self.wallet = self._getAssetsDefaultDataframe()
             self.wallet["Ticker"] = self.__getTicker()
             self.wallet["Mercado"] = self.__getMercado()
             self.wallet["Indexador"] = self.__getIndexador()
-            self.wallet["Rentabilidade-média Contratada"] = self.__getTaxa()
+            self.wallet["Taxa-média Contratada"] = self.__getTaxa()
+            self.wallet["Taxa-média Ajustada"] = self.__getTaxaAjustada()
             self.wallet["Data Inicial"] = self.__getDataInicial()
             self.wallet["Data Final"] = self.__getDataFinal()
             self.wallet["Proventos"] = self.__getProventos()
@@ -193,7 +264,7 @@ class PortfolioAssets:
 
         # 'Extrato' dataframe has ONLY the title line
         else:
-            return self.__getDefaultDataframe().copy()
+            return self._getAssetsDefaultDataframe().copy()
 
     def calculateWalletDefaultColumns(self, market_list):
         """Calculate default column values."""

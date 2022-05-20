@@ -53,6 +53,7 @@ class VariableIncomesFormater(EasyFormatter):
         column_type_dict = {
             "Mercado": "s",
             "Ticker": "s",
+            "Dividend-Yield": "%",
             "Dividend-Yield Ajustado": "%",
             "Data Inicial": "0-0",
             "Quantidade": "0.0",
@@ -89,7 +90,8 @@ class TreasuriesFormater(EasyFormatter):
         column_type_dict = {
             "Ticker": "s",
             "Indexador": "s",
-            "Rentabilidade-média Contratada": "%",
+            "Taxa-média Contratada": "%",
+            "Taxa-média Ajustada": "%",
             "Data Inicial": "0-0",
             "Quantidade": "0.0",
             "Preço médio": "$",
@@ -125,7 +127,8 @@ class FixedIncomesFormater(EasyFormatter):
         column_type_dict = {
             "Ticker": "s",
             "Indexador": "s",
-            "Rentabilidade-média Contratada": "%",
+            "Taxa-média Contratada": "%",
+            "Taxa-média Ajustada": "%",
             "Data Inicial": "0-0",
             "Quantidade": "0.0",
             "Preço médio": "$",

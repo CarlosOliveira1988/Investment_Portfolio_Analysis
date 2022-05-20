@@ -208,7 +208,7 @@ class HistoryFormatter(EasyFormatter):
             "Mercado": "s",
             "Ticker": "s",
             "Indexador": "ns",
-            "Taxa Contratada": "%",
+            "Taxa-média Contratada": "%",
             "Operação": "s",
             "Data Inicial": "0-0",
             "Data Final": "0-0",
@@ -264,7 +264,7 @@ class OperationsHistory:
             "Mercado",
             "Ticker",
             "Indexador",
-            "Taxa Contratada",
+            "Taxa-média Contratada",
             "Operação",
             "Data Inicial",
             "Data Final",
@@ -486,7 +486,7 @@ class OperationsHistory:
         operations_df["Mercado"] = market_list
         operations_df["Ticker"] = ticker_list
         operations_df["Indexador"] = indexer_list
-        operations_df["Taxa Contratada"] = contracted_rate_list
+        operations_df["Taxa-média Contratada"] = contracted_rate_list
         operations_df["Operação"] = operation_list
         operations_df["Data Inicial"] = initial_date_list
         operations_df["Data Final"] = final_date_list
