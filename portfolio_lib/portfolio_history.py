@@ -33,7 +33,7 @@ class MarketFormatter(EasyFormatter):
         super().__init__(dataframe, column_type_dict)
 
 
-class MarketInformation:
+class MarketInfo:
     """Class to show data related to 'market' column."""
 
     def __init__(self, extrato_df):
@@ -548,7 +548,7 @@ class OperationsHistory:
 
     def __getHistOperationsDataframe(self, closed=True):
         operations_mkt_df = self.__getDefaultHistoryDataframe()
-        mkt_info = MarketInformation(self.extrato_df)
+        mkt_info = MarketInfo(self.extrato_df)
         mkt_list = mkt_info._getMarketList()
         for market in mkt_list:
             if closed:
