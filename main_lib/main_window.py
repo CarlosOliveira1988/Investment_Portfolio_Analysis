@@ -1,5 +1,7 @@
 """This file is responsible to define the main window of the application."""
 
+import os
+
 from portfolio_lib.portfolio_widget import PortfolioViewerWidget
 from PyQt5 import QtWidgets
 
@@ -43,6 +45,7 @@ class MainWindow(QtWidgets.QWidget):
         # OnClick event
         file_menu = self.menu_bar.getFileMenu()
         self.status_bar.setUpdateButtonEvent(file_menu.reopenFile)
+        self.status_bar.setEditXlsButtonEvent(self._openXlsFile)
 
         # Status bar message
         message = self.PortfolioWidget.getExtratoFile()
@@ -53,6 +56,14 @@ class MainWindow(QtWidgets.QWidget):
     def closeEvent(self, event):
         """Override 'QtWidgets.QWidget.closeEvent'."""
         event.accept()
+
+    """Protected methods."""
+
+    def _openXlsFile(self):
+        try:
+            os.startfile(self.getExtratoFile())
+        finally:
+            pass
 
     """Puclic methods."""
 
