@@ -3,7 +3,6 @@
 from portfolio_lib.extrato_manager import ExtratoFileManager
 from portfolio_lib.fixed_income import FixedIncomeAssets
 from portfolio_lib.multi_processing import MultiProcessingTasks
-from portfolio_lib.portfolio_history import OperationsHistory
 from portfolio_lib.treasuries import TreasuriesAssets
 from portfolio_lib.variable_income import VariableIncomeAssets
 
@@ -39,6 +38,8 @@ class PortfolioInvestment(ExtratoFileManager):
         self.multi_process_list[proc_index].endAllProcesses()
 
     def _updateOpenedOperations(self):
+        from portfolio_lib.portfolio_history import OperationsHistory
+
         history = OperationsHistory(self.operations.copy())
         self.openedOperations = history.getOpenedOperationsDataframe()
         self.VariableIncome.setOpenedOperations(self.openedOperations)
