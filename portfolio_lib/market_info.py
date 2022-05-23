@@ -64,6 +64,14 @@ class MarketInfo:
         # Sorting dataframe 'Market'
         self.mkt_df = self.mkt_df.sort_values(by=["Mercado"])
 
+    """Private methods."""
+
+    def __getColumnSum(self, totaldf, column):
+        totaldf[column] = [self.mkt_df[column].sum()]
+        return totaldf
+
+    """Protected methods."""
+
     def _getGrossResultList(self):
         from portfolio_lib.portfolio_history import OperationsHistory
 
@@ -118,6 +126,8 @@ class MarketInfo:
             jcp_list.append(jcp)
         return fee_list, incomeTax_list, dividend_list, jcp_list
 
+    """Public methods."""
+
     def getDataframe(self):
         """Return a dataframe with useful data.
 
@@ -161,16 +171,12 @@ class MarketInfo:
         """
         totaldf = pd.DataFrame()
         totaldf["Mercado"] = ["TOTAL"]
-        totaldf["Taxas"] = [self.mkt_df["Taxas"].sum()]
-        totaldf["IR"] = [self.mkt_df["IR"].sum()]
-        totaldf["Dividendos"] = [self.mkt_df["Dividendos"].sum()]
-        totaldf["JCP"] = [self.mkt_df["JCP"].sum()]
-        totaldf["Venda-Compra Realizado"] = [
-            self.mkt_df["Venda-Compra Realizado"].sum(),
-        ]
-        totaldf["Líquido Realizado"] = [
-            self.mkt_df["Líquido Realizado"].sum(),
-        ]
+        totaldf = self.__getColumnSum(totaldf, "Taxas")
+        totaldf = self.__getColumnSum(totaldf, "IR")
+        totaldf = self.__getColumnSum(totaldf, "Dividendos")
+        totaldf = self.__getColumnSum(totaldf, "JCP")
+        totaldf = self.__getColumnSum(totaldf, "Venda-Compra Realizado")
+        totaldf = self.__getColumnSum(totaldf, "Líquido Realizado")
         return totaldf.copy()
 
     def getTotalFormattedDataframe(self):
@@ -185,6 +191,5 @@ class MarketInfo:
         - Venda-Compra Realizado
         - Líquido Realizado
         """
-        # Formatter
         mkt_formatter = MarketFormatter(self.getTotalDataframe())
         return mkt_formatter.getFormattedDataFrame()

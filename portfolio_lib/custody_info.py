@@ -1,8 +1,32 @@
 """File to handle Custody Information for Summary tab."""
 
 import pandas as pd
-from gui_lib.treeview.format_applier import TreeviewFormatApplier
+from gui_lib.treeview.format_applier import EasyFormatter
 from indexer_lib.dataframe_filter import DataframeFilter
+
+
+class CustodyFormatter(EasyFormatter):
+    """This class is useful to format Custody dataFrames.
+
+    Basically, here we manipulate the dataframe to define:
+    - the columns order
+    - the columns types
+    - the number of columns
+
+    Arguments:
+    - dataframe: the portfolio pandas dataframe
+    """
+
+    def __init__(self, dataframe):
+        """Create the CustodyFormatter object."""
+        column_type_dict = {
+            "Mercado": "s",
+            "Transferência": "$",
+            "Resgate": "$",
+            "Taxas": "$",
+            "IR": "$",
+        }
+        super().__init__(dataframe, column_type_dict)
 
 
 class CustodyInformation:
@@ -22,8 +46,6 @@ class CustodyInformation:
         # Calculate useful values
         self.fee = self.filtered_df["Taxas"].sum()
         self.incomeTax = self.filtered_df["IR"].sum()
-        self.dividend = self.filtered_df["Dividendos"].sum()
-        self.jcp = self.filtered_df["JCP"].sum()
 
         # Calculate deposit value
         self.deposit_df = self.df_filter.filterDataframePerColumn(
@@ -42,37 +64,18 @@ class CustodyInformation:
         self.cust_df["Mercado"] = ["Custodia"]
         self.cust_df["Taxas"] = [self.fee]
         self.cust_df["IR"] = [self.incomeTax]
-        self.cust_df["Dividendos"] = [self.dividend]
-        self.cust_df["JCP"] = [self.jcp]
         self.cust_df["Transferência"] = [self.deposit]
         self.cust_df["Resgate"] = [self.rescue]
-
-        # Formatter
-        self.cust_formatter = TreeviewFormatApplier()
-        self.cust_formatter.setDataframe(self.cust_df)
-        self.cust_formatter.setRequiredString(["Mercado"])
-        self.cust_formatter.setCurrencyType(
-            [
-                "Taxas",
-                "IR",
-                "Dividendos",
-                "JCP",
-                "Transferência",
-                "Resgate",
-            ]
-        )
 
     def getDataframe(self):
         """Return a dataframe with useful data.
 
         The following columns are present:
         - Mercado
-        - Taxas
-        - IR
-        - Dividendos
-        - JCP
         - Transferência
         - Resgate
+        - Taxas
+        - IR
         """
         return self.cust_df
 
@@ -81,13 +84,10 @@ class CustodyInformation:
 
         The following columns are present:
         - Mercado
-        - Taxas
-        - IR
-        - Dividendos
-        - JCP
         - Transferência
         - Resgate
+        - Taxas
+        - IR
         """
-        self.cust_formatter.setDataframe(self.cust_df)
-        self.cust_formatter.runFormatter()
-        return self.cust_formatter.getFormatedDataFrame()
+        cust_formatter = CustodyFormatter(self.getDataframe())
+        return cust_formatter.getFormattedDataFrame()
