@@ -1,8 +1,7 @@
 """This file has a set of methods related to Fixed Income assets."""
 
 from indexer_lib.fixed_income import FixedIncomeCalculation
-
-from portfolio_lib.portfolio_assets import PortfolioAssets
+from portfolio_lib.assets.portfolio_assets import PortfolioAssets
 
 
 class FixedIncomeAssets(PortfolioAssets):

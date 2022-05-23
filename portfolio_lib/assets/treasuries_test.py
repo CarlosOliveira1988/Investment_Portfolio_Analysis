@@ -10,7 +10,7 @@ import pytest
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from portfolio_lib.treasuries import TreasuriesAssets
+from portfolio_lib.assets.treasuries import TreasuriesAssets
 
 
 def date(string):

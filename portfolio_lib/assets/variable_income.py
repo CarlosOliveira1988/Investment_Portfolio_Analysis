@@ -4,10 +4,9 @@ import pandas as pd
 import requests
 import yfinance as yf
 from bs4 import BeautifulSoup
-
+from portfolio_lib.assets.portfolio_assets import PortfolioAssets
 from portfolio_lib.gdrive_exporter import GoogleDriveExporter
 from portfolio_lib.multi_processing import PoolTasks
-from portfolio_lib.portfolio_assets import PortfolioAssets
 
 
 class VariableIncomeAssets(PortfolioAssets):

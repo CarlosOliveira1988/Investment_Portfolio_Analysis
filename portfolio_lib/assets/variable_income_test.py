@@ -9,7 +9,7 @@ import pytest
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from portfolio_lib.variable_income import VariableIncomeAssets
+from portfolio_lib.assets.variable_income import VariableIncomeAssets
 
 
 class Test_VariableIncomeAssets_initialization:

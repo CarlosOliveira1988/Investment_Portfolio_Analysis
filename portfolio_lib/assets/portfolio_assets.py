@@ -5,6 +5,8 @@ from datetime import datetime
 import pandas as pd
 from indexer_lib.months_indexers import TwelveMonthsIndexer
 
+from portfolio_lib.portfolio_history import OperationsHistory
+
 
 class PortfolioAssets:
     """Class used to manipulate the different portfolio assets."""
@@ -14,6 +16,7 @@ class PortfolioAssets:
         self.wallet = self._getAssetsDefaultDataframe()
         self.openedOperations = self._getAssetsDefaultDataframe()
         self.indexers = TwelveMonthsIndexer()
+        self.history = None
 
     """Private methods."""
 
@@ -219,6 +222,11 @@ class PortfolioAssets:
     def setOpenedOperations(self, openedOperations):
         """Set the opened operations."""
         self.openedOperations = openedOperations.copy()
+
+    def setExtratoDataframe(self, operations):
+        """Set the operations dataframe."""
+        self.history = OperationsHistory(operations)
+        self.setOpenedOperations(self.history.getOpenedOperationsDataframe())
 
     def createWalletDefaultColumns(self, market_list):
         """Return a default dataframe with 'Wallet' columns."""

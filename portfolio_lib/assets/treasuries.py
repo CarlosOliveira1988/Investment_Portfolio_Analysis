@@ -4,8 +4,7 @@ import re
 
 import requests
 from bs4 import BeautifulSoup
-
-from portfolio_lib.portfolio_assets import PortfolioAssets
+from portfolio_lib.assets.portfolio_assets import PortfolioAssets
 
 
 class TreasuriesAssets(PortfolioAssets):
