@@ -45,7 +45,7 @@ class FixedIncomeAssets(PortfolioAssets):
         self._checkStringType(indexer)
         if indexer not in ["PREFIXADO", "IPCA", "CDI"]:
             raise ValueError(
-                "The indexer argument should be 'PREFIXADO', 'IPCA' or 'CDI'.",
+                "The indexer argument should be PREFIXADO, IPCA, CDI.",
             )
 
     """Public methods."""
@@ -95,6 +95,36 @@ class FixedIncomeAssets(PortfolioAssets):
             return float(buyPrice)
 
     def currentRendaFixa(self):
-        """Create a dataframe with all opened operations of Renda Fixa."""
+        """Create a dataframe with all opened operations of Renda Fixa.
+
+        The following columns are present:
+        - Ticker
+        - Mercado
+        - Indexador
+        - Taxa-média Contratada
+        - Taxa-média Ajustada
+        - Data Inicial
+        - Data Final
+        - Quantidade
+        - Quantidade compra
+        - Preço médio
+        - Preço médio+taxas
+        - Preço pago
+        - Compras totais
+        - Vendas parciais
+        - Proventos
+        - Custos
+        - Taxas Adicionais
+        - IR
+        - Dividendos
+        - JCP
+        - Cotação
+        - Preço mercado
+        - Mercado-pago
+        - Mercado-pago(%)
+        - Líquido parcial
+        - Líquido parcial(%)
+        - Porcentagem carteira
+        """
         self.wallet = self.__currentRendaFixa()
         return self.wallet.copy()

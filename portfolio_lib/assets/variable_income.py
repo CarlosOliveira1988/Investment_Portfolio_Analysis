@@ -271,6 +271,35 @@ class VariableIncomeAssets(PortfolioAssets):
 
         Return a dataframe containing the current wallet of stocks, FIIs,
         ETFs and BDRs.
+
+        The following columns are present:
+        - Ticker
+        - Mercado
+        - Indexador
+        - Dividend-Yield
+        - Dividend-Yield Ajustado
+        - Data Inicial
+        - Data Final
+        - Quantidade
+        - Quantidade compra
+        - Preço médio
+        - Preço médio+taxas
+        - Preço pago
+        - Compras totais
+        - Vendas parciais
+        - Proventos
+        - Custos
+        - Taxas Adicionais
+        - IR
+        - Dividendos
+        - JCP
+        - Cotação
+        - Preço mercado
+        - Mercado-pago
+        - Mercado-pago(%)
+        - Líquido parcial
+        - Líquido parcial(%)
+        - Porcentagem carteira
         """
         self.wallet = self.__currentPortfolio()
         return self.wallet.copy()

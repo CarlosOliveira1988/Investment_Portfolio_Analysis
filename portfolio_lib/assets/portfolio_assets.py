@@ -4,7 +4,6 @@ from datetime import datetime
 
 import pandas as pd
 from indexer_lib.months_indexers import TwelveMonthsIndexer
-
 from portfolio_lib.portfolio_history import OperationsHistory
 
 
@@ -193,6 +192,19 @@ class PortfolioAssets:
                 "The value_list argument should not be empty.",
             )
 
+    def _checkIndexerType(self, indexer):
+        self._checkStringType(indexer)
+        if indexer not in ["PREFIXADO", "IPCA", "CDI", "SELIC"]:
+            raise ValueError(
+                "The indexer argument should be PREFIXADO, IPCA, CDI, SELIC.",
+            )
+
+    def _checkDataframeType(self, dataframe):
+        if not isinstance(dataframe, pd.DataFrame):
+            raise TypeError(
+                "The dataframe argument should be a pandas dataframe.",
+            )
+
     """Public methods."""
 
     def getAdjustedYield(self, yield_val, adjust_type):
@@ -204,6 +216,8 @@ class PortfolioAssets:
         - CDI  : return 'yield_val * CDI'
         - PREFIXADO: return 'yield_val'
         """
+        self._checkNumberType(yield_val)
+        self._checkIndexerType(adjust_type)
         if adjust_type == "IPCA":
             return yield_val + self.indexers.getIPCA()
         elif adjust_type == "SELIC":
@@ -221,15 +235,18 @@ class PortfolioAssets:
 
     def setOpenedOperations(self, openedOperations):
         """Set the opened operations."""
+        self._checkDataframeType(openedOperations)
         self.openedOperations = openedOperations.copy()
 
     def setExtratoDataframe(self, operations):
         """Set the operations dataframe."""
+        self._checkDataframeType(operations)
         self.history = OperationsHistory(operations)
         self.setOpenedOperations(self.history.getOpenedOperationsDataframe())
 
     def createWalletDefaultColumns(self, market_list):
         """Return a default dataframe with 'Wallet' columns."""
+        self._checkStringListType(market_list)
         # 'Extrato' dataframe has title and data lines
         if len(self.openedOperations):
 
@@ -276,6 +293,7 @@ class PortfolioAssets:
 
     def calculateWalletDefaultColumns(self, market_list):
         """Calculate default column values."""
+        self._checkStringListType(market_list)
         self.wallet["Preço mercado"] = self.__getPrecoMercado()
         deltaPrice = self.__getMercadoMenosPago()
         self.wallet["Mercado-pago"] = deltaPrice
