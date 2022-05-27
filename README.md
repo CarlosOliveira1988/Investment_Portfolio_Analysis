@@ -72,7 +72,7 @@ Essa ferramenta é bastante útil para realizar cálculos de custo de oportunida
 ## **Preenchimento do arquivo de histórico Excel "Extrato"**
 Na pasta "portfolio_lib" há disponível o arquivo "PORTFOLIO_TEMPLATE_EMPTY.xlsx". A partir dele você poderá iniciar os seus lançamentos, seguindo algumas poucas regras nas seguintes colunas obrigatórias:
 - "Ticker": identificador principal do investimento
-- "Mercado": classifica o tipo do ativo: "Ações", "FII", "BDR", "ETF", "Opções" ("Renda Variável"), "Renda Fixa" e "Tesouro Direto".
+- "Mercado": classifica o tipo do ativo ou lançamento: "Ações", "FII", "BDR", "ETF", "Opções", "Renda Fixa", "Tesouro Direto", "Custodia".
 - "Operação": classifica o tipo de operação: "Compra", "Venda", "Transferência", "Resgate", "Provento", "Cobrança".
 - "Notas": lembretes de objetivos ou motivações que o fizeram comprar ou vender um dado ativo
 - Data, Quantidade, preços, taxas, proventos: colunas para controle de fluxo de caixa dos ativos

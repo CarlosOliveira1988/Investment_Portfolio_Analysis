@@ -8,7 +8,13 @@ from portfolio_lib.portfolio_history import OperationsHistory
 
 
 class PortfolioAssets:
-    """Class used to manipulate the different portfolio assets."""
+    """Base-class used to manipulate different portfolio assets.
+
+    This is a class for general use purpose. It doesn't make too much sense use
+    it without some inheritance and data manipulation. It's used to handle
+    Fixed Income, Variable Income and so on, since they have some common
+    behaviors and necessities.
+    """
 
     def __init__(self):
         """Create the PortfolioAssets object."""
@@ -19,41 +25,6 @@ class PortfolioAssets:
 
     """Private methods."""
 
-    def _getAssetsDefaultDataframe(self):
-        col_list = [
-            "Ticker",
-            "Mercado",
-            "Indexador",
-            "Taxa-média Contratada",
-            "Taxa-média Ajustada",
-            "Data Inicial",
-            "Data Final",
-            "Quantidade",
-            "Quantidade compra",
-            "Preço médio",
-            "Preço médio+taxas",
-            "Preço pago",
-            "Compras totais",
-            "Vendas parciais",
-            "Proventos",
-            "Custos",
-            "Taxas Adicionais",
-            "IR",
-            "Dividendos",
-            "JCP",
-            "Cotação",
-            "Preço mercado",
-            "Mercado-pago",
-            "Mercado-pago(%)",
-            "Líquido parcial",
-            "Líquido parcial(%)",
-            "Porcentagem carteira",
-        ]
-        return pd.DataFrame(columns=col_list)
-
-    def _getDefaultDataframe(self):
-        return self._getAssetsDefaultDataframe()
-
     def __getMarketValueSum(self, market):
         df = self.wallet[self.wallet["Mercado"] == market]
         return df["Preço mercado"].sum()
@@ -63,7 +34,10 @@ class PortfolioAssets:
         marketDF = self.wallet[self.wallet["Mercado"].isin([market])]
         for index, row in marketDF.iterrows():
             marketPrice = row["Preço mercado"]
-            percentage = marketPrice / marketValue
+            try:
+                percentage = marketPrice / marketValue
+            except ZeroDivisionError:
+                percentage = 0.0
             self.wallet.at[index, "Porcentagem carteira"] = percentage
 
     def __getTicker(self):
@@ -159,6 +133,41 @@ class PortfolioAssets:
 
     """Protected methods."""
 
+    def _getAssetsDefaultDataframe(self):
+        col_list = [
+            "Ticker",
+            "Mercado",
+            "Indexador",
+            "Taxa-média Contratada",
+            "Taxa-média Ajustada",
+            "Data Inicial",
+            "Data Final",
+            "Quantidade",
+            "Quantidade compra",
+            "Preço médio",
+            "Preço médio+taxas",
+            "Preço pago",
+            "Compras totais",
+            "Vendas parciais",
+            "Proventos",
+            "Custos",
+            "Taxas Adicionais",
+            "IR",
+            "Dividendos",
+            "JCP",
+            "Cotação",
+            "Preço mercado",
+            "Mercado-pago",
+            "Mercado-pago(%)",
+            "Líquido parcial",
+            "Líquido parcial(%)",
+            "Porcentagem carteira",
+        ]
+        return pd.DataFrame(columns=col_list)
+
+    def _getDefaultDataframe(self):
+        return self._getAssetsDefaultDataframe()
+
     def _checkDateType(self, date):
         if not isinstance(date, datetime):
             raise TypeError(
@@ -205,6 +214,17 @@ class PortfolioAssets:
                 "The dataframe argument should be a pandas dataframe.",
             )
 
+    def _checkMarketListType(self, market_list):
+        self._checkStringListType(market_list)
+        exp_market_list = ["Ações", "Opções", "FII", "BDR", "ETF"]
+        Others_market = ["Renda Fixa", "Tesouro Direto", "Custodia"]
+        exp_market_list.extend(Others_market)
+        for market in market_list:
+            if market not in exp_market_list:
+                msg = "The indexer argument should be "
+                msg += ", ".join(exp_market_list)
+                raise ValueError(msg)
+
     """Public methods."""
 
     def getAdjustedYield(self, yield_val, adjust_type):
@@ -246,7 +266,8 @@ class PortfolioAssets:
 
     def createWalletDefaultColumns(self, market_list):
         """Return a default dataframe with 'Wallet' columns."""
-        self._checkStringListType(market_list)
+        self._checkMarketListType(market_list)
+
         # 'Extrato' dataframe has title and data lines
         if len(self.openedOperations):
 
@@ -293,7 +314,7 @@ class PortfolioAssets:
 
     def calculateWalletDefaultColumns(self, market_list):
         """Calculate default column values."""
-        self._checkStringListType(market_list)
+        self._checkMarketListType(market_list)
         self.wallet["Preço mercado"] = self.__getPrecoMercado()
         deltaPrice = self.__getMercadoMenosPago()
         self.wallet["Mercado-pago"] = deltaPrice
