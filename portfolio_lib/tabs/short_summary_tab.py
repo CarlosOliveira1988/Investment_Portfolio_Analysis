@@ -3,8 +3,9 @@
 import pandas as pd
 from gui_lib.treeview.treeview_pandas import ResizableTreeviewPandas
 from gui_lib.window import Window
-from portfolio_lib.custody_info import CustodyInformation
-from portfolio_lib.portfolio_history import MarketInfo, OperationsHistory
+from portfolio_lib.portfolio_history import OperationsHistory
+from portfolio_lib.tabs.summary.custody_info import CustodyInformation
+from portfolio_lib.tabs.summary.market_info import MarketInfo
 from portfolio_lib.tabs.tab_viewer import TabViewerInterface
 from widget_lib.tab_viewer import TabViewerWidget
 

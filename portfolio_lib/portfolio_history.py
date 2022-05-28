@@ -6,7 +6,7 @@ import pandas as pd
 from gui_lib.treeview.format_applier import EasyFormatter
 from indexer_lib.dataframe_filter import DataframeFilter
 
-from portfolio_lib.market_info import MarketInfo
+from portfolio_lib.tabs.summary.market_info import MarketInfo
 
 
 class HistoryFormatter(EasyFormatter):
