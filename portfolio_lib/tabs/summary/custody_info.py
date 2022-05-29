@@ -68,7 +68,7 @@ class CustodyInformation:
         self.cust_df["Resgate"] = [self.rescue]
 
     def getDataframe(self):
-        """Return a dataframe with useful data.
+        """Return a multi-line dataframe with useful data.
 
         The following columns are present:
         - Mercado
@@ -77,10 +77,10 @@ class CustodyInformation:
         - Taxas
         - IR
         """
-        return self.cust_df
+        return self.cust_df.copy()
 
     def getFormattedDataframe(self):
-        """Return a formatted dataframe with useful data.
+        """Return a multi-line formatted dataframe with useful data.
 
         The following columns are present:
         - Mercado

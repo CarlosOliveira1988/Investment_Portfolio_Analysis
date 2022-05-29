@@ -129,7 +129,7 @@ class MarketInfo:
     """Public methods."""
 
     def getDataframe(self):
-        """Return a dataframe with useful data.
+        """Return a multi-line dataframe with useful data.
 
         The following columns are present:
         - Mercado
@@ -143,7 +143,7 @@ class MarketInfo:
         return self.mkt_df.copy()
 
     def getFormattedDataframe(self):
-        """Return a formatted dataframe with useful data.
+        """Return a multi-line formatted dataframe with useful data.
 
         The following columns are present:
         - Mercado
@@ -158,7 +158,7 @@ class MarketInfo:
         return mkt_formatter.getFormattedDataFrame()
 
     def getTotalDataframe(self):
-        """Return a dataframe with the sum of the useful data.
+        """Return a single-line dataframe with the sum of the useful data.
 
         The following columns are present:
         - Mercado
@@ -180,7 +180,7 @@ class MarketInfo:
         return totaldf.copy()
 
     def getTotalFormattedDataframe(self):
-        """Return a formatted dataframe with the sum of the useful data.
+        """Return a single-line dataframe with the sum of the useful data.
 
         The following columns are present:
         - Mercado
@@ -193,3 +193,24 @@ class MarketInfo:
         """
         mkt_formatter = MarketFormatter(self.getTotalDataframe())
         return mkt_formatter.getFormattedDataFrame()
+
+    def getFullFormattedDataframe(self):
+        """Return a multi-line dataframe, including the total line.
+
+        The following columns are present:
+        - Mercado
+        - Taxas
+        - IR
+        - Dividendos
+        - JCP
+        - Venda-Compra Realizado
+        - Líquido Realizado
+        """
+        formatted_df = self.getFormattedDataframe()
+        total_dataframe = self.getTotalFormattedDataframe()
+        formatted_df = pd.concat(
+            [formatted_df, total_dataframe],
+            ignore_index=True,
+            sort=False,
+        )
+        return formatted_df
