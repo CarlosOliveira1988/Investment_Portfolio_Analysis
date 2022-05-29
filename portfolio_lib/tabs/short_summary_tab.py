@@ -6,6 +6,7 @@ from gui_lib.window import Window
 from portfolio_lib.portfolio_history import OperationsHistory
 from portfolio_lib.tabs.summary.custody_info import CustodyInformation
 from portfolio_lib.tabs.summary.market_info import MarketInfo
+from portfolio_lib.tabs.summary.opened_summary_info import OpenedSummaryInfo
 from portfolio_lib.tabs.tab_viewer import TabViewerInterface
 from widget_lib.tab_viewer import TabViewerWidget
 
@@ -50,6 +51,19 @@ class TableInterface:
         self.tree.showPandas(resize_per_contents=resize_per_contents)
 
 
+class OpenedInvestmentTable(TableInterface):
+    """Table to show data related to Opened Investment."""
+
+    def __init__(self):
+        """Create the OpenedInvestmentTable object."""
+        super().__init__(proportional_height=9)
+
+    def updateTreeviewData(self, dataframe):
+        """Update the Treeview data table."""
+        mkt_info = OpenedSummaryInfo(dataframe)
+        self.updateData(mkt_info.getFullFormattedDataframe())
+
+
 class ClosedInvestmentTable(TableInterface):
     """Table to show data related to Closed Investment."""
 
@@ -88,7 +102,7 @@ class CustodyTable(TableInterface):
 
     def __init__(self):
         """Create the CustodyTable object."""
-        super().__init__(proportional_height=3)
+        super().__init__(proportional_height=2)
 
     def updateTreeviewData(self, dataframe):
         """Update the Treeview data table."""
@@ -108,6 +122,7 @@ class ShortSummaryTabInterface(TabViewerInterface):
 
         # Tables
         self.table_list = []
+        self.opened_table = self.__addTable(OpenedInvestmentTable())
         self.closed_table = self.__addTable(ClosedInvestmentTable())
         self.closed_hist_table = self.__addTable(DetailClosedInvestmentTable())
         self.custody_table = self.__addTable(CustodyTable())
