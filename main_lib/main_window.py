@@ -4,6 +4,7 @@ import os
 
 from portfolio_lib.portfolio_widget import PortfolioViewerWidget
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 from main_lib.menu_bar import MenuBar
 from main_lib.status_bar import StatusBar
@@ -51,6 +52,11 @@ class MainWindow(QtWidgets.QWidget):
         message = self.PortfolioWidget.getExtratoFile()
         self.status_bar.setBarMessage(message)
 
+    def __showOpenFileErrorMessage(self):
+        msg = "Algum erro ocorreu enquanto tentava-se abrir o arquivo "
+        msg += self.getExtratoFile() + "."
+        QMessageBox.warning(self, "Análise de Portfólio", msg, QMessageBox.Ok)
+
     """Overrides methods."""
 
     def closeEvent(self, event):
@@ -62,8 +68,8 @@ class MainWindow(QtWidgets.QWidget):
     def _openXlsFile(self):
         try:
             os.startfile(self.getExtratoFile())
-        finally:
-            pass
+        except:
+            self.__showOpenFileErrorMessage()
 
     """Puclic methods."""
 
