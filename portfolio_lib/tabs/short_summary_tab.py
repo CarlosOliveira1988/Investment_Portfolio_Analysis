@@ -61,7 +61,9 @@ class OpenedInvestmentTable(TableInterface):
     def updateTreeviewData(self, dataframe):
         """Update the Treeview data table."""
         mkt_info = OpenedSummaryInfo(dataframe)
-        self.updateData(mkt_info.getFullFormattedDataframe())
+        dataframe = mkt_info.getFullFormattedDataframe()
+        dataframe = dataframe[["Mercado", "Valor_Investido"]]
+        self.updateData(dataframe)
 
 
 class ClosedInvestmentTable(TableInterface):
