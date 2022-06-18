@@ -4,8 +4,7 @@ import re
 
 import requests
 from bs4 import BeautifulSoup
-
-from portfolio_lib.portfolio_assets import PortfolioAssets
+from portfolio_lib.assets.portfolio_assets import PortfolioAssets
 
 
 class TreasuriesAssets(PortfolioAssets):
@@ -150,6 +149,36 @@ class TreasuriesAssets(PortfolioAssets):
             return TreasuriesAssets.VALUE_NOT_FOUND
 
     def currentTesouroDireto(self):
-        """Create a dataframe with all opened operations of Tesouro Direto."""
+        """Create a dataframe with all opened operations of Tesouro Direto.
+
+        The following columns are present
+        - Ticker
+        - Mercado
+        - Indexador
+        - Taxa-média Contratada
+        - Taxa-média Ajustada
+        - Data Inicial
+        - Data Final
+        - Quantidade
+        - Quantidade compra
+        - Preço médio
+        - Preço médio+taxas
+        - Preço pago
+        - Compras totais
+        - Vendas parciais
+        - Proventos
+        - Custos
+        - Taxas Adicionais
+        - IR
+        - Dividendos
+        - JCP
+        - Cotação
+        - Preço mercado
+        - Mercado-pago
+        - Mercado-pago(%)
+        - Líquido parcial
+        - Líquido parcial(%)
+        - Porcentagem carteira:
+        """
         self.wallet = self.__currentTesouroDireto()
         return self.wallet.copy()

@@ -1,5 +1,7 @@
 """This file has classes to show windows for portfolio balancing purpose."""
 
+import subprocess
+
 from gui_lib.pushbutton import StandardPushButton
 from gui_lib.window import Window
 from PyQt5 import QtCore, QtWidgets
@@ -8,16 +10,17 @@ from balance_lib.balance_tabs import BalancingWindowTabs
 from balance_lib.get_config import ConfigurationManager
 
 
-class UpdateConfigurationButton(QtWidgets.QPushButton):
-    """Button used to reload the configuration values from file."""
+class Button(QtWidgets.QPushButton):
+    """Button used to handle configuration files."""
 
-    def __init__(self, onClickMethod):
-        """Create the UpdateConfigurationButton object.
+    def __init__(self, title, onClickMethod):
+        """Create the Button object.
 
         Arguments:
+        - title: the text shown on the button
         - onClickMethod: any method to be called when clicking in the button
         """
-        super().__init__("ATUALIZAR\nCONFIGURAÇÕES")
+        super().__init__(title)
         self.setFixedSize(
             QtCore.QSize(
                 StandardPushButton.DEFAULT_WIDTH,
@@ -25,6 +28,25 @@ class UpdateConfigurationButton(QtWidgets.QPushButton):
             )
         )
         self.clicked.connect(onClickMethod)
+
+
+class UpdateConfigurationButton(Button):
+    """Button used to reload the configuration values from file."""
+
+    def __init__(self, onClickMethod):
+        """Create the UpdateConfigurationButton object."""
+        super().__init__("ATUALIZAR\nCONFIGURAÇÕES", onClickMethod)
+
+
+class EditConfigurationButton(Button):
+    """Button used to edit the configuration file.
+
+    Basically, it will try to open the Notepad++ ou Notepad.
+    """
+
+    def __init__(self, onClickMethod):
+        """Create the EditConfigurationButton object."""
+        super().__init__("EDITAR\nCONFIGURAÇÕES", onClickMethod)
 
 
 class BalancingWindow(QtWidgets.QWidget):
@@ -65,8 +87,9 @@ class BalancingWindow(QtWidgets.QWidget):
             self.config,
         )
 
-        # Update configuration button
+        # Buttons
         self.ConfigButton = UpdateConfigurationButton(self.updateConfig)
+        self.EditButton = EditConfigurationButton(self.editConfig)
 
         # Set the window properties
         self.__setWindowProperties()
@@ -80,13 +103,21 @@ class BalancingWindow(QtWidgets.QWidget):
     def __setWindowProperties(self):
         spacing = Window.DEFAULT_BORDER_SIZE / 2
 
+        # Create the button grid object
+        self.ButtonsWidget = QtWidgets.QWidget()
+        self.ButtonGrid = QtWidgets.QHBoxLayout()
+        self.ButtonGrid.setSpacing(spacing)
+        self.ButtonGrid.addWidget(self.ConfigButton)
+        self.ButtonGrid.addWidget(self.EditButton)
+        self.ButtonsWidget.setLayout(self.ButtonGrid)
+
         # Create the grid object
         self.grid = QtWidgets.QGridLayout()
         self.grid.setContentsMargins(spacing, spacing, spacing, spacing)
         self.grid.setSpacing(spacing)
         self.grid.addWidget(self.TabGroup)
         self.grid.addWidget(
-            self.ConfigButton, 1, 0, QtCore.Qt.AlignmentFlag.AlignCenter
+            self.ButtonsWidget, 1, 0, QtCore.Qt.AlignmentFlag.AlignCenter
         )
 
         # Set the grid layout
@@ -100,3 +131,7 @@ class BalancingWindow(QtWidgets.QWidget):
     def updateConfig(self):
         """Update configuration values from configuration file."""
         self.TabGroup.updateConfigurationValues()
+
+    def editConfig(self):
+        """Open the Notepad, then the user may edit the file."""
+        subprocess.Popen(["notepad.exe", self.config.getConfigFile()])

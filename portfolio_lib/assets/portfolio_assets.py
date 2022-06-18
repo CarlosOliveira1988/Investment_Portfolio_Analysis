@@ -4,53 +4,26 @@ from datetime import datetime
 
 import pandas as pd
 from indexer_lib.months_indexers import TwelveMonthsIndexer
+from portfolio_lib.portfolio_history import OperationsHistory
 
 
 class PortfolioAssets:
-    """Class used to manipulate the different portfolio assets."""
+    """Base-class used to manipulate different portfolio assets.
+
+    This is a class for general use purpose. It doesn't make too much sense use
+    it without some inheritance and data manipulation. It's used to handle
+    Fixed Income, Variable Income and so on, since they have some common
+    behaviors and necessities.
+    """
 
     def __init__(self):
         """Create the PortfolioAssets object."""
         self.wallet = self._getAssetsDefaultDataframe()
         self.openedOperations = self._getAssetsDefaultDataframe()
         self.indexers = TwelveMonthsIndexer()
+        self.history = None
 
     """Private methods."""
-
-    def _getAssetsDefaultDataframe(self):
-        col_list = [
-            "Ticker",
-            "Mercado",
-            "Indexador",
-            "Taxa-média Contratada",
-            "Taxa-média Ajustada",
-            "Data Inicial",
-            "Data Final",
-            "Quantidade",
-            "Quantidade compra",
-            "Preço médio",
-            "Preço médio+taxas",
-            "Preço pago",
-            "Compras totais",
-            "Vendas parciais",
-            "Proventos",
-            "Custos",
-            "Taxas Adicionais",
-            "IR",
-            "Dividendos",
-            "JCP",
-            "Cotação",
-            "Preço mercado",
-            "Mercado-pago",
-            "Mercado-pago(%)",
-            "Líquido parcial",
-            "Líquido parcial(%)",
-            "Porcentagem carteira",
-        ]
-        return pd.DataFrame(columns=col_list)
-
-    def _getDefaultDataframe(self):
-        return self._getAssetsDefaultDataframe()
 
     def __getMarketValueSum(self, market):
         df = self.wallet[self.wallet["Mercado"] == market]
@@ -61,7 +34,10 @@ class PortfolioAssets:
         marketDF = self.wallet[self.wallet["Mercado"].isin([market])]
         for index, row in marketDF.iterrows():
             marketPrice = row["Preço mercado"]
-            percentage = marketPrice / marketValue
+            try:
+                percentage = marketPrice / marketValue
+            except ZeroDivisionError:
+                percentage = 0.0
             self.wallet.at[index, "Porcentagem carteira"] = percentage
 
     def __getTicker(self):
@@ -157,6 +133,41 @@ class PortfolioAssets:
 
     """Protected methods."""
 
+    def _getAssetsDefaultDataframe(self):
+        col_list = [
+            "Ticker",
+            "Mercado",
+            "Indexador",
+            "Taxa-média Contratada",
+            "Taxa-média Ajustada",
+            "Data Inicial",
+            "Data Final",
+            "Quantidade",
+            "Quantidade compra",
+            "Preço médio",
+            "Preço médio+taxas",
+            "Preço pago",
+            "Compras totais",
+            "Vendas parciais",
+            "Proventos",
+            "Custos",
+            "Taxas Adicionais",
+            "IR",
+            "Dividendos",
+            "JCP",
+            "Cotação",
+            "Preço mercado",
+            "Mercado-pago",
+            "Mercado-pago(%)",
+            "Líquido parcial",
+            "Líquido parcial(%)",
+            "Porcentagem carteira",
+        ]
+        return pd.DataFrame(columns=col_list)
+
+    def _getDefaultDataframe(self):
+        return self._getAssetsDefaultDataframe()
+
     def _checkDateType(self, date):
         if not isinstance(date, datetime):
             raise TypeError(
@@ -190,6 +201,30 @@ class PortfolioAssets:
                 "The value_list argument should not be empty.",
             )
 
+    def _checkIndexerType(self, indexer):
+        self._checkStringType(indexer)
+        if indexer not in ["PREFIXADO", "IPCA", "CDI", "SELIC"]:
+            raise ValueError(
+                "The indexer argument should be PREFIXADO, IPCA, CDI, SELIC.",
+            )
+
+    def _checkDataframeType(self, dataframe):
+        if not isinstance(dataframe, pd.DataFrame):
+            raise TypeError(
+                "The dataframe argument should be a pandas dataframe.",
+            )
+
+    def _checkMarketListType(self, market_list):
+        self._checkStringListType(market_list)
+        exp_market_list = ["Ações", "Opções", "FII", "BDR", "ETF"]
+        Others_market = ["Renda Fixa", "Tesouro Direto", "Custodia"]
+        exp_market_list.extend(Others_market)
+        for market in market_list:
+            if market not in exp_market_list:
+                msg = "The indexer argument should be "
+                msg += ", ".join(exp_market_list)
+                raise ValueError(msg)
+
     """Public methods."""
 
     def getAdjustedYield(self, yield_val, adjust_type):
@@ -201,6 +236,8 @@ class PortfolioAssets:
         - CDI  : return 'yield_val * CDI'
         - PREFIXADO: return 'yield_val'
         """
+        self._checkNumberType(yield_val)
+        self._checkIndexerType(adjust_type)
         if adjust_type == "IPCA":
             return yield_val + self.indexers.getIPCA()
         elif adjust_type == "SELIC":
@@ -218,10 +255,19 @@ class PortfolioAssets:
 
     def setOpenedOperations(self, openedOperations):
         """Set the opened operations."""
+        self._checkDataframeType(openedOperations)
         self.openedOperations = openedOperations.copy()
+
+    def setExtratoDataframe(self, operations):
+        """Set the operations dataframe."""
+        self._checkDataframeType(operations)
+        self.history = OperationsHistory(operations)
+        self.setOpenedOperations(self.history.getOpenedOperationsDataframe())
 
     def createWalletDefaultColumns(self, market_list):
         """Return a default dataframe with 'Wallet' columns."""
+        self._checkMarketListType(market_list)
+
         # 'Extrato' dataframe has title and data lines
         if len(self.openedOperations):
 
@@ -268,6 +314,7 @@ class PortfolioAssets:
 
     def calculateWalletDefaultColumns(self, market_list):
         """Calculate default column values."""
+        self._checkMarketListType(market_list)
         self.wallet["Preço mercado"] = self.__getPrecoMercado()
         deltaPrice = self.__getMercadoMenosPago()
         self.wallet["Mercado-pago"] = deltaPrice

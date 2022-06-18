@@ -43,6 +43,8 @@ class TreeviewPandas(Treeview):
 
     def showPandas(self, resize_per_contents=True):
         """Insert a Pandas Dataframe inside the Treeview."""
+        self.createTreeViewModel(list(self.PandasDataFrame))
+        self.setModel(self.TreeViewModel)
         for line_data_row in self.PandasDataFrame.itertuples(index=False):
             line_data_row_list = list(line_data_row)
             items_list = self.convertValuesListToItemsList(line_data_row_list)
@@ -77,6 +79,8 @@ class ResizableTreeviewPandas(ResTreeview):
 
     def showPandas(self, resize_per_contents=True):
         """Insert a Pandas Dataframe inside the Treeview."""
+        self.createTreeViewModel(list(self.PandasDataFrame))
+        self.setModel(self.TreeViewModel)
         for line_data_row in self.PandasDataFrame.itertuples(index=False):
             line_data_row_list = list(line_data_row)
             items_list = self.convertValuesListToItemsList(line_data_row_list)

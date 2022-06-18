@@ -32,7 +32,7 @@ class TreeviewInterface(QtWidgets.QTreeView):
         else:
             super().__init__()
         self.ColumnsTitleList = columns_title_list
-        self.__createTreeViewModel(columns_title_list)
+        self.createTreeViewModel(columns_title_list)
         self.setModel(self.TreeViewModel)
 
     def __splitBigTitle(self, title):
@@ -41,7 +41,7 @@ class TreeviewInterface(QtWidgets.QTreeView):
         else:
             return title
 
-    def __createTreeViewModel(self, columns_title_list):
+    def createTreeViewModel(self, columns_title_list):
         self.TreeViewModel = QStandardItemModel(
             0,
             len(columns_title_list),
@@ -128,7 +128,10 @@ class TreeviewInterface(QtWidgets.QTreeView):
     def resizeColumnsToTreeViewWidth(self):
         """Adjust the columns size according the treeview width."""
         column_count = self.TreeViewModel.columnCount()
-        column_width = round((self.width() - 25) / column_count)
+        try:
+            column_width = round((self.width() - 25) / column_count)
+        except ZeroDivisionError:
+            column_width = round((self.width() - 25))
         for column_index in range(column_count):
             self.setColumnWidth(column_index, column_width)
 

@@ -1,31 +1,10 @@
 """This file has a set of methods related to Portfolio/Extrato."""
 
-import os
-import sys
-
-try:
-    from portfolio_lib.extrato_manager import ExtratoFileManager
-    from portfolio_lib.fixed_income import FixedIncomeAssets
-    from portfolio_lib.gdrive_exporter import GoogleDriveExporter
-    from portfolio_lib.multi_processing import MultiProcessingTasks
-    from portfolio_lib.portfolio_history import OperationsHistory
-    from portfolio_lib.treasuries import TreasuriesAssets
-    from portfolio_lib.variable_income import VariableIncomeAssets
-
-except ModuleNotFoundError:
-
-    # Change the directory
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    sys.path.append(os.path.dirname(SCRIPT_DIR))
-
-    # Run the import statements
-    from portfolio_lib.extrato_manager import ExtratoFileManager
-    from portfolio_lib.fixed_income import FixedIncomeAssets
-    from portfolio_lib.gdrive_exporter import GoogleDriveExporter
-    from portfolio_lib.multi_processing import MultiProcessingTasks
-    from portfolio_lib.portfolio_history import OperationsHistory
-    from portfolio_lib.treasuries import TreasuriesAssets
-    from portfolio_lib.variable_income import VariableIncomeAssets
+from portfolio_lib.assets.fixed_income import FixedIncomeAssets
+from portfolio_lib.assets.treasuries import TreasuriesAssets
+from portfolio_lib.assets.variable_income import VariableIncomeAssets
+from portfolio_lib.extrato_manager import ExtratoFileManager
+from portfolio_lib.multi_processing import MultiProcessingTasks
 
 
 class PortfolioInvestment(ExtratoFileManager):
@@ -59,11 +38,9 @@ class PortfolioInvestment(ExtratoFileManager):
         self.multi_process_list[proc_index].endAllProcesses()
 
     def _updateOpenedOperations(self):
-        history = OperationsHistory(self.operations.copy())
-        self.openedOperations = history.getOpenedOperationsDataframe()
-        self.VariableIncome.setOpenedOperations(self.openedOperations)
-        self.FixedIncome.setOpenedOperations(self.openedOperations)
-        self.Treasuries.setOpenedOperations(self.openedOperations)
+        self.VariableIncome.setExtratoDataframe(self.operations)
+        self.FixedIncome.setExtratoDataframe(self.operations)
+        self.Treasuries.setExtratoDataframe(self.operations)
 
     def _updateCurrentPortfolio(self):
         self.currentVariableIncome = self.VariableIncome.currentPortfolio()
@@ -109,30 +86,3 @@ class PortfolioInvestment(ExtratoFileManager):
     def currentRendaFixa(self):
         """Create a dataframe with all opened operations of Renda Fixa."""
         return self.currentFixedIncome.copy()
-
-
-if __name__ == "__main__":
-
-    import os
-
-    # Main directory
-    SOURCE_FILE_DIRECTORY = os.path.join(os.path.curdir, "portfolio_lib")
-    FILE_NAME = "PORTFOLIO_TEMPLATE_PERFORMANCE.xlsx"
-    FILE = os.path.join(SOURCE_FILE_DIRECTORY, FILE_NAME)
-
-    # Example:
-    portfolio = PortfolioInvestment(FILE)
-    if portfolio.isValidFile():
-        carteiraGD = portfolio.currentPortfolioGoogleDrive()
-        carteiraRV = portfolio.currentPortfolio()
-        carteiraRF = portfolio.currentRendaFixa()
-        tesouro = portfolio.currentTesouroDireto()
-        print("\nCarteira Renda Variável - Google Drive:", carteiraGD)
-        print("\nCarteira Renda Variável:", carteiraRV)
-        print("\nCarteira Renda Fixa:", carteiraRF)
-        print("\nCarteira Tesouro Direto:", tesouro)
-    else:
-        print("\nThe selected Portfolio file is not in the expected format.")
-        print("\nPlease, check the following expected column names:")
-        for title in portfolio.getExpectedColumnsTitleList():
-            print(" - ", title)
