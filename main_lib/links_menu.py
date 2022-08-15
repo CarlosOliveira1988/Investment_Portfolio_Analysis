@@ -26,6 +26,10 @@ class LinksMenu(MenuInterface):
             "&Simulador de Rentabilidade",
             self.profitabilityLink,
         )
+        self.extratoHistory = self.addSubmenu(
+            "&Histórico de Extrato",
+            self.extratoHistoryLink,
+        )
 
     def focusReportLink(self):
         """Open the 'Relatorio Focus' weblink."""
@@ -38,3 +42,9 @@ class LinksMenu(MenuInterface):
     def profitabilityLink(self):
         """Open a weblink related to 'Rentabilidade'."""
         webbrowser.open(r"http://rendafixa.herokuapp.com/rentabilidade")
+
+    def extratoHistoryLink(self):
+        """Open a weblink related to 'Extrato History'."""
+        webbrowser.open(
+            r"https://carlosoliveira1988-portfoliogui-home-i621k2.streamlitapp.com/"
+        )
