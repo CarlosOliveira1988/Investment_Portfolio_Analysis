@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import QMessageBox
 from xlrd import XLRDError
 
 from portfolio_lib.portfolio_investment import PortfolioInvestment
-from portfolio_lib.tabs.extrato_tab import ExtratoTabInterface
 from portfolio_lib.tabs.fixed_income_tab import FixedIncomeTabInterface
 from portfolio_lib.tabs.short_summary_tab import ShortSummaryTabInterface
 from portfolio_lib.tabs.treasuries_tab import TreasuriesTabInterface
@@ -23,12 +22,53 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         """
         super().__init__()
         self.investment = PortfolioInvestment(File)
-        self.__createTabs()
         self.setPortfolioInvestment(File, initialization=True)
-        self.__addDataToTabs()
+        self.__createTabs()
 
         # Connect tab event
         self.currentChanged.connect(self.onChange)
+
+    def __addNewTab(self, tab_widget):
+        tab_index = self.addTab(
+            tab_widget.getTab(),
+            tab_widget.getTabTitle(),
+        )
+        tab_widget.setTabIndex(tab_index)
+        return tab_index
+
+    def __createSingleTab(self, TabViewerClass, TabViewerDataframe):
+        TabViewerObject = TabViewerClass(self.__addNewTab)
+        TabViewerObject.setNewData(TabViewerDataframe)
+        self.TabInterfaceList.append(TabViewerObject)
+        return TabViewerObject
+
+    def __createTabs(self):
+        self.TabInterfaceList = []
+
+        self.VariableTab = self.__createSingleTab(
+            VariableTabInterface, self.variable_income
+        )
+        self.FixedTab = self.__createSingleTab(
+            FixedIncomeTabInterface, self.fixed_income
+        )
+        self.TreasuriesTab = self.__createSingleTab(
+            TreasuriesTabInterface, self.treasuries
+        )
+        self.ShortSummaryTab = self.__createSingleTab(
+            ShortSummaryTabInterface, self.short_summary
+        )
+
+    def __showColumnsErrorMessage(self):
+        msg = "O arquivo selecionado é inválido.\n\n"
+        msg += "Por favor, verifique se as colunas existem no arquivo:\n"
+        for title in self.investment.getExpectedColumnsTitleList():
+            msg += "\n - " + title
+        QMessageBox.warning(self, "Análise de Portfólio", msg, QMessageBox.Ok)
+
+    def __showXLRDErrorMessage(self):
+        msg = "O arquivo selecionado é inválido.\n\n"
+        msg += "Por favor, verifique se o arquivo contém apenas 1 aba."
+        QMessageBox.warning(self, "Análise de Portfólio", msg, QMessageBox.Ok)
 
     def __setMainDataframes(self):
         self.extrato = self.investment.getExtrato()
@@ -52,71 +92,13 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
             self.__showXLRDErrorMessage()
             return False
 
-    def __addNewTab(self, tab_widget):
-        tab_index = self.addTab(
-            tab_widget.getTab(),
-            tab_widget.getTabTitle(),
-        )
-        tab_widget.setTabIndex(tab_index)
-        return tab_index
-
-    def __showColumnsErrorMessage(self):
-        msg = "O arquivo selecionado é inválido.\n\n"
-        msg += "Por favor, verifique se as colunas existem no arquivo:\n"
-        for title in self.investment.getExpectedColumnsTitleList():
-            msg += "\n - " + title
-        QMessageBox.warning(self, "Análise de Portfólio", msg, QMessageBox.Ok)
-
-    def __showXLRDErrorMessage(self):
-        msg = "O arquivo selecionado é inválido.\n\n"
-        msg += "Por favor, verifique se o arquivo contém apenas 1 aba."
-        QMessageBox.warning(self, "Análise de Portfólio", msg, QMessageBox.Ok)
-
-    def __setTabInterfaceList(self):
-        self.TabInterfaceList = [
-            self.ExtratoTab,
-            self.VariableTab,
-            self.FixedTab,
-            self.TreasuriesTab,
-            self.ShortSummaryTab,
-        ]
-
-    def __setTabDataframeList(self):
-        self.TabDataframeList = [
-            self.extrato,
-            self.variable_income,
-            self.fixed_income,
-            self.treasuries,
-            self.short_summary,
-        ]
-
     def setPortfolioInvestment(self, File, initialization=False):
         """Read the excel file and update the main dataframes."""
         self.File = File
         if not initialization:
             self.investment.setFile(self.File)
         df_updated_flag = self.__updateMainDataframes(initialization)
-        self.__setTabDataframeList()
         return df_updated_flag
-
-    def exportGoogleDriveSheet(self):
-        """Export the Google Drive spreasheet."""
-        self.investment.currentPortfolioGoogleDrive()
-
-    def __createTabs(self):
-        self.ExtratoTab = ExtratoTabInterface(self.__addNewTab)
-        self.VariableTab = VariableTabInterface(self.__addNewTab)
-        self.FixedTab = FixedIncomeTabInterface(self.__addNewTab)
-        self.TreasuriesTab = TreasuriesTabInterface(self.__addNewTab)
-        self.ShortSummaryTab = ShortSummaryTabInterface(self.__addNewTab)
-        self.__setTabInterfaceList()
-
-    def __addDataToTabs(self):
-        self.ExtratoTab.setNewData(self.extrato)
-        self.VariableTab.setNewData(self.variable_income)
-        self.FixedTab.setNewData(self.fixed_income)
-        self.TreasuriesTab.setNewData(self.treasuries)
-        self.ShortSummaryTab.setNewData(self.short_summary)
 
     def clearData(self):
         """Clear the treeview data lines."""
@@ -126,10 +108,10 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
     def updateData(self, File):
         """Update the treeview data lines."""
         if self.setPortfolioInvestment(File):
-            for index in range(len(self.TabInterfaceList)):
-                tab_interface = self.TabInterfaceList[index]
-                tab_dataframe = self.TabDataframeList[index]
-                tab_interface.updateData(tab_dataframe)
+            self.VariableTab.updateData(self.variable_income)
+            self.FixedTab.updateData(self.fixed_income)
+            self.TreasuriesTab.updateData(self.treasuries)
+            self.ShortSummaryTab.updateData(self.short_summary)
             self.File = File
 
     def onChange(self, index):
@@ -137,6 +119,10 @@ class PortfolioViewerWidget(QtWidgets.QTabWidget):
         for tab_interface in self.TabInterfaceList:
             if index == tab_interface.getTabIndex():
                 tab_interface.onChangeAction()
+
+    def exportGoogleDriveSheet(self):
+        """Export the Google Drive spreasheet."""
+        self.investment.currentPortfolioGoogleDrive()
 
     def getPortfolioInvestmentObject(self):
         """Return the Portfolio Investment Object to handle extrato sheet."""
