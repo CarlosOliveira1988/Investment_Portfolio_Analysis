@@ -41,7 +41,7 @@ class GeneralDataframes:
         replace_dict = {}
         for subtitle in RendaVariavel(None).getSubTitlesList():
             replace_dict[subtitle] = "Renda Variável"
-        return CI_df.replace(to_replace=replace_dict, value=None)
+        return CI_df.replace(to_replace=replace_dict)
 
     """Public methods."""
 
