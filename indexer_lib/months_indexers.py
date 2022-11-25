@@ -24,7 +24,8 @@ class Indexer:
         self.value = self.__getUpdatedData()
 
     def __getUpdatedData(self):
-        page = requests.get(self.weblink)
+        headers = {"User-Agent": "Mozilla/5.0"}
+        page = requests.get(self.weblink, headers=headers)
         soup = BeautifulSoup(page.content, "html.parser")
         selector = soup.select(self.selector)
         try:

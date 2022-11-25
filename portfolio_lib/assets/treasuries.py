@@ -4,6 +4,7 @@ import re
 
 import requests
 from bs4 import BeautifulSoup
+
 from portfolio_lib.assets.portfolio_assets import PortfolioAssets
 
 
@@ -127,7 +128,8 @@ class TreasuriesAssets(PortfolioAssets):
 
         try:
             # Get information from URL
-            page = requests.get(url)
+            headers = {"User-Agent": "Mozilla/5.0"}
+            page = requests.get(url, headers=headers)
             soup = BeautifulSoup(page.content, "html.parser")
 
             # Get the current value from ticker

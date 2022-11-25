@@ -4,6 +4,7 @@ import pandas as pd
 import requests
 import yfinance as yf
 from bs4 import BeautifulSoup
+
 from portfolio_lib.assets.portfolio_assets import PortfolioAssets
 from portfolio_lib.gdrive_exporter import GoogleDriveExporter
 from portfolio_lib.multi_processing import PoolTasks
@@ -183,7 +184,8 @@ class VariableIncomeAssets(PortfolioAssets):
             url = main_url + "acoes/" + true_ticker
 
         # Web scraping
-        page = requests.get(url)
+        headers = {"User-Agent": "Mozilla/5.0"}
+        page = requests.get(url, headers=headers)
         soup = BeautifulSoup(page.content, "html.parser")
         if market == "FII":
             selector = soup.select(
