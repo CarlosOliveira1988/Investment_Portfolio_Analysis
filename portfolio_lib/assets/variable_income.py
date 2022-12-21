@@ -44,7 +44,6 @@ class VariableIncomeAssets(PortfolioAssets):
     def __currentPortfolio(self):
         # Prepare the default wallet dataframe
         market_list = ["Ações", "ETF", "FII", "BDR"]
-        # self.setOpenedOperations(self.openedOperations)
         wallet = self.createWalletDefaultColumns(market_list)
 
         # Create a list of ticker to be used in YFinance API

@@ -3,10 +3,10 @@
 import os
 
 import pandas as pd
-from gui_lib.treeview.treeview_pandas import ResizableTreeviewPandas
-from gui_lib.window import Window
 from PyQt5 import QtWidgets
 
+from gui_lib.treeview.treeview_pandas import ResizableTreeviewPandas
+from gui_lib.window import Window
 from valuation_lib.fundamental_analysis import FundamentalAnalysisFrame
 from valuation_lib.valuation_formater import FundamentalAnalysisFormater
 
@@ -33,7 +33,10 @@ class ValuationWindow(QtWidgets.QWidget):
 
         # Analysis object
         self.analysis = FundamentalAnalysisFrame()
-        self.analysis.setTickersList(list(self.file_dataframe["Ticker"]))
+        self.analysis.setTickersList(
+            self.file_dataframe["Ticker"].to_list(),
+            self.file_dataframe["Mercado"].to_list(),
+        )
         self.analysis.updateTickersDataframe()
 
         # Formater

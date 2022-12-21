@@ -74,7 +74,7 @@ class TreasuriesAssets(PortfolioAssets):
         else:
             return None
 
-    def __getURL(self, text):
+    def _getURL(self, text):
         url = False
         for value_list in self.pattern_dict.values():
             rgx = value_list[0]
@@ -124,7 +124,7 @@ class TreasuriesAssets(PortfolioAssets):
         """
         self._checkStringType(ticker)
 
-        url = self.__getURL(ticker)
+        url = self._getURL(ticker)
 
         try:
             # Get information from URL
