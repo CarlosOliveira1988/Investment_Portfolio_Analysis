@@ -154,7 +154,12 @@ class LocalScraper:
         value_str = value_str.replace("R$ ", "")
         value_str = value_str.replace("%", "")
         value = value_str.replace(",", ".")
-        return float(value) / divide_by
+        try:
+            return float(value) / divide_by
+        except ZeroDivisionError:
+            return 0.0
+        except ValueError:
+            return 0.0
 
     """Public methods."""
 
