@@ -22,13 +22,13 @@ class LinksMenu(MenuInterface):
             "&Simulador de Renda Fixa",
             self.fixedIncomeLink,
         )
-        self.profitability = self.addSubmenu(
-            "&Simulador de Rentabilidade",
-            self.profitabilityLink,
-        )
         self.extratoHistory = self.addSubmenu(
             "&Histórico de Extrato",
             self.extratoHistoryLink,
+        )
+        self.economicIndexers = self.addSubmenu(
+            "&Indicadores Econômicos",
+            self.economicIndexersLink,
         )
 
     def focusReportLink(self):
@@ -37,14 +37,14 @@ class LinksMenu(MenuInterface):
 
     def fixedIncomeLink(self):
         """Open a weblink related to 'Renda Fixa'."""
-        webbrowser.open(r"https://rendafixa.herokuapp.com")
-
-    def profitabilityLink(self):
-        """Open a weblink related to 'Rentabilidade'."""
-        webbrowser.open(r"http://rendafixa.herokuapp.com/rentabilidade")
+        webbrowser.open(r"https://rendafixa.github.io/")
 
     def extratoHistoryLink(self):
         """Open a weblink related to 'Extrato History'."""
         webbrowser.open(
             r"https://carlosoliveira1988-portfoliogui-home-i621k2.streamlitapp.com/"
         )
+
+    def economicIndexersLink(self):
+        """Open a weblink related to 'Economic Indexers'."""
+        webbrowser.open(r"https://econindexerapi-user.streamlit.app/")
