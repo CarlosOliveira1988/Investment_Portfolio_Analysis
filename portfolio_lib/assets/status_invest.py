@@ -2,22 +2,22 @@
 
 import locale
 import os
-import time
 import urllib.request
 from datetime import datetime
 
 import pandas as pd
 from bs4 import BeautifulSoup
 
-from portfolio_lib.assets.selector_bdrs import BDRS_HTML_SELECTOR_DICT as bdrs_selector
-from portfolio_lib.assets.selector_etfs import ETFS_HTML_SELECTOR_DICT as etfs_selector
-from portfolio_lib.assets.selector_fiis import FIIS_HTML_SELECTOR_DICT as fiis_selector
-from portfolio_lib.assets.selector_stocks import (
-    STOCKS_HTML_SELECTOR_DICT as stocks_selector,
-)
-from portfolio_lib.assets.selector_tesouro import (
-    TESOURO_HTML_SELECTOR_DICT as tesouro_selector,
-)
+from portfolio_lib.assets.selector_bdrs import \
+    BDRS_HTML_SELECTOR_DICT as bdrs_selector
+from portfolio_lib.assets.selector_etfs import \
+    ETFS_HTML_SELECTOR_DICT as etfs_selector
+from portfolio_lib.assets.selector_fiis import \
+    FIIS_HTML_SELECTOR_DICT as fiis_selector
+from portfolio_lib.assets.selector_stocks import \
+    STOCKS_HTML_SELECTOR_DICT as stocks_selector
+from portfolio_lib.assets.selector_tesouro import \
+    TESOURO_HTML_SELECTOR_DICT as tesouro_selector
 from portfolio_lib.assets.treasuries import TreasuriesAssets
 
 
@@ -117,7 +117,7 @@ class HtmlCacheManager:
     def set_ticker_market(self, ticker, market):
         """Set the ticker and market."""
         self._ticker_cache_path = self._get_ticker_cache_path(ticker)
-        self._ticker_url = self._get_ticker_url(ticker, market)
+        self._ticker_url = self._get_ticker_url(ticker, market).lower()
         self._market = market
         self._ticker = ticker
 

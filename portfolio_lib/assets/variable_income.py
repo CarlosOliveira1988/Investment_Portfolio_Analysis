@@ -135,10 +135,10 @@ class VariableIncomeAssets(PortfolioAssets):
         self._checkStringType(ticker)
         try:
             return self.__getSectorOfTicker(ticker)
-        except KeyError:
+        except (KeyError, IndexError):
             try:
                 return self.__getSectorOfTicker(ticker + ".SA")
-            except KeyError:
+            except (KeyError, IndexError):
                 return VariableIncomeAssets.SECTOR_NOT_FOUND
 
     def currentMarketPriceByTicker(self, ticker):
